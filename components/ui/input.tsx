@@ -1,6 +1,8 @@
 import * as React from "react"
 import { cn } from "@/lib/utils"
 
+// Shadcn pattern: Empty interface allows future prop customization (e.g., variant, size)
+// eslint-disable-next-line @typescript-eslint/no-empty-object-type
 export interface InputProps
   extends React.InputHTMLAttributes<HTMLInputElement> {}
 

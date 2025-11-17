@@ -1,6 +1,8 @@
 import * as React from "react"
 import { cn } from "@/lib/utils"
 
+// Shadcn pattern: Empty interface allows future prop customization
+// eslint-disable-next-line @typescript-eslint/no-empty-object-type
 export interface TextareaProps
   extends React.TextareaHTMLAttributes<HTMLTextAreaElement> {}
 

@@ -202,6 +202,110 @@ Hit the `keyPoints.map()` error in production. Should've added `|| []` from the 
 
 ---
 
+### 4. ESLint Errors Before Merging to Main
+
+**The Problem:**
+Before merging to main, ran `npm run lint` and got 6 errors:
+- Unused variable (`userId` in tracker)
+- Empty TypeScript interfaces (Shadcn components)
+- CommonJS `require()` in diagnostic script
+
+**What I Learned:**
+
+**Empty interfaces in Shadcn:**
+Shadcn creates empty interfaces like:
+```typescript
+export interface InputProps extends React.InputHTMLAttributes<HTMLInputElement> {}
+```
+
+ESLint complains this is "equivalent to its supertype" - technically true, but it's a **design pattern**. Shadcn does this so I can customize components later:
+```typescript
+export interface InputProps extends React.InputHTMLAttributes<HTMLInputElement> {
+  variant?: 'default' | 'ghost'  // Can add this later
+}
+```
+
+**The Fix:** Add `// eslint-disable-next-line @typescript-eslint/no-empty-object-type` with a comment explaining WHY.
+
+**CommonJS vs ES Modules:**
+My project uses ES modules (`import`), but the diagnostic script used CommonJS (`require`). Mixing module systems is confusing.
+
+**Trade-off:** 
+- Convert to ES modules → requires build step or `.mjs` extension
+- Disable lint rule → simpler for one-off scripts
+
+Chose to disable for diagnostic scripts since they're not part of the main app.
+
+**Takeaway:** Clean linting before merging to main shows attention to detail in interviews.
+
+---
+
+### 5. .env.example Pattern
+
+**The Problem:**
+Had `.env*` in `.gitignore`, which blocked `.env.example` from being committed.
+
+**Why This Matters:**
+When someone clones my repo, they won't know what environment variables they need. `.env.example` is the template.
+
+**The Fix:**
+```gitignore
+.env.local       # Secret values (gitignored)
+!.env.example    # Template (committed to git)
+```
+
+**Lesson:** `.env.example` with fake values is industry standard. Real secrets go in `.env.local`.
+
+---
+
+## Technical Debt Decisions (Intentional)
+
+### Single-User MVP (userId = '1')
+
+**What:** Hardcoded `userId: '1'` everywhere, no authentication.
+
+**Why:** 
+- Learning focus is AI integration, not auth
+- Schema already supports multi-user (foreign keys exist)
+- Adding NextAuth later is straightforward
+
+**Interview Answer:**
+"I prioritized learning the core AI features first. The database schema supports multi-user (userId foreign keys, indexes), so adding NextAuth.js is a clear next step when needed."
+
+---
+
+### console.error() for Logging
+
+**What:** Using `console.error()` in API routes and client code.
+
+**Why:**
+- Development: Need to see errors in terminal/browser console
+- Production: Would replace with proper logging (Sentry, LogRocket)
+
+**What's Okay:**
+- ✅ `console.error()` for debugging
+- ✅ API routes logging errors server-side
+- ❌ Never log secrets, API keys, or PII
+
+**Interview Answer:**
+"For MVP, I use console.error for debugging. In production, I'd integrate Sentry for error tracking and analytics."
+
+---
+
+### No Tests Yet
+
+**What:** No test files (Vitest, React Testing Library).
+
+**Why:**
+- Prioritized learning Next.js 16, Prisma, AI SDKs first
+- Manually tested all three core features
+- Testing is next on learning roadmap
+
+**Interview Answer:**
+"I manually tested the core flows, but I know tests are critical for production. Next step is learning Vitest + React Testing Library - I've already researched the setup patterns."
+
+---
+
 ### 3. Dark Mode by Default
 
 Initial UI was dark mode with poor contrast. Realized most job hunters use this during the day, not at night.

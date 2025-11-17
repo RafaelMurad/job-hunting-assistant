@@ -19,7 +19,6 @@ interface Application {
 
 export default function TrackerPage() {
   const router = useRouter()
-  const [userId, setUserId] = useState<string>('')
   const [applications, setApplications] = useState<Application[]>([])
   const [loading, setLoading] = useState(true)
 
@@ -28,7 +27,6 @@ export default function TrackerPage() {
     fetch('/api/user')
       .then(res => res.json())
       .then(user => {
-        setUserId(user.id)
         // Then load applications
         return fetch(`/api/applications?userId=${user.id}`)
       })
