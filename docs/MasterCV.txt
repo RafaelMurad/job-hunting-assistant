@@ -1,0 +1,103 @@
+# Rafael Murad - Master CV
+
+## Contact Information
+**Name:** Rafael Murad
+**Email:** rfimurad@gmail.com
+**Phone:** +44 7714 002131
+**Location:** Brazil (relocating from London)
+**LinkedIn:** linkedin.com/in/rflmurad
+**GitHub:** github.com/RafaelMurad
+
+## Professional Summary
+Frontend Software Engineer with 4+ years of experience building production React/TypeScript applications. Delivered features to millions of users across 15+ European markets at Just Eat Takeaway. Expert in React, TypeScript, Next.js, and Redux with proven track record in monorepo architecture, SSR, component libraries, and performance optimization. Strong focus on testing (Jest, React Testing Library) and accessibility (WCAG). Fluent English speaker with 11 years in London.
+
+## Work Experience
+
+### Just Eat Takeaway | Frontend Software Engineer
+**March 2023 - Present** | London, UK (Remote)
+
+**Key Achievements:**
+- **Jet+ Cancellation Ownership:** Sole developer responsible for end-to-end delivery of membership cancellation flow, building from scratch to reduce customer support load
+- **Group Order Contribution:** Active participant in 17-month initiative delivering key components for collaborative ordering experience across 15+ markets
+- **Architecture & Performance:** Contributed to scheduled fulfillment refactor by creating shared date-time selection package for monorepo reuse; drove 20% bundle size reduction through optimization
+- **Production Quality:** Owned complete resolution process for 2 production incidents (debugging, technical fixes, revenue impact reports, stakeholder communication); maintained high stability with 450+ commits over 32 months
+- **Testing Discipline:** Added 738+ lines of comprehensive tests (unit, integration, E2E) ensuring production stability
+
+**Technical Impact:**
+- Architected shared component library consumed across 3+ product domains
+- Multi-market support (15+ European countries)
+- Cross-browser compatibility and performance optimization
+- Distributed team collaboration (UK, Netherlands, Germany)
+- Zero self-caused production incidents
+
+**Technologies:** React, TypeScript, Next.js, Redux, Redux-Saga, Jest, React Testing Library, Monorepos, SSR, WCAG
+
+## Skills
+
+**Frontend Core:**
+- React, TypeScript, JavaScript
+- Next.js, Redux, Redux-Saga
+- HTML5, CSS3, SCSS, Tailwind CSS
+
+**Testing & Quality:**
+- Jest, React Testing Library
+- Unit testing, Integration testing, E2E testing
+- Accessibility (WCAG)
+
+**Architecture & Patterns:**
+- Monorepo architecture
+- Component library design
+- Server-Side Rendering (SSR)
+- Domain-Driven Design
+- State management patterns
+
+**Tools & Workflow:**
+- Git, GitHub, CI/CD
+- Webpack, Build optimization
+- Agile/Scrum
+- Code review, Pair programming
+
+**Languages:**
+- English: Fluent (11 years in London)
+- Portuguese: Native
+
+## Projects
+
+### Jet+ Membership Cancellation Flow
+- Built complete cancellation feature from scratch
+- Reduced customer support tickets
+- Multi-step form with state management
+- Production-ready with comprehensive testing
+
+### Group Order Feature (15+ Markets)
+- Collaborative ordering experience
+- 17-month initiative, key contributor
+- Multi-market rollout coordination
+- Complex state management across users
+
+### Scheduled Fulfillment Refactor
+- Shared date-time selection component
+- Monorepo package consumed across domains
+- Performance optimization
+- Reusable architecture
+
+## Education
+**[Details to be added]**
+
+## Certifications
+**[Details to be added]**
+
+## Work Preferences
+- **Location:** Remote (LATAM focus, based in Brazil)
+- **Contract Type:** Open to both permanent and contract roles (12+ months)
+- **Timezone:** UTC-3 (Brazil), comfortable with async collaboration
+- **Availability:** Immediate
+
+## Key Metrics
+- 450+ commits at Just Eat (72 visible due to squash merging)
+- 738+ test lines added
+- 20% bundle size reduction
+- 2 production incidents owned and resolved
+- Zero self-caused incidents
+- 15+ markets supported
+- 17 months on Group Order initiative
