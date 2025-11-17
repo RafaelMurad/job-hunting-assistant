@@ -64,6 +64,129 @@ Before implementing anything, explain:
 
 ---
 
+## 📋 Effective Prompting Framework
+
+### **The CCEE Pattern (Context → Constraints → Explain → Execute)**
+
+When I make requests, I should structure them using this pattern:
+
+1. **Context** - What are we building and why?
+   - Example: "I'm building the cover letter generator. Users complained the output is too generic."
+
+2. **Constraints** - What are the requirements/limits?
+   - Example: "Max 500 words, must match the job description tone, keep my writing style from the profile."
+
+3. **Explain First** - Why this approach? What alternatives exist?
+   - Example: "Explain why we'd use streaming vs batch generation. What are the trade-offs?"
+
+4. **Then Execute** - Show me the code/docs
+   - Example: "After explaining, implement the streaming approach."
+
+### **AI Coaching Guidelines**
+
+**When I give an ambiguous request, AI should:**
+
+1. **Gently remind me of the CCEE pattern** (once per session max)
+   - Example: "I can help with this! To give you the best solution, could you provide: **Context** (what/why), **Constraints** (requirements), and whether you want me to **Explain First** or jump straight to implementation?"
+
+2. **Make 2-3 reasonable assumptions and proceed**
+   - Example: "I'm assuming you want this for [X purpose] with [Y constraint]. I'll explain the approach first, then implement. Let me know if I'm off track."
+
+3. **Ask ONE specific clarifying question if critical**
+   - Example: "Should this component be a Server Component (for SEO) or Client Component (for interactivity)?"
+
+**When I give a well-structured request, AI should:**
+- Acknowledge it briefly ("Great context!")
+- Proceed directly with the work
+- No need to praise the structure every time
+
+### **Prompt Quality Feedback**
+
+**At the end of each response, AI should provide:**
+
+```
+📊 Prompt Quality: ★★★★☆ (4/5)
+✅ Good: Clear context, specific constraints
+⚠️ Could improve: Add expected output format
+💡 Tip: Next time, specify word count or time limit
+
+🪙 Token Usage: ~1,200 tokens
+Context Window: 15% used (efficient)
+```
+
+**Rating criteria (1-5 stars):**
+- ★☆☆☆☆ - Ambiguous, no context, unclear intent
+- ★★☆☆☆ - Missing key details, needs multiple follow-ups
+- ★★★☆☆ - Decent context, but could be more specific
+- ★★★★☆ - Clear context and constraints, minor improvements possible
+- ★★★★★ - Perfect CCEE pattern, actionable, constrained, clear intent
+
+**Token usage guidance:**
+- **Efficient** (<20% of context): Focused requests, targeted file reads
+- **Moderate** (20-50%): Multiple file reads, complex explanations
+- **Heavy** (50-80%): Research-heavy, many files, extensive searches
+- **Critical** (>80%): May need to summarize conversation soon
+
+**How to optimize context window:**
+1. **Be specific about files** - "Check `lib/ai.ts` lines 50-100" vs "Look at the AI code"
+2. **Batch related questions** - One request instead of 3 sequential ones
+3. **Use subagents for research** - Offload heavy searching to separate context
+4. **Close topics before opening new ones** - "This is done, moving on to..."
+
+### **Batching Requests**
+
+**I should combine related asks:**
+- ❌ Don't: "Add validation" → "Add error handling" → "Add tests" (3 separate requests)
+- ✅ Do: "Add validation with error handling and basic tests for the login form"
+
+**AI should suggest batching when I ask related things sequentially:**
+- Example: After 2-3 related small requests, suggest: "I notice we're making several related changes to [feature]. Want to batch the next few into one request? It'll be more efficient."
+
+### **Using Subagents Effectively**
+
+**I should delegate research-heavy tasks:**
+- "Find all instances of [pattern] across the codebase and summarize the approaches"
+- "Research best practices for [technology] and propose 3 options with trade-offs"
+- "Search the docs for [feature] and explain how it works"
+
+**AI should suggest subagents when:**
+- The request requires extensive searching/reading
+- Multiple sources need to be cross-referenced
+- Pattern analysis across many files is needed
+
+### **Challenge and Question**
+
+**I should ask:**
+- "What's the downside of this approach?"
+- "What could go wrong?"
+- "Is there a simpler way?"
+- "What would you do differently?"
+
+**AI should proactively mention:**
+- Trade-offs of the chosen approach
+- Simpler alternatives (especially for MVP)
+- Potential pitfalls or gotchas
+- When I'm over-engineering
+
+### **Setting Constraints Upfront**
+
+**I should specify:**
+- Word counts for docs ("500 words max")
+- Time limits ("I have 30 minutes")
+- Scope ("MVP only, no edge cases yet")
+- Learning depth ("Explain like I'm new to React" vs "Just show me the code")
+
+**Examples of well-constrained requests:**
+```
+"Explain Prisma transactions in 200 words. I understand basic SQL but not ORMs."
+
+"Add error handling to the AI analysis route. 30-min timebox, focus on user-facing errors only."
+
+"Review this component for performance issues. I know React basics, explain optimization patterns I should learn."
+```
+
+---
+
 ## 📝 Commit Strategy
 
 **Conventional Commits with Learning Context (FIRST PERSON - as Rafael):**
