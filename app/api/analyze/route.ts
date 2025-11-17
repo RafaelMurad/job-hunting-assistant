@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { analyzeJob } from '@/lib/claude'
+import { analyzeJob } from '@/lib/ai'
 import { prisma } from '@/lib/db'
 
 export async function POST(request: NextRequest) {
