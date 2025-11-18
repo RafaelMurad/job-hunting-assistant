@@ -18,13 +18,14 @@ This project is a **learning-focused portfolio showcase**. The primary goals are
 Every implementation follows this pattern:
 
 1. **WHY** - Explain the engineering reasoning and concept
-2. **WHAT** - Define the contract/interface we're building  
+2. **WHAT** - Define the contract/interface we're building
 3. **HOW** - Describe the implementation approach and trade-offs
 4. **COMMIT** - One logical change per conventional commit
 
 ### **Division of Labor**
 
 **Rafael writes code when:**
+
 - New concepts to learn (React Server Components, Server Actions, Prisma queries)
 - Core business logic (AI prompts, analysis algorithms, scoring logic)
 - Critical features (authentication, payment integration, data validation)
@@ -32,6 +33,7 @@ Every implementation follows this pattern:
 - Bug fixes that require debugging (learning the root cause)
 
 **AI writes code when:**
+
 - Configuration files (tsconfig, tailwind, etc.) - after explaining what they do
 - Repetitive UI components (after Rafael writes the first one)
 - Type definitions following established patterns
@@ -96,6 +98,7 @@ When I make requests, I should structure them using this pattern:
    - Example: "Should this component be a Server Component (for SEO) or Client Component (for interactivity)?"
 
 **When I give a well-structured request, AI should:**
+
 - Acknowledge it briefly ("Great context!")
 - Proceed directly with the work
 - No need to praise the structure every time
@@ -115,6 +118,7 @@ Context Window: 15% used (efficient)
 ```
 
 **Rating criteria (1-5 stars):**
+
 - ★☆☆☆☆ - Ambiguous, no context, unclear intent
 - ★★☆☆☆ - Missing key details, needs multiple follow-ups
 - ★★★☆☆ - Decent context, but could be more specific
@@ -122,12 +126,14 @@ Context Window: 15% used (efficient)
 - ★★★★★ - Perfect CCEE pattern, actionable, constrained, clear intent
 
 **Token usage guidance:**
+
 - **Efficient** (<20% of context): Focused requests, targeted file reads
 - **Moderate** (20-50%): Multiple file reads, complex explanations
 - **Heavy** (50-80%): Research-heavy, many files, extensive searches
 - **Critical** (>80%): May need to summarize conversation soon
 
 **How to optimize context window:**
+
 1. **Be specific about files** - "Check `lib/ai.ts` lines 50-100" vs "Look at the AI code"
 2. **Batch related questions** - One request instead of 3 sequential ones
 3. **Use subagents for research** - Offload heavy searching to separate context
@@ -136,20 +142,24 @@ Context Window: 15% used (efficient)
 ### **Batching Requests**
 
 **I should combine related asks:**
+
 - ❌ Don't: "Add validation" → "Add error handling" → "Add tests" (3 separate requests)
 - ✅ Do: "Add validation with error handling and basic tests for the login form"
 
 **AI should suggest batching when I ask related things sequentially:**
+
 - Example: After 2-3 related small requests, suggest: "I notice we're making several related changes to [feature]. Want to batch the next few into one request? It'll be more efficient."
 
 ### **Using Subagents Effectively**
 
 **I should delegate research-heavy tasks:**
+
 - "Find all instances of [pattern] across the codebase and summarize the approaches"
 - "Research best practices for [technology] and propose 3 options with trade-offs"
 - "Search the docs for [feature] and explain how it works"
 
 **AI should suggest subagents when:**
+
 - The request requires extensive searching/reading
 - Multiple sources need to be cross-referenced
 - Pattern analysis across many files is needed
@@ -157,12 +167,14 @@ Context Window: 15% used (efficient)
 ### **Challenge and Question**
 
 **I should ask:**
+
 - "What's the downside of this approach?"
 - "What could go wrong?"
 - "Is there a simpler way?"
 - "What would you do differently?"
 
 **AI should proactively mention:**
+
 - Trade-offs of the chosen approach
 - Simpler alternatives (especially for MVP)
 - Potential pitfalls or gotchas
@@ -171,12 +183,14 @@ Context Window: 15% used (efficient)
 ### **Setting Constraints Upfront**
 
 **I should specify:**
+
 - Word counts for docs ("500 words max")
 - Time limits ("I have 30 minutes")
 - Scope ("MVP only, no edge cases yet")
 - Learning depth ("Explain like I'm new to React" vs "Just show me the code")
 
 **Examples of well-constrained requests:**
+
 ```
 "Explain Prisma transactions in 200 words. I understand basic SQL but not ORMs."
 
@@ -194,6 +208,7 @@ Context Window: 15% used (efficient)
 We follow **GitHub Flow** - simple branching with clean PRs.
 
 **Branch Naming:**
+
 - `feat/` - New features (feat/design-system, feat/auth)
 - `fix/` - Bug fixes (fix/login-error)
 - `docs/` - Documentation (docs/api-guide)
@@ -204,16 +219,19 @@ We follow **GitHub Flow** - simple branching with clean PRs.
 ### **Creating a New Branch**
 
 **Always use the custom alias to ensure clean branching:**
+
 ```bash
 git branch-clean feat/your-feature-name
 ```
 
 This automatically:
+
 1. Switches to `main`
 2. Pulls latest `main`
 3. Creates new branch from updated `main`
 
 **Manual alternative:**
+
 ```bash
 git checkout main
 git pull origin main
@@ -223,6 +241,7 @@ git checkout -b feat/your-feature-name
 ### **Before Opening a PR**
 
 **Always rebase to show only your commits:**
+
 ```bash
 # Update main
 git checkout main
@@ -260,6 +279,7 @@ git push origin feat/your-feature --force-with-lease
 6. After merge: Delete branch locally and remotely
 
 **Delete merged branches:**
+
 ```bash
 # Local
 git branch -d feat/merged-feature
@@ -298,6 +318,7 @@ How: Used model.generateContentStream() and processed chunks
 **CRITICAL: All commit messages, documentation, and comments MUST be in FIRST PERSON ("I did", "I learned", "I want") as if Rafael wrote them. Never use third person ("Rafael needs", "The user wants").**
 
 **Commit Types:**
+
 - `feat:` New feature
 - `fix:` Bug fix
 - `refactor:` Code improvement without behavior change
@@ -306,6 +327,7 @@ How: Used model.generateContentStream() and processed chunks
 - `chore:` Build/tooling changes
 
 **One Logical Concern Per Commit:**
+
 - ❌ Don't: "Add feature X, fix bug Y, update docs"
 - ✅ Do: Three separate commits
 
@@ -314,20 +336,25 @@ How: Used model.generateContentStream() and processed chunks
 ## 🏗️ Architecture Principles
 
 ### **No Premature Abstraction**
+
 - Extract shared code only after seeing duplication 2-3 times
 - Keep it simple first, optimize when patterns emerge
 
 ### **MVP Scope Discipline**
+
 - Prefix out-of-scope ideas with `FUTURE:` in code comments
 - Don't build features not in the current plan
 - Focus on: Job analysis, cover letters, application tracking
 
 ### **Explicit Over Implicit**
+
 - If something is ambiguous, list 2-3 assumptions OR ask ONE clarifying question
 - Never guess requirements
 
 ### **Rafael Runs Critical Commands**
+
 For learning/muscle memory:
+
 - Database migrations: `npx prisma migrate dev`
 - Dev server: `npm run dev`
 - Deployments (future)
@@ -360,6 +387,7 @@ Throughout development, I should surface:
 ## 🚀 Current Project Context
 
 ### **Tech Stack**
+
 - **Frontend:** Next.js 16 (App Router), React 19, TypeScript, TailwindCSS 4, Shadcn/ui
 - **Backend:** Next.js API Routes, Server Actions, Prisma ORM
 - **Database:** SQLite (dev), PostgreSQL (production planning)
@@ -390,6 +418,7 @@ Throughout development, I should surface:
    - Learning: Understanding ORMs vs raw SQL
 
 ### **Project Structure**
+
 ```
 app/                    # Next.js App Router
 ├── api/               # API Routes (REST endpoints)
@@ -414,16 +443,19 @@ prisma/                 # Database schema & migrations
 When Rafael needs to deep-dive:
 
 **Next.js 16:**
+
 - [App Router docs](https://nextjs.org/docs/app)
 - [Server Components](https://nextjs.org/docs/app/building-your-application/rendering/server-components)
 - [Server Actions](https://nextjs.org/docs/app/building-your-application/data-fetching/server-actions-and-mutations)
 
 **Prisma:**
+
 - [Schema guide](https://www.prisma.io/docs/concepts/components/prisma-schema)
 - [Queries](https://www.prisma.io/docs/concepts/components/prisma-client/crud)
 - [Relations](https://www.prisma.io/docs/concepts/components/prisma-schema/relations)
 
 **AI SDKs:**
+
 - [Gemini AI](https://ai.google.dev/gemini-api/docs)
 - [OpenAI](https://platform.openai.com/docs/api-reference)
 - [Anthropic Claude](https://docs.anthropic.com/en/api/getting-started)
@@ -433,6 +465,7 @@ When Rafael needs to deep-dive:
 ## ✅ Before Every Implementation
 
 **Ask myself:**
+
 1. Should Rafael write this for learning?
 2. Have I explained WHY we're doing it this way?
 3. What will Rafael learn from this?
@@ -440,6 +473,7 @@ When Rafael needs to deep-dive:
 5. Is this the simplest approach for MVP?
 
 **Rafael should ask:**
+
 1. Why this approach over alternatives?
 2. What would break if we did X instead?
 3. How does this fit into the bigger picture?
@@ -450,6 +484,7 @@ When Rafael needs to deep-dive:
 ## 🎓 Current Learning Focus
 
 **Rafael is actively learning:**
+
 1. Next.js 16 App Router patterns
 2. Server Components vs Client Components
 3. Prisma ORM and database design
@@ -458,6 +493,7 @@ When Rafael needs to deep-dive:
 6. Modern React patterns (2024/2025)
 
 **Future learning paths:**
+
 - Authentication (NextAuth.js)
 - Deployment (Vercel)
 - Testing (Vitest, React Testing Library)
@@ -469,6 +505,7 @@ When Rafael needs to deep-dive:
 ## 🚧 Out of Scope (For Now)
 
 Mark these as `FUTURE:` in code:
+
 - Multi-user support (MVP is single-user)
 - PDF export for cover letters
 - Email integration
@@ -483,6 +520,7 @@ Mark these as `FUTURE:` in code:
 ## 💡 How to Use This File
 
 **When starting a task:**
+
 1. Read the "Division of Labor" section
 2. Decide who codes what
 3. Explain WHY → WHAT → HOW before implementing
@@ -490,12 +528,14 @@ Mark these as `FUTURE:` in code:
 5. Commit with context when done
 
 **When Rafael asks a question:**
+
 1. Explain the concept first
 2. Show how it applies to this project
 3. Provide the answer with reasoning
 4. Suggest what to read next
 
 **When stuck:**
+
 1. Follow the "When Rafael Gets Stuck" checklist
 2. Simplify the problem
 3. Get basic version working
@@ -504,6 +544,7 @@ Mark these as `FUTURE:` in code:
 ---
 
 This framework ensures Rafael:
+
 - ✅ Learns by doing (hands-on coding)
 - ✅ Understands every architectural decision
 - ✅ Can confidently explain the project in interviews
