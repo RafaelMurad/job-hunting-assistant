@@ -129,17 +129,29 @@ export default function AnalyzePage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 py-12">
-      <div className="max-w-6xl mx-auto px-4">
-        <div className="mb-8 flex justify-between items-center">
-          <div>
-            <h1 className="text-4xl font-bold mb-2">Analyze Job</h1>
-            <p className="text-gray-600">Paste a job description to get AI-powered analysis</p>
+    <div className="container mx-auto px-4 py-8">
+      <div className="mb-8 flex justify-between items-center">
+        <div>
+          <h1 className="text-4xl font-bold mb-2 bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+            Analyze Job
+          </h1>
+          <p className="text-slate-600">Paste a job description to get AI-powered analysis and earn XP</p>
+          <div className="flex gap-2 mt-2">
+            <span className="inline-flex items-center gap-1 px-2 py-1 bg-blue-50 text-blue-700 text-xs rounded-full">
+              ⚡ +10 XP for analyzing
+            </span>
+            <span className="inline-flex items-center gap-1 px-2 py-1 bg-purple-50 text-purple-700 text-xs rounded-full">
+              ⚡ +15 XP for cover letter
+            </span>
+            <span className="inline-flex items-center gap-1 px-2 py-1 bg-green-50 text-green-700 text-xs rounded-full">
+              ⚡ +25 XP for saving
+            </span>
           </div>
-          <Button variant="outline" onClick={() => router.push('/')}>
-            ← Back to Profile
-          </Button>
         </div>
+        <Button variant="outline" onClick={() => router.push('/')}>
+          ← Back to Profile
+        </Button>
+      </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           {/* Input Section */}

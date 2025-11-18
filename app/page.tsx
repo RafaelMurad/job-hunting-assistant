@@ -90,12 +90,62 @@ export default function Home() {
   const isProfileComplete = user.name && user.email && user.location && user.summary && user.experience && user.skills
 
   return (
-    <div className="min-h-screen bg-gray-50 py-12">
-      <div className="max-w-4xl mx-auto px-4">
-        <div className="mb-8">
-          <h1 className="text-4xl font-bold mb-2">Job Hunt AI</h1>
-          <p className="text-gray-600">Your Master CV & Application Tracker</p>
-        </div>
+    <div className="container mx-auto px-4 py-8">
+      {/* Gamification Stats Hero */}
+      <Card className="mb-6 bg-gradient-to-r from-blue-50 to-purple-50 border-blue-200">
+        <CardHeader>
+          <CardTitle className="text-2xl flex items-center gap-2">
+            <span className="text-2xl">🎯</span>
+            Your Job Hunt Progress
+          </CardTitle>
+          <CardDescription>
+            Keep building your streak and level up your career!
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-6">
+          {/* TODO: Add real gamification stats here once you implement the core functions */}
+          {/* For now showing placeholder - user will implement calculateStreak, etc. */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div className="text-center p-4 bg-white rounded-lg shadow-sm">
+              <div className="text-4xl mb-2">🔥</div>
+              <div className="text-3xl font-bold text-amber-600 mb-1">0</div>
+              <div className="text-sm text-slate-600">Day Streak</div>
+              <p className="text-xs text-slate-500 mt-1">Apply today to start your streak!</p>
+            </div>
+
+            <div className="text-center p-4 bg-white rounded-lg shadow-sm">
+              <div className="text-4xl mb-2">⚡</div>
+              <div className="text-3xl font-bold text-purple-600 mb-1">Level 1</div>
+              <div className="text-sm text-slate-600">Novice Hunter</div>
+              <p className="text-xs text-slate-500 mt-1">Earn XP to level up!</p>
+            </div>
+
+            <div className="text-center p-4 bg-white rounded-lg shadow-sm">
+              <div className="text-4xl mb-2">📊</div>
+              <div className="text-3xl font-bold text-blue-600 mb-1">0</div>
+              <div className="text-sm text-slate-600">Apps This Week</div>
+              <p className="text-xs text-slate-500 mt-1">Your application velocity</p>
+            </div>
+          </div>
+
+          {/* XP Progress Bar Placeholder */}
+          <div className="bg-white p-4 rounded-lg shadow-sm">
+            <div className="flex justify-between items-center mb-2">
+              <span className="text-sm font-medium text-slate-700">XP Progress</span>
+              <span className="text-sm text-slate-600">0 / 100 XP</span>
+            </div>
+            <div className="w-full bg-slate-200 rounded-full h-3 overflow-hidden">
+              <div
+                className="h-full bg-gradient-to-r from-blue-500 to-purple-500 transition-all duration-500"
+                style={{ width: '0%' }}
+              />
+            </div>
+            <p className="text-xs text-slate-500 mt-2">
+              💡 Tip: Analyze jobs (+10 XP), Generate cover letters (+15 XP), Save applications (+25 XP)
+            </p>
+          </div>
+        </CardContent>
+      </Card>
 
         <Card className="mb-6">
           <CardHeader>

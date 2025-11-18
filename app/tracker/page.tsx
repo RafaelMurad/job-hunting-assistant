@@ -80,56 +80,122 @@ export default function TrackerPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 py-12">
-      <div className="max-w-7xl mx-auto px-4">
-        <div className="mb-8 flex justify-between items-center">
-          <div>
-            <h1 className="text-4xl font-bold mb-2">Application Tracker</h1>
-            <p className="text-gray-600">Track all your job applications in one place</p>
-          </div>
-          <div className="flex gap-4">
-            <Button variant="outline" onClick={() => router.push('/')}>
-              Profile
-            </Button>
-            <Button onClick={() => router.push('/analyze')}>
-              + Analyze New Job
-            </Button>
-          </div>
+    <div className="container mx-auto px-4 py-8">
+      <div className="mb-8 flex justify-between items-center">
+        <div>
+          <h1 className="text-4xl font-bold mb-2 bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+            Application Tracker
+          </h1>
+          <p className="text-slate-600">Track all your job applications and build your streak</p>
         </div>
+        <div className="flex gap-4">
+          <Button variant="outline" onClick={() => router.push('/')}>
+            Profile
+          </Button>
+          <Button
+            onClick={() => router.push('/analyze')}
+            className="bg-gradient-to-r from-blue-500 to-purple-500 text-white hover:from-blue-600 hover:to-purple-600"
+          >
+            + Analyze New Job
+          </Button>
+        </div>
+      </div>
 
-        {/* Stats */}
-        <div className="grid grid-cols-5 gap-4 mb-6">
-          <Card>
-            <CardHeader className="pb-2">
-              <CardDescription>Total</CardDescription>
-              <CardTitle className="text-3xl">{stats.total}</CardTitle>
-            </CardHeader>
-          </Card>
-          <Card>
-            <CardHeader className="pb-2">
-              <CardDescription>Applied</CardDescription>
-              <CardTitle className="text-3xl text-blue-600">{stats.applied}</CardTitle>
-            </CardHeader>
-          </Card>
-          <Card>
-            <CardHeader className="pb-2">
-              <CardDescription>Interviewing</CardDescription>
-              <CardTitle className="text-3xl text-purple-600">{stats.interviewing}</CardTitle>
-            </CardHeader>
-          </Card>
-          <Card>
-            <CardHeader className="pb-2">
-              <CardDescription>Offers</CardDescription>
-              <CardTitle className="text-3xl text-green-600">{stats.offers}</CardTitle>
-            </CardHeader>
-          </Card>
-          <Card>
-            <CardHeader className="pb-2">
-              <CardDescription>Avg Match</CardDescription>
-              <CardTitle className="text-3xl">{stats.avgMatch}%</CardTitle>
-            </CardHeader>
-          </Card>
-        </div>
+      {/* Stats Grid with Gamification */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4 mb-6">
+        <Card className="border-slate-200 hover:shadow-md transition-shadow">
+          <CardHeader className="pb-2">
+            <div className="flex items-center justify-between">
+              <CardDescription className="text-slate-600">Total Apps</CardDescription>
+              <span className="text-2xl">📝</span>
+            </div>
+            <CardTitle className="text-3xl font-bold">{stats.total}</CardTitle>
+          </CardHeader>
+        </Card>
+        <Card className="border-blue-200 bg-blue-50/50 hover:shadow-md transition-shadow">
+          <CardHeader className="pb-2">
+            <div className="flex items-center justify-between">
+              <CardDescription className="text-blue-700">Applied</CardDescription>
+              <span className="text-2xl">🚀</span>
+            </div>
+            <CardTitle className="text-3xl text-blue-600 font-bold">{stats.applied}</CardTitle>
+          </CardHeader>
+        </Card>
+        <Card className="border-purple-200 bg-purple-50/50 hover:shadow-md transition-shadow">
+          <CardHeader className="pb-2">
+            <div className="flex items-center justify-between">
+              <CardDescription className="text-purple-700">Interviewing</CardDescription>
+              <span className="text-2xl">💼</span>
+            </div>
+            <CardTitle className="text-3xl text-purple-600 font-bold">{stats.interviewing}</CardTitle>
+          </CardHeader>
+        </Card>
+        <Card className="border-green-200 bg-green-50/50 hover:shadow-md transition-shadow">
+          <CardHeader className="pb-2">
+            <div className="flex items-center justify-between">
+              <CardDescription className="text-green-700">Offers</CardDescription>
+              <span className="text-2xl">🎉</span>
+            </div>
+            <CardTitle className="text-3xl text-green-600 font-bold">{stats.offers}</CardTitle>
+          </CardHeader>
+        </Card>
+        <Card className="border-amber-200 bg-amber-50/50 hover:shadow-md transition-shadow">
+          <CardHeader className="pb-2">
+            <div className="flex items-center justify-between">
+              <CardDescription className="text-amber-700">Avg Match</CardDescription>
+              <span className="text-2xl">🎯</span>
+            </div>
+            <CardTitle className="text-3xl text-amber-600 font-bold">{stats.avgMatch}%</CardTitle>
+          </CardHeader>
+        </Card>
+      </div>
+
+      {/* Velocity Card - TODO: User will implement calculateVelocity() */}
+      <Card className="mb-6 bg-gradient-to-r from-blue-50 to-purple-50 border-blue-200">
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <span className="text-2xl">📊</span>
+            Application Velocity
+          </CardTitle>
+          <CardDescription>
+            Track your application momentum over time
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="bg-white p-4 rounded-lg shadow-sm text-center">
+              <div className="text-sm text-slate-600 mb-1">Last 7 Days</div>
+              <div className="text-3xl font-bold text-blue-600">
+                {applications.filter(app => {
+                  const weekAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000)
+                  return new Date(app.createdAt) >= weekAgo
+                }).length}
+              </div>
+              <div className="text-xs text-slate-500 mt-1">applications</div>
+            </div>
+            <div className="bg-white p-4 rounded-lg shadow-sm text-center">
+              <div className="text-sm text-slate-600 mb-1">Last 30 Days</div>
+              <div className="text-3xl font-bold text-purple-600">
+                {applications.filter(app => {
+                  const monthAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000)
+                  return new Date(app.createdAt) >= monthAgo
+                }).length}
+              </div>
+              <div className="text-xs text-slate-500 mt-1">applications</div>
+            </div>
+            <div className="bg-white p-4 rounded-lg shadow-sm text-center">
+              <div className="text-sm text-slate-600 mb-1">Weekly Goal</div>
+              <div className="text-3xl font-bold text-amber-600">5</div>
+              <div className="text-xs text-slate-500 mt-1">target applications</div>
+            </div>
+          </div>
+          <div className="mt-4 p-3 bg-white rounded-lg border border-blue-200">
+            <p className="text-sm text-slate-600">
+              💡 <strong>Tip:</strong> Applying to 5-10 jobs per week increases your chances of getting interviews by 3x!
+            </p>
+          </div>
+        </CardContent>
+      </Card>
 
         {/* Applications List */}
         <Card>
