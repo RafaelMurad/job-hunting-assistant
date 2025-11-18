@@ -19,6 +19,17 @@ model User {
   experience String   // Formatted text of work experience
   skills     String   // Comma-separated skills
 
+  // Gamification fields
+  totalXP       Int      @default(0)       // Total XP earned
+  level         Int      @default(1)       // Current level (1-50)
+  currentStreak Int      @default(0)       // Current daily application streak
+  longestStreak Int      @default(0)       // Longest streak ever achieved
+  achievements  String   @default("[]")    // JSON array of unlocked achievement IDs
+
+  // Timestamps for streak calculation
+  lastActionAt    DateTime? // Last time user performed any action
+  streakUpdatedAt DateTime? // Last time streak was recalculated
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
@@ -42,7 +53,7 @@ model Application {
 
   // Tracking
   status         String   @default("saved")  // saved, applied, interviewing, rejected, offer
-  appliedAt      DateTime?
+  appliedAt      DateTime @default(now())    // When application was created (for streak calculation)
   notes          String?
 
   createdAt      DateTime @default(now())
