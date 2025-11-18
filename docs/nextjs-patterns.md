@@ -7,18 +7,21 @@
 ## Server Components vs Client Components
 
 **Server Components:**
+
 - Run on server only
 - Can directly query database
 - No JavaScript sent to browser
 - Example: Profile page showing data
 
 **Client Components:**
+
 - Run in browser
 - Can use React hooks (useState, useEffect)
 - Interactive (forms, buttons)
 - Example: Analyze page with job description form
 
 **Rule of thumb:**
+
 - Default to Server Components
 - Add `'use client'` only when you need interactivity
 
@@ -31,19 +34,20 @@ I'm still wrapping my head around this. The mental model differs from traditiona
 ```typescript
 // app/api/analyze/route.ts
 export async function POST(request: NextRequest) {
-  const { jobDescription, userId } = await request.json()
-  
+  const { jobDescription, userId } = await request.json();
+
   // Get user from DB
-  const user = await prisma.user.findUnique({ where: { id: userId }})
-  
+  const user = await prisma.user.findUnique({ where: { id: userId } });
+
   // Call AI
-  const analysis = await analyzeJob(jobDescription, userCV)
-  
-  return NextResponse.json(analysis)
+  const analysis = await analyzeJob(jobDescription, userCV);
+
+  return NextResponse.json(analysis);
 }
 ```
 
 **Why this works:**
+
 - Standard REST pattern
 - Easy to test with curl/Postman
 - Client code just does `fetch('/api/analyze', {...})`

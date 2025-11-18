@@ -7,17 +7,20 @@ Utility scripts for development and debugging.
 **Purpose:** Diagnostic tool to test which Gemini AI model names actually work with your API key.
 
 **When to use:**
+
 - Gemini API returns 404 errors
 - Google updates model names (they deprecate models occasionally)
 - Verifying your API key works
 
 **How to run:**
+
 ```bash
 npm install dotenv  # Only needed once
 node scripts/test-gemini.js
 ```
 
 **What it does:**
+
 1. Loads your `GEMINI_API_KEY` from `.env.local`
 2. Tests multiple model name variations:
    - `gemini-pro`
@@ -29,6 +32,7 @@ node scripts/test-gemini.js
 3. Shows which ones work and which fail
 
 **Example output:**
+
 ```
 🔍 Testing Gemini API...
 API Key: AIzaSyCoF7...
@@ -50,6 +54,7 @@ In November 2025, Google deprecated `gemini-pro` and the docs were outdated. Thi
 ## Adding New Scripts
 
 When adding scripts:
+
 1. Create the file in `scripts/`
 2. Add description here
 3. Make it executable if needed: `chmod +x scripts/your-script.sh`

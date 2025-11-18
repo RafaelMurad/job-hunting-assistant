@@ -7,20 +7,23 @@
 ## Why Prisma?
 
 **Type-safe queries:**
+
 ```typescript
 const user = await prisma.user.findUnique({
-  where: { id: userId }
-})
+  where: { id: userId },
+});
 // ↑ Autocomplete in VS Code, catches typos at compile time
 ```
 
 **vs raw SQL:**
+
 ```sql
 SELECT * FROM User WHERE id = ?
 -- ↑ No type safety, runtime errors
 ```
 
 **Other benefits:**
+
 - Automatic migrations
 - Works with SQLite (dev) and PostgreSQL (prod)
 - Schema in one file (`prisma/schema.prisma`)
@@ -32,11 +35,13 @@ SELECT * FROM User WHERE id = ?
 ## SQLite for Dev, PostgreSQL for Prod
 
 **Current: SQLite**
+
 - Zero setup (single file: `prisma/dev.db`)
 - Perfect for local development
 - Git-ignored (in `.gitignore`)
 
 **Future: PostgreSQL**
+
 - Better for production (multi-user, concurrent writes)
 - Required for Vercel deployment
 - Migration: Just change connection string in `.env`
@@ -62,13 +67,14 @@ model Application {
   company        String
   role           String
   status         String
-  
+
   @@index([userId, status])
   @@index([userId, createdAt])
 }
 ```
 
 **Why indexes?**
+
 - `[userId, status]` - Fast filtering by status ("show me applied jobs")
 - `[userId, createdAt]` - Fast sorting by date
 

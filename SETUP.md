@@ -3,17 +3,21 @@
 ## Quick Start (5 minutes)
 
 ### 1. Install Dependencies
+
 ```bash
 npm install
 ```
 
 ### 2. Set Up Database
+
 ```bash
 npx prisma migrate dev --name init
 ```
 
 ### 3. Add Your Claude API Key
+
 Create `.env.local` file:
+
 ```bash
 ANTHROPIC_API_KEY=your_api_key_here
 ```
@@ -21,6 +25,7 @@ ANTHROPIC_API_KEY=your_api_key_here
 Get your API key from: https://console.anthropic.com/
 
 ### 4. Start Development Server
+
 ```bash
 npm run dev
 ```
@@ -30,6 +35,7 @@ Open http://localhost:3000
 ## Usage Flow
 
 ### First Time Setup
+
 1. **Enter Your Profile** (Home page)
    - Fill in your name, email, location
    - Add your professional summary
@@ -37,6 +43,7 @@ Open http://localhost:3000
    - Click "Save Profile"
 
 ### Analyzing Jobs
+
 2. **Analyze a Job** (Navigate to "Analyze New Job")
    - Paste the job description
    - Click "Analyze with AI"
@@ -45,6 +52,7 @@ Open http://localhost:3000
    - Click "Save to Tracker" to save the application
 
 ### Tracking Applications
+
 3. **View Your Applications** (Navigate to "Application Tracker")
    - See all saved jobs
    - View stats: total, applied, interviewing, offers

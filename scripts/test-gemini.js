@@ -1,35 +1,35 @@
 // Test script to see what Gemini models are available
 /* eslint-disable @typescript-eslint/no-require-imports */
 // Diagnostic script uses CommonJS for simplicity (no build step needed)
-require('dotenv').config({ path: '.env.local' })
-const { GoogleGenerativeAI } = require('@google/generative-ai')
+require("dotenv").config({ path: ".env.local" });
+const { GoogleGenerativeAI } = require("@google/generative-ai");
 
 const apiKey = process.env.GEMINI_API_KEY;
 
 if (!apiKey) {
-  console.error('❌ GEMINI_API_KEY not found in environment');
+  console.error("❌ GEMINI_API_KEY not found in environment");
   process.exit(1);
 }
 
 async function listModels() {
-  console.log('🔍 Testing Gemini API...\n');
-  console.log('API Key:', apiKey.substring(0, 10) + '...');
-  
+  console.log("🔍 Testing Gemini API...\n");
+  console.log("API Key:", apiKey.substring(0, 10) + "...");
+
   const genAI = new GoogleGenerativeAI(apiKey);
-  
+
   try {
     // Try different model names
     const modelsToTry = [
-      'gemini-pro',
-      'gemini-1.5-pro',
-      'gemini-1.5-flash',
-      'models/gemini-pro',
-      'models/gemini-1.5-pro',
-      'models/gemini-1.5-flash',
+      "gemini-pro",
+      "gemini-1.5-pro",
+      "gemini-1.5-flash",
+      "models/gemini-pro",
+      "models/gemini-1.5-pro",
+      "models/gemini-1.5-flash",
     ];
-    
-    console.log('\n📋 Testing models:\n');
-    
+
+    console.log("\n📋 Testing models:\n");
+
     for (const modelName of modelsToTry) {
       try {
         console.log(`Testing: ${modelName}...`);
@@ -43,7 +43,7 @@ async function listModels() {
       }
     }
   } catch (error) {
-    console.error('❌ Error:', error.message);
+    console.error("❌ Error:", error.message);
   }
 }
 

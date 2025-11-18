@@ -1,6 +1,7 @@
 # Free AI Setup Guide - Google Gemini
 
 ## Why Gemini?
+
 ✅ **Completely FREE** (1,500 requests/day = 1,500 job analyses per day)
 ✅ **No credit card** required
 ✅ **Good quality** for job matching and cover letters
@@ -14,7 +15,7 @@
 
 1. Go to: https://aistudio.google.com/app/apikey
 2. Click **"Get API key"**
-3. Click **"Create API key"** 
+3. Click **"Create API key"**
 4. Copy the API key
 
 ### 2. Add to Your App
@@ -39,6 +40,7 @@ npm install
 ```
 
 This will install:
+
 - `@google/generative-ai` - Gemini SDK (free)
 - `openai` - OpenAI SDK (optional, for later)
 - `@anthropic-ai/sdk` - Claude SDK (optional, for later)
@@ -62,11 +64,13 @@ Open http://localhost:3000
 ## Free Tier Limits
 
 **Google Gemini Free Tier:**
+
 - ✅ 15 requests per minute
 - ✅ 1,500 requests per day
 - ✅ Unlimited days (doesn't expire!)
 
 **What This Means:**
+
 - Analyze 1,500 jobs per day for free
 - Perfect for active job hunting
 - No credit card needed
@@ -78,19 +82,23 @@ Open http://localhost:3000
 If you want to upgrade later, just change the `.env.local`:
 
 ### Option 1: OpenAI (Paid)
+
 ```bash
 AI_PROVIDER="openai"
 OPENAI_API_KEY="sk-..."
 ```
+
 - Cost: ~$0.0005 per job analysis
 - Get key: https://platform.openai.com/api-keys
 
 ### Option 2: Claude (Paid)
+
 ```bash
 AI_PROVIDER="claude"
 ANTHROPIC_API_KEY="sk-ant-..."
 ```
-- Cost: ~$0.002 per job analysis  
+
+- Cost: ~$0.002 per job analysis
 - Get key: https://console.anthropic.com/
 
 ---
@@ -98,15 +106,19 @@ ANTHROPIC_API_KEY="sk-ant-..."
 ## Troubleshooting
 
 ### Error: "Cannot find module '@google/generative-ai'"
+
 Run: `npm install`
 
 ### Error: "GEMINI_API_KEY is not defined"
+
 1. Check `.env.local` exists in project root
 2. Check the file has: `GEMINI_API_KEY="your-key"`
 3. Restart the dev server: `npm run dev`
 
 ### Rate Limit Error
+
 You've hit the free tier limit (1,500/day). Either:
+
 - Wait until tomorrow (resets daily)
 - Switch to paid provider (OpenAI/Claude)
 
@@ -114,11 +126,11 @@ You've hit the free tier limit (1,500/day). Either:
 
 ## Cost Comparison
 
-| Provider | Free Tier | Cost After Free | Quality |
-|----------|-----------|-----------------|---------|
-| **Gemini** | 1,500/day forever | N/A | Good ⭐⭐⭐⭐ |
-| OpenAI | $5 for 3 months | $0.0005/job | Excellent ⭐⭐⭐⭐⭐ |
-| Claude | None | $0.002/job | Excellent ⭐⭐⭐⭐⭐ |
+| Provider   | Free Tier         | Cost After Free | Quality              |
+| ---------- | ----------------- | --------------- | -------------------- |
+| **Gemini** | 1,500/day forever | N/A             | Good ⭐⭐⭐⭐        |
+| OpenAI     | $5 for 3 months   | $0.0005/job     | Excellent ⭐⭐⭐⭐⭐ |
+| Claude     | None              | $0.002/job      | Excellent ⭐⭐⭐⭐⭐ |
 
 **Recommendation:** Start with Gemini (free), upgrade if needed later.
 
@@ -127,6 +139,7 @@ You've hit the free tier limit (1,500/day). Either:
 ## Next Steps
 
 Once running:
+
 1. Fill in your profile on the home page
 2. Go to "Analyze New Job" page
 3. Paste a job description
