@@ -1,0 +1,26 @@
+#!/usr/bin/env bash
+# Pre-push hook - runs before git push
+# Ensures we don't push broken code to main
+
+set -e
+
+echo "🚀 Pre-Push Validation..."
+
+# Only validate if pushing to main
+CURRENT_BRANCH=$(git rev-parse --abbrev-ref HEAD)
+
+if [ "$CURRENT_BRANCH" = "main" ]; then
+  echo "📍 Pushing to main - running full validation..."
+  
+  # Run all validation checks
+  npm run validate
+  
+  # Ensure build works
+  echo "🏗️  Testing production build..."
+  npm run build
+  
+  echo "✅ Pre-push validation passed!"
+else
+  echo "📍 Pushing to branch: $CURRENT_BRANCH"
+  echo "✅ Skipping full validation (only main requires it)"
+fi

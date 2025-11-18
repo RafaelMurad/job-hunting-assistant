@@ -3,8 +3,10 @@ generator client {
 }
 
 datasource db {
-  provider = "sqlite"
-  url      = "file:./dev.db"
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+  // Use connection pooling for serverless (Vercel)
+  relationMode = "prisma"
 }
 
 model User {

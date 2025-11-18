@@ -47,9 +47,30 @@ Open http://localhost:3000
 
 ## 📖 Documentation
 
-- **[SETUP.md](./SETUP.md)** - Quick start guide and setup instructions
-- **[Implementation Plan](./docs/IMPLEMENTATION_PLAN.md)** - Detailed technical implementation guide
+- **[SETUP.md](./SETUP.md)** - Quick start guide and local setup
+- **[DEPLOYMENT.md](./docs/DEPLOYMENT.md)** - Production deployment to Vercel 🚀
+- **[STRICT_RULES.md](./docs/STRICT_RULES.md)** - Code quality and validation rules
+- **[Implementation Plan](./docs/IMPLEMENTATION_PLAN.md)** - Technical implementation details
 - **[Product Specification](./docs/product-spec.md)** - Full product documentation
+
+---
+
+## 🌐 Production Deployment
+
+This app is production-ready with:
+
+- ✅ **Vercel Deployment** - One-click deploy with automatic CI/CD
+- ✅ **PostgreSQL Database** - Production-ready with connection pooling
+- ✅ **Pre-Deployment Validation** - Automated checks before every deploy
+- ✅ **Multi-Layer Quality Gates** - Pre-commit, pre-push, and CI checks
+- ✅ **Security Headers** - XSS protection, frame-deny, CSP
+
+**Deploy now:** See [DEPLOYMENT.md](./docs/DEPLOYMENT.md) for step-by-step guide.
+
+```bash
+# Deploy to Vercel (with validation)
+npm run vercel:deploy:production
+```
 
 ---
 
