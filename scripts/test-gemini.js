@@ -12,8 +12,8 @@ if (!apiKey) {
 }
 
 async function listModels() {
-  console.log("🔍 Testing Gemini API...\n");
-  console.log("API Key:", apiKey.substring(0, 10) + "...");
+  console.warn("🔍 Testing Gemini API...\n");
+  console.warn("API Key:", apiKey.substring(0, 10) + "...");
 
   const genAI = new GoogleGenerativeAI(apiKey);
 
@@ -28,18 +28,18 @@ async function listModels() {
       "models/gemini-1.5-flash",
     ];
 
-    console.log("\n📋 Testing models:\n");
+    console.warn("\n📋 Testing models:\n");
 
     for (const modelName of modelsToTry) {
       try {
-        console.log(`Testing: ${modelName}...`);
+        console.warn(`Testing: ${modelName}...`);
         const model = genAI.getGenerativeModel({ model: modelName });
         const result = await model.generateContent('Say "Hello"');
         const text = result.response.text();
-        console.log(`✅ ${modelName} works! Response: ${text.substring(0, 50)}`);
+        console.warn(`✅ ${modelName} works! Response: ${text.substring(0, 50)}`);
         break; // Stop at first working model
       } catch (err) {
-        console.log(`❌ ${modelName} failed:`, err.message.substring(0, 100));
+        console.warn(`❌ ${modelName} failed:`, err.message.substring(0, 100));
       }
     }
   } catch (error) {

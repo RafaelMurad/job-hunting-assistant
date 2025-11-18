@@ -19,7 +19,7 @@ interface JobAnalysisResult {
   keyPoints: string[];
 }
 
-export default function AnalyzePage() {
+export default function AnalyzePage(): React.JSX.Element {
   const router = useRouter();
   const [userId, setUserId] = useState<string>("");
   const [jobDescription, setJobDescription] = useState("");
@@ -37,7 +37,7 @@ export default function AnalyzePage() {
       .catch(console.error);
   }, []);
 
-  const handleAnalyze = async () => {
+  const handleAnalyze = async (): Promise<void> => {
     if (!jobDescription.trim()) {
       alert("Please enter a job description");
       return;
@@ -66,7 +66,7 @@ export default function AnalyzePage() {
     }
   };
 
-  const handleGenerateCoverLetter = async () => {
+  const handleGenerateCoverLetter = async (): Promise<void> => {
     if (!analysis) return;
 
     setGeneratingCoverLetter(true);
@@ -89,7 +89,7 @@ export default function AnalyzePage() {
     }
   };
 
-  const handleSaveApplication = async () => {
+  const handleSaveApplication = async (): Promise<void> => {
     if (!analysis) return;
 
     setSaving(true);
@@ -121,7 +121,7 @@ export default function AnalyzePage() {
     }
   };
 
-  const getMatchColor = (score: number) => {
+  const getMatchColor = (score: number): string => {
     if (score >= 80) return "bg-green-100 text-green-800";
     if (score >= 60) return "bg-blue-100 text-blue-800";
     if (score >= 40) return "bg-yellow-100 text-yellow-800";

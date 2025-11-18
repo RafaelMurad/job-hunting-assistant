@@ -17,7 +17,7 @@ interface Application {
   createdAt: string;
 }
 
-export default function TrackerPage() {
+export default function TrackerPage(): React.JSX.Element {
   const router = useRouter();
   const [applications, setApplications] = useState<Application[]>([]);
   const [loading, setLoading] = useState(true);
@@ -41,7 +41,7 @@ export default function TrackerPage() {
       });
   }, []);
 
-  const getStatusBadgeVariant = (status: string) => {
+  const getStatusBadgeVariant = (status: string): string => {
     const variants: Record<string, string> = {
       saved: "bg-gray-100 text-gray-800",
       applied: "bg-blue-100 text-blue-800",
@@ -52,7 +52,7 @@ export default function TrackerPage() {
     return variants[status] || "bg-gray-100 text-gray-800";
   };
 
-  const getMatchColor = (score: number) => {
+  const getMatchColor = (score: number): string => {
     if (score >= 80) return "text-green-600 font-semibold";
     if (score >= 60) return "text-blue-600 font-semibold";
     if (score >= 40) return "text-yellow-600 font-semibold";

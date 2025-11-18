@@ -16,31 +16,49 @@ const eslintConfig = defineConfig([
     "next-env.d.ts",
   ]),
   {
+    files: ["**/*.ts", "**/*.tsx"],
     rules: {
       // STRICT MODE: Convert ALL warnings to errors
       // No unused variables - EVER
-      "@typescript-eslint/no-unused-vars": ["error", { 
-        "argsIgnorePattern": "^_",
-        "varsIgnorePattern": "^_"
-      }],
+      "@typescript-eslint/no-unused-vars": [
+        "error",
+        {
+          argsIgnorePattern: "^_",
+          varsIgnorePattern: "^_",
+        },
+      ],
       // Prevent console.log in production
       "no-console": ["error", { allow: ["warn", "error"] }],
       // No debugger statements
       "no-debugger": "error",
-      // Require explicit types for function returns (prevents "any" leakage)
-      "@typescript-eslint/explicit-function-return-type": ["error", {
-        allowExpressions: true,
-        allowTypedFunctionExpressions: true,
-        allowHigherOrderFunctions: true
-      }],
+      // Require explicit types for function returns (TypeScript only)
+      "@typescript-eslint/explicit-function-return-type": [
+        "error",
+        {
+          allowExpressions: true,
+          allowTypedFunctionExpressions: true,
+          allowHigherOrderFunctions: true,
+        },
+      ],
       // Ban @ts-ignore and @ts-nocheck (must fix issues, not hide them)
-      "@typescript-eslint/ban-ts-comment": ["error", {
-        "ts-expect-error": "allow-with-description",
-        "ts-ignore": true,
-        "ts-nocheck": true
-      }],
-    }
-  }
+      "@typescript-eslint/ban-ts-comment": [
+        "error",
+        {
+          "ts-expect-error": "allow-with-description",
+          "ts-ignore": true,
+          "ts-nocheck": true,
+        },
+      ],
+    },
+  },
+  {
+    files: ["**/*.js", "**/*.mjs"],
+    rules: {
+      // JavaScript files: Less strict (no TypeScript-specific rules)
+      "no-console": ["error", { allow: ["warn", "error"] }],
+      "no-debugger": "error",
+    },
+  },
 ]);
 
 export default eslintConfig;

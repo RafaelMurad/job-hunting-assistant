@@ -36,7 +36,7 @@ export interface JobAnalysisResult {
 const ANALYSIS_PROMPT = (
   jobDescription: string,
   userCV: string
-) => `You are a job application expert. Analyze this job description against the candidate's CV.
+): string => `You are a job application expert. Analyze this job description against the candidate's CV.
 
 Job Description:
 ${jobDescription}
@@ -65,7 +65,7 @@ Return ONLY valid JSON, no other text.`;
 const COVER_LETTER_PROMPT = (
   analysis: JobAnalysisResult,
   userCV: string
-) => `Write a professional cover letter (max 250 words) for this job application.
+): string => `Write a professional cover letter (max 250 words) for this job application.
 
 Company: ${analysis.company}
 Role: ${analysis.role}
@@ -149,7 +149,11 @@ async function analyzeWithOpenAI(
     response_format: { type: "json_object" },
   });
 
-  return JSON.parse(completion.choices[0].message.content!);
+  const firstChoice = completion.choices[0];
+  if (!firstChoice?.message.content) {
+    throw new Error("No response from OpenAI");
+  }
+  return JSON.parse(firstChoice.message.content);
 }
 
 async function generateCoverLetterWithOpenAI(
@@ -168,7 +172,11 @@ async function generateCoverLetterWithOpenAI(
     ],
   });
 
-  return completion.choices[0].message.content!.trim();
+  const firstChoice = completion.choices[0];
+  if (!firstChoice?.message.content) {
+    throw new Error("No response from OpenAI");
+  }
+  return firstChoice.message.content.trim();
 }
 
 // ============================================
@@ -196,6 +204,9 @@ async function analyzeWithClaude(
   });
 
   const content = response.content[0];
+  if (!content) {
+    throw new Error("No response from Claude");
+  }
   if (content.type !== "text") {
     throw new Error("Unexpected response type from Claude");
   }
@@ -229,6 +240,9 @@ async function generateCoverLetterWithClaude(
   });
 
   const content = response.content[0];
+  if (!content) {
+    throw new Error("No response from Claude");
+  }
   if (content.type !== "text") {
     throw new Error("Unexpected response type from Claude");
   }

@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 
 // GET all applications
-export async function GET(request: NextRequest) {
+export async function GET(request: NextRequest): Promise<NextResponse> {
   try {
     const { searchParams } = new URL(request.url);
     const userId = searchParams.get("userId");
@@ -24,7 +24,7 @@ export async function GET(request: NextRequest) {
 }
 
 // POST create new application
-export async function POST(request: NextRequest) {
+export async function POST(request: NextRequest): Promise<NextResponse> {
   try {
     const body = await request.json();
     const {
@@ -54,7 +54,7 @@ export async function POST(request: NextRequest) {
         analysis: analysis || "",
         coverLetter: coverLetter || "",
         status: status || "saved",
-        appliedAt: status === "applied" ? new Date() : null,
+        ...(status === "applied" && { appliedAt: new Date() }),
       },
     });
 

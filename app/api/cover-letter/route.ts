@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { generateCoverLetter, type JobAnalysisResult } from "@/lib/ai";
 import { prisma } from "@/lib/db";
 
-export async function POST(request: NextRequest) {
+export async function POST(request: NextRequest): Promise<NextResponse> {
   try {
     const body = await request.json();
     const { jobDescription, userId, analysis } = body as {
@@ -40,8 +40,8 @@ Skills:
 ${user.skills}
     `.trim();
 
-    // Generate cover letter with Claude
-    const coverLetter = await generateCoverLetter(jobDescription, userCV, analysis);
+    // Generate cover letter with analysis result
+    const coverLetter = await generateCoverLetter(analysis, userCV);
 
     return NextResponse.json({ coverLetter });
   } catch (error) {

@@ -19,7 +19,7 @@ interface User {
   skills: string;
 }
 
-export default function Home() {
+export default function Home(): React.JSX.Element {
   const router = useRouter();
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
@@ -39,7 +39,7 @@ export default function Home() {
       });
   }, []);
 
-  const handleSave = async (e: React.FormEvent) => {
+  const handleSave = async (e: React.FormEvent): Promise<void> => {
     e.preventDefault();
     if (!user) return;
 
@@ -66,7 +66,7 @@ export default function Home() {
     }
   };
 
-  const updateField = (field: keyof User, value: string) => {
+  const updateField = (field: keyof User, value: string): void => {
     if (!user) return;
     setUser({ ...user, [field]: value });
   };
