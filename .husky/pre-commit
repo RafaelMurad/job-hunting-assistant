@@ -1,0 +1,5 @@
+#!/bin/sh
+# Husky pre-commit hook
+# Runs lint-staged to lint only changed files before committing
+
+npx lint-staged
