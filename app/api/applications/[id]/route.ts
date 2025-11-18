@@ -4,10 +4,10 @@ import { prisma } from "@/lib/db";
 // PATCH update application
 export async function PATCH(
   request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
+  context: { params: Promise<{ id: string }> }
 ): Promise<NextResponse> {
   try {
-    const { id } = await params;
+    const { id } = await context.params;
     const body = await request.json();
     const { status, notes } = body;
 
@@ -30,10 +30,10 @@ export async function PATCH(
 // DELETE application
 export async function DELETE(
   _request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
+  context: { params: Promise<{ id: string }> }
 ): Promise<NextResponse> {
   try {
-    const { id } = await params;
+    const { id } = await context.params;
     await prisma.application.delete({
       where: { id },
     });
