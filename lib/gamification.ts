@@ -6,7 +6,7 @@
  */
 
 import { Application, User } from '@prisma/client'
-import { startOfDay, differenceInDays } from 'date-fns'
+// import { startOfDay, differenceInDays } from 'date-fns'
 
 // ===========================
 // XP VALUES
@@ -47,7 +47,7 @@ export const XP_VALUES = {
  * ]
  * calculateStreak(apps) // Returns: 3
  */
-export function calculateStreak(applications: Application[]): number {
+export function calculateStreak(_applications: Application[]): number {
   // TODO: Implement streak calculation
   //
   // Algorithm:
@@ -101,7 +101,7 @@ export function calculateStreak(applications: Application[]): number {
  * calculateLevel(100) // Returns: 2
  * calculateLevel(450) // Returns: 3 (sqrt(450/100) = 2.12, floor = 2, +1 = 3)
  */
-export function calculateLevel(totalXP: number): number {
+export function calculateLevel(_totalXP: number): number {
   // TODO: Implement level calculation
   //
   // Formula: Level = floor(sqrt(XP / 100)) + 1
@@ -128,7 +128,7 @@ export function calculateLevel(totalXP: number): number {
  * xpForNextLevel(2) // Returns: 400  (Level 2 → 3 needs 400 XP)
  * xpForNextLevel(3) // Returns: 900  (Level 3 → 4 needs 900 XP)
  */
-export function xpForNextLevel(currentLevel: number): number {
+export function xpForNextLevel(_currentLevel: number): number {
   // TODO: Implement XP needed for next level
   //
   // Formula: (currentLevel^2) * 100
@@ -157,7 +157,7 @@ export function xpForNextLevel(currentLevel: number): number {
  * @example
  * calculateVelocity(applications) // Returns: 5 (if 5 apps in last week)
  */
-export function calculateVelocity(applications: Application[]): number {
+export function calculateVelocity(_applications: Application[]): number {
   // TODO: Implement velocity calculation
   //
   // Algorithm:
@@ -293,8 +293,8 @@ export const ACHIEVEMENTS: Achievement[] = [
  * @returns Array of newly unlocked achievements
  */
 export function checkAchievements(
-  user: User,
-  applications: Application[]
+  _user: User,
+  _applications: Application[]
 ): Achievement[] {
   // TODO: Implement achievement checking (Phase 3)
   //

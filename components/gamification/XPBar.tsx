@@ -9,7 +9,7 @@
 
 'use client'
 
-import { motion } from 'framer-motion'
+// import { motion } from 'framer-motion'
 import { Star, Zap } from 'lucide-react'
 import { getLevelTitle } from '@/lib/gamification'
 

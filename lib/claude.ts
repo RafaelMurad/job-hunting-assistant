@@ -58,7 +58,7 @@ Return ONLY valid JSON, no other text.`
 
   // Extract JSON from response
   const text = content.text.trim()
-  let jsonMatch = text.match(/\{[\s\S]*\}/)
+  const jsonMatch = text.match(/\{[\s\S]*\}/)
 
   if (!jsonMatch) {
     // Try parsing the whole response as JSON

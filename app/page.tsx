@@ -92,13 +92,13 @@ export default function Home() {
   return (
     <div className="container mx-auto px-4 py-8">
       {/* Gamification Stats Hero */}
-      <Card className="mb-6 bg-gradient-to-r from-blue-50 to-purple-50 border-blue-200">
+      <Card className="mb-6 bg-gradient-to-r from-blue-50 to-purple-50 border-blue-200 text-slate-900">
         <CardHeader>
-          <CardTitle className="text-2xl flex items-center gap-2">
+          <CardTitle className="text-2xl flex items-center gap-2 text-slate-900">
             <span className="text-2xl">🎯</span>
             Your Job Hunt Progress
           </CardTitle>
-          <CardDescription>
+          <CardDescription className="text-slate-600">
             Keep building your streak and level up your career!
           </CardDescription>
         </CardHeader>
@@ -147,7 +147,7 @@ export default function Home() {
         </CardContent>
       </Card>
 
-        <Card className="mb-6">
+      <Card className="mb-6">
           <CardHeader>
             <CardTitle>Your Profile</CardTitle>
             <CardDescription>
@@ -274,7 +274,6 @@ export default function Home() {
             </form>
           </CardContent>
         </Card>
-      </div>
     </div>
   )
 }

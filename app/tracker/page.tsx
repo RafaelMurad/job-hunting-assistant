@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import { useRouter } from 'next/navigation'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
@@ -19,7 +19,7 @@ interface Application {
 
 export default function TrackerPage() {
   const router = useRouter()
-  const [userId, setUserId] = useState<string>('')
+  const [, setUserId] = useState<string>('')
   const [applications, setApplications] = useState<Application[]>([])
   const [loading, setLoading] = useState(true)
 
@@ -70,6 +70,18 @@ export default function TrackerPage() {
       ? Math.round(applications.reduce((sum, a) => sum + a.matchScore, 0) / applications.length)
       : 0,
   }
+
+  const velocityStats = useMemo(() => {
+    // eslint-disable-next-line
+    const now = Date.now()
+    const weekAgo = new Date(now - 7 * 24 * 60 * 60 * 1000)
+    const monthAgo = new Date(now - 30 * 24 * 60 * 60 * 1000)
+
+    return {
+      last7Days: applications.filter(app => new Date(app.createdAt) >= weekAgo).length,
+      last30Days: applications.filter(app => new Date(app.createdAt) >= monthAgo).length
+    }
+  }, [applications])
 
   if (loading) {
     return (
@@ -166,20 +178,14 @@ export default function TrackerPage() {
             <div className="bg-white p-4 rounded-lg shadow-sm text-center">
               <div className="text-sm text-slate-600 mb-1">Last 7 Days</div>
               <div className="text-3xl font-bold text-blue-600">
-                {applications.filter(app => {
-                  const weekAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000)
-                  return new Date(app.createdAt) >= weekAgo
-                }).length}
+                {velocityStats.last7Days}
               </div>
               <div className="text-xs text-slate-500 mt-1">applications</div>
             </div>
             <div className="bg-white p-4 rounded-lg shadow-sm text-center">
               <div className="text-sm text-slate-600 mb-1">Last 30 Days</div>
               <div className="text-3xl font-bold text-purple-600">
-                {applications.filter(app => {
-                  const monthAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000)
-                  return new Date(app.createdAt) >= monthAgo
-                }).length}
+                {velocityStats.last30Days}
               </div>
               <div className="text-xs text-slate-500 mt-1">applications</div>
             </div>
@@ -248,6 +254,5 @@ export default function TrackerPage() {
           </CardContent>
         </Card>
       </div>
-    </div>
   )
 }

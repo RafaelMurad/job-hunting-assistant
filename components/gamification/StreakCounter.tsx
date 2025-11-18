@@ -10,8 +10,8 @@
 'use client'
 
 import { Flame } from 'lucide-react'
-import { motion } from 'framer-motion'
-import { getStreakColor, getStreakMessage } from '@/lib/gamification'
+// import { motion } from 'framer-motion'
+import { getStreakMessage } from '@/lib/gamification'
 
 interface StreakCounterProps {
   streak: number
@@ -38,7 +38,7 @@ export function StreakCounter({ streak, showMessage = false }: StreakCounterProp
   // - Add continuous pulse for streaks >= 7
   // - Use keyframes for pulse effect
 
-  const streakColor = getStreakColor(streak)
+  // const streakColor = getStreakColor(streak)
   const message = getStreakMessage(streak)
 
   return (
