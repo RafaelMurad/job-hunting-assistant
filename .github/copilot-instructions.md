@@ -187,6 +187,98 @@ Context Window: 15% used (efficient)
 
 ---
 
+## 🌿 Git Workflow Strategy
+
+### **GitHub Flow (Simple, Fast)**
+
+We follow **GitHub Flow** - simple branching with clean PRs.
+
+**Branch Naming:**
+- `feat/` - New features (feat/design-system, feat/auth)
+- `fix/` - Bug fixes (fix/login-error)
+- `docs/` - Documentation (docs/api-guide)
+- `refactor/` - Code improvements (refactor/db-queries)
+- `chore/` - Tooling, deps (chore/update-deps)
+- `test/` - Tests (test/gamification)
+
+### **Creating a New Branch**
+
+**Always use the custom alias to ensure clean branching:**
+```bash
+git branch-clean feat/your-feature-name
+```
+
+This automatically:
+1. Switches to `main`
+2. Pulls latest `main`
+3. Creates new branch from updated `main`
+
+**Manual alternative:**
+```bash
+git checkout main
+git pull origin main
+git checkout -b feat/your-feature-name
+```
+
+### **Before Opening a PR**
+
+**Always rebase to show only your commits:**
+```bash
+# Update main
+git checkout main
+git pull origin main
+
+# Switch to your branch
+git checkout feat/your-feature
+
+# Rebase onto latest main
+git rebase main
+
+# Force push (safe - it's your branch)
+git push origin feat/your-feature --force-with-lease
+```
+
+**Why:** This puts your commits on top of main, so PRs only show your changes (not main's commits).
+
+### **Git Hooks**
+
+- **pre-checkout**: Automatically fetches latest main when creating branches
+- Located in `.git/hooks/` (not committed, local to your machine)
+
+### **GitHub Actions**
+
+- **PR Checks**: Reminds you to rebase if branch is behind main
+- Located in `.github/workflows/pr-checks.yml` (committed)
+
+### **PR Workflow**
+
+1. Create branch: `git branch-clean feat/amazing-feature`
+2. Make changes, commit frequently
+3. Before PR: Rebase onto main (see above)
+4. Push: `git push origin feat/amazing-feature`
+5. Open PR on GitHub
+6. After merge: Delete branch locally and remotely
+
+**Delete merged branches:**
+```bash
+# Local
+git branch -d feat/merged-feature
+
+# Remote
+git push origin --delete feat/merged-feature
+```
+
+### **Rules**
+
+1. ✅ Always branch from latest `main`
+2. ✅ One feature per branch
+3. ✅ Rebase before opening PR
+4. ✅ `main` should always run without errors
+5. ✅ Delete branches after merging
+6. ✅ Keep branches short-lived (< 1 week)
+
+---
+
 ## 📝 Commit Strategy
 
 **Conventional Commits with Learning Context (FIRST PERSON - as Rafael):**
