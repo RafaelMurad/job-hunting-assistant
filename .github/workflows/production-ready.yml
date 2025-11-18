@@ -1,0 +1,92 @@
+name: Pre-Deployment Validation
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  production-ready-check:
+    name: Production Readiness Validation
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+      
+      - name: Install dependencies
+        run: npm ci
+      
+      - name: Check code formatting
+        run: npm run format:check
+        continue-on-error: false
+      
+      - name: Run ESLint (zero warnings)
+        run: npm run lint -- --max-warnings=0
+        continue-on-error: false
+      
+      - name: Run TypeScript type check
+        run: npm run type-check
+        continue-on-error: false
+      
+      - name: Validate Prisma schema
+        run: npx prisma validate
+        continue-on-error: false
+      
+      - name: Test production build
+        run: npm run build
+        env:
+          DATABASE_URL: "postgresql://user:pass@localhost:5432/test"
+          AI_PROVIDER: "gemini"
+          GEMINI_API_KEY: "test-key-for-build"
+        continue-on-error: false
+      
+      - name: Comment on PR if production checks fail
+        if: failure() && github.event_name == 'pull_request'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: \`## ❌ Production Readiness Check Failed
+
+Your code is **NOT ready for production deployment**.
+
+**What failed:**
+Check the "Checks" tab above to see which validation step failed.
+
+**To fix locally:**
+\\\`\\\`\\\`bash
+# Run all validation checks
+npm run validate
+
+# Test production build
+npm run build
+
+# Or run the full pre-deployment check
+.husky/pre-deploy
+\\\`\\\`\\\`
+
+**Why this matters:**
+- 🚫 Broken builds = deployment failures
+- 🚫 Type errors = runtime crashes
+- 🚫 Lint errors = bugs in production
+- 🚫 Format issues = inconsistent codebase
+
+Fix these issues before merging to \\\`main\\\`.\`
+            })
+      
+      - name: All checks passed
+        if: success()
+        run: |
+          echo "✅ All production readiness checks passed!"
+          echo "🚀 Code is ready for deployment to Vercel"

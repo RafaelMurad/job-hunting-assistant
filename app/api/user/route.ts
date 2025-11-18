@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 
 // GET user (for now, we'll just get the first user or create if none exists)
-export async function GET() {
+export async function GET(): Promise<NextResponse> {
   try {
     let user = await prisma.user.findFirst();
 
@@ -28,7 +28,7 @@ export async function GET() {
 }
 
 // POST/PUT update user
-export async function POST(request: NextRequest) {
+export async function POST(request: NextRequest): Promise<NextResponse> {
   try {
     const body = await request.json();
     const { id, name, email, phone, location, summary, experience, skills } = body;
