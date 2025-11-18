@@ -8,6 +8,10 @@
     "start": "next start",
     "lint": "eslint",
     "lint:fix": "eslint --fix",
+    "type-check": "tsc --noEmit",
+    "format": "prettier --write \"**/*.{ts,tsx,js,jsx,json,md}\"",
+    "format:check": "prettier --check \"**/*.{ts,tsx,js,jsx,json,md}\"",
+    "validate": "npm run lint && npm run type-check && npm run format:check",
     "prepare": "husky"
   },
   "dependencies": {
@@ -36,14 +40,21 @@
     "@types/react-dom": "^19",
     "eslint": "^9",
     "eslint-config-next": "16.0.3",
+    "eslint-config-prettier": "^10.1.8",
     "husky": "^9.1.7",
     "lint-staged": "^16.2.6",
+    "prettier": "^3.6.2",
     "tailwindcss": "^4",
     "typescript": "^5"
   },
   "lint-staged": {
     "*.{ts,tsx}": [
-      "eslint --fix"
+      "prettier --write",
+      "eslint --fix --max-warnings=0",
+      "bash -c 'tsc --noEmit'"
+    ],
+    "*.{js,jsx,json,md}": [
+      "prettier --write"
     ]
   }
 }
