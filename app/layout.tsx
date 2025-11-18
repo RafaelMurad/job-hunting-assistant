@@ -33,10 +33,16 @@ export default function RootLayout({
                   <Link href="/" className="text-slate-600 hover:text-slate-900 transition-colors">
                     Profile
                   </Link>
-                  <Link href="/analyze" className="text-slate-600 hover:text-slate-900 transition-colors">
+                  <Link
+                    href="/analyze"
+                    className="text-slate-600 hover:text-slate-900 transition-colors"
+                  >
                     Analyze Job
                   </Link>
-                  <Link href="/tracker" className="text-slate-600 hover:text-slate-900 transition-colors">
+                  <Link
+                    href="/tracker"
+                    className="text-slate-600 hover:text-slate-900 transition-colors"
+                  >
                     Tracker
                   </Link>
                 </div>

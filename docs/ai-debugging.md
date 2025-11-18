@@ -9,12 +9,14 @@
 **Problem:** `[404 Not Found] models/gemini-pro is not found`
 
 **Solution:** Google deprecated `gemini-pro`. Use:
+
 - `gemini-2.5-flash` (stable, free)
 - `gemini-2.5-pro` (more capable, free)
 - `gemini-flash-latest` (auto-updates)
 
 **How I found out:**
 I called the API directly:
+
 ```bash
 curl "https://generativelanguage.googleapis.com/v1beta/models?key=YOUR_KEY"
 ```
@@ -32,11 +34,13 @@ I saw the actual model names in the response. The docs were outdated.
 **Why:** AI responses don't guarantee all fields exist. Even with JSON schema prompts, fields sometimes go missing.
 
 **Fix:**
+
 ```typescript
 ${(analysis.keyPoints || []).map(...)}  // Always provide fallback
 ```
 
 **Pattern I use:**
+
 - Arrays: `|| []`
 - Strings: `|| ''`
 - Numbers: `|| 0`
@@ -48,6 +52,7 @@ ${(analysis.keyPoints || []).map(...)}  // Always provide fallback
 ## Multi-Provider Architecture
 
 **Pattern:**
+
 ```typescript
 // lib/ai.ts
 export async function analyzeJob(jobDescription, userCV) {
@@ -60,6 +65,7 @@ export async function analyzeJob(jobDescription, userCV) {
 ```
 
 **Why:**
+
 - Switch providers with one env var: `AI_PROVIDER=openai`
 - Same interface everywhere
 - Test different AIs without code changes

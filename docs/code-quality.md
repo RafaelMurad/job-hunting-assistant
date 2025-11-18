@@ -21,19 +21,22 @@ Before merging to main, I ran `npm run lint` and got 6 errors:
 ### 2. Shadcn Empty Interface Pattern
 
 **ESLint error:**
+
 ```typescript
 export interface InputProps extends React.InputHTMLAttributes<HTMLInputElement> {}
 // ❌ "equivalent to its supertype"
 ```
 
 **Why it exists:** Shadcn pattern allows future customization:
+
 ```typescript
 export interface InputProps extends React.InputHTMLAttributes<HTMLInputElement> {
-  variant?: 'default' | 'ghost'  // Can add later
+  variant?: "default" | "ghost"; // Can add later
 }
 ```
 
 **Fix:**
+
 ```typescript
 // Shadcn pattern: Empty interface allows future prop customization
 // eslint-disable-next-line @typescript-eslint/no-empty-object-type
@@ -49,10 +52,12 @@ export interface InputProps extends ...
 **Problem:** Diagnostic script used `require()`, project uses `import`.
 
 **Trade-off:**
+
 - Convert to ES modules → needs build step
 - Disable rule for scripts → simpler
 
 **Fix:**
+
 ```javascript
 /* eslint-disable @typescript-eslint/no-require-imports */
 // Diagnostic script uses CommonJS for simplicity (no build step)
@@ -68,6 +73,7 @@ require('dotenv').config(...)
 **Problem:** `.env*` in `.gitignore` blocked `.env.example`.
 
 **Fix:**
+
 ```gitignore
 .env.local       # Secret values (gitignored)
 !.env.example    # Template (committed)

@@ -1,102 +1,102 @@
-'use client'
+"use client";
 
-import { useState, useEffect } from 'react'
-import { useRouter } from 'next/navigation'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { Textarea } from '@/components/ui/textarea'
-import { Button } from '@/components/ui/button'
-import { Label } from '@/components/ui/label'
-import { Badge } from '@/components/ui/badge'
+import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Textarea } from "@/components/ui/textarea";
+import { Button } from "@/components/ui/button";
+import { Label } from "@/components/ui/label";
+import { Badge } from "@/components/ui/badge";
 
 interface JobAnalysisResult {
-  company: string
-  role: string
-  matchScore: number
-  topRequirements: string[]
-  skillsMatch: string[]
-  gaps: string[]
-  redFlags: string[]
-  keyPoints: string[]
+  company: string;
+  role: string;
+  matchScore: number;
+  topRequirements: string[];
+  skillsMatch: string[];
+  gaps: string[];
+  redFlags: string[];
+  keyPoints: string[];
 }
 
 export default function AnalyzePage() {
-  const router = useRouter()
-  const [userId, setUserId] = useState<string>('')
-  const [jobDescription, setJobDescription] = useState('')
-  const [analyzing, setAnalyzing] = useState(false)
-  const [analysis, setAnalysis] = useState<JobAnalysisResult | null>(null)
-  const [coverLetter, setCoverLetter] = useState('')
-  const [generatingCoverLetter, setGeneratingCoverLetter] = useState(false)
-  const [saving, setSaving] = useState(false)
+  const router = useRouter();
+  const [userId, setUserId] = useState<string>("");
+  const [jobDescription, setJobDescription] = useState("");
+  const [analyzing, setAnalyzing] = useState(false);
+  const [analysis, setAnalysis] = useState<JobAnalysisResult | null>(null);
+  const [coverLetter, setCoverLetter] = useState("");
+  const [generatingCoverLetter, setGeneratingCoverLetter] = useState(false);
+  const [saving, setSaving] = useState(false);
 
   // Get user ID on mount
   useEffect(() => {
-    fetch('/api/user')
-      .then(res => res.json())
-      .then(data => setUserId(data.id))
-      .catch(console.error)
-  }, [])
+    fetch("/api/user")
+      .then((res) => res.json())
+      .then((data) => setUserId(data.id))
+      .catch(console.error);
+  }, []);
 
   const handleAnalyze = async () => {
     if (!jobDescription.trim()) {
-      alert('Please enter a job description')
-      return
+      alert("Please enter a job description");
+      return;
     }
 
-    setAnalyzing(true)
-    setAnalysis(null)
-    setCoverLetter('')
+    setAnalyzing(true);
+    setAnalysis(null);
+    setCoverLetter("");
 
     try {
-      const res = await fetch('/api/analyze', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+      const res = await fetch("/api/analyze", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ jobDescription, userId }),
-      })
+      });
 
-      if (!res.ok) throw new Error('Analysis failed')
+      if (!res.ok) throw new Error("Analysis failed");
 
-      const data = await res.json()
-      setAnalysis(data)
+      const data = await res.json();
+      setAnalysis(data);
     } catch (error) {
-      console.error('Error:', error)
-      alert('Failed to analyze job. Make sure you\'ve filled in your profile first.')
+      console.error("Error:", error);
+      alert("Failed to analyze job. Make sure you've filled in your profile first.");
     } finally {
-      setAnalyzing(false)
+      setAnalyzing(false);
     }
-  }
+  };
 
   const handleGenerateCoverLetter = async () => {
-    if (!analysis) return
+    if (!analysis) return;
 
-    setGeneratingCoverLetter(true)
+    setGeneratingCoverLetter(true);
     try {
-      const res = await fetch('/api/cover-letter', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+      const res = await fetch("/api/cover-letter", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ jobDescription, userId, analysis }),
-      })
+      });
 
-      if (!res.ok) throw new Error('Cover letter generation failed')
+      if (!res.ok) throw new Error("Cover letter generation failed");
 
-      const data = await res.json()
-      setCoverLetter(data.coverLetter)
+      const data = await res.json();
+      setCoverLetter(data.coverLetter);
     } catch (error) {
-      console.error('Error:', error)
-      alert('Failed to generate cover letter')
+      console.error("Error:", error);
+      alert("Failed to generate cover letter");
     } finally {
-      setGeneratingCoverLetter(false)
+      setGeneratingCoverLetter(false);
     }
-  }
+  };
 
   const handleSaveApplication = async () => {
-    if (!analysis) return
+    if (!analysis) return;
 
-    setSaving(true)
+    setSaving(true);
     try {
-      const res = await fetch('/api/applications', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+      const res = await fetch("/api/applications", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           userId,
           company: analysis.company,
@@ -104,29 +104,29 @@ export default function AnalyzePage() {
           jobDescription,
           matchScore: analysis.matchScore,
           analysis: JSON.stringify(analysis),
-          coverLetter: coverLetter || '',
-          status: 'saved',
+          coverLetter: coverLetter || "",
+          status: "saved",
         }),
-      })
+      });
 
-      if (!res.ok) throw new Error('Save failed')
+      if (!res.ok) throw new Error("Save failed");
 
-      alert('Application saved to tracker!')
-      router.push('/tracker')
+      alert("Application saved to tracker!");
+      router.push("/tracker");
     } catch (error) {
-      console.error('Error:', error)
-      alert('Failed to save application')
+      console.error("Error:", error);
+      alert("Failed to save application");
     } finally {
-      setSaving(false)
+      setSaving(false);
     }
-  }
+  };
 
   const getMatchColor = (score: number) => {
-    if (score >= 80) return 'bg-green-100 text-green-800'
-    if (score >= 60) return 'bg-blue-100 text-blue-800'
-    if (score >= 40) return 'bg-yellow-100 text-yellow-800'
-    return 'bg-red-100 text-red-800'
-  }
+    if (score >= 80) return "bg-green-100 text-green-800";
+    if (score >= 60) return "bg-blue-100 text-blue-800";
+    if (score >= 40) return "bg-yellow-100 text-yellow-800";
+    return "bg-red-100 text-red-800";
+  };
 
   return (
     <div className="min-h-screen bg-gray-50 py-12">
@@ -136,7 +136,7 @@ export default function AnalyzePage() {
             <h1 className="text-4xl font-bold mb-2">Analyze Job</h1>
             <p className="text-gray-600">Paste a job description to get AI-powered analysis</p>
           </div>
-          <Button variant="outline" onClick={() => router.push('/')}>
+          <Button variant="outline" onClick={() => router.push("/")}>
             ← Back to Profile
           </Button>
         </div>
@@ -162,7 +162,7 @@ export default function AnalyzePage() {
                   disabled={analyzing || !jobDescription.trim()}
                   className="w-full"
                 >
-                  {analyzing ? 'Analyzing...' : 'Analyze with AI'}
+                  {analyzing ? "Analyzing..." : "Analyze with AI"}
                 </Button>
               </CardContent>
             </Card>
@@ -188,7 +188,9 @@ export default function AnalyzePage() {
                       <Label className="text-base mb-2 block">Top Requirements</Label>
                       <ul className="space-y-1">
                         {analysis.topRequirements.map((req, i) => (
-                          <li key={i} className="text-sm">• {req}</li>
+                          <li key={i} className="text-sm">
+                            • {req}
+                          </li>
                         ))}
                       </ul>
                     </div>
@@ -225,7 +227,9 @@ export default function AnalyzePage() {
                         <Label className="text-base mb-2 block text-red-600">Concerns</Label>
                         <ul className="space-y-1">
                           {analysis.redFlags.map((flag, i) => (
-                            <li key={i} className="text-sm text-red-600">⚠️ {flag}</li>
+                            <li key={i} className="text-sm text-red-600">
+                              ⚠️ {flag}
+                            </li>
                           ))}
                         </ul>
                       </div>
@@ -238,7 +242,7 @@ export default function AnalyzePage() {
                         disabled={generatingCoverLetter}
                         className="w-full"
                       >
-                        {generatingCoverLetter ? 'Generating...' : 'Generate Cover Letter'}
+                        {generatingCoverLetter ? "Generating..." : "Generate Cover Letter"}
                       </Button>
                       <Button
                         onClick={handleSaveApplication}
@@ -246,7 +250,7 @@ export default function AnalyzePage() {
                         variant="outline"
                         className="w-full"
                       >
-                        {saving ? 'Saving...' : 'Save to Tracker'}
+                        {saving ? "Saving..." : "Save to Tracker"}
                       </Button>
                     </div>
                   </CardContent>
@@ -268,8 +272,8 @@ export default function AnalyzePage() {
                       />
                       <Button
                         onClick={() => {
-                          navigator.clipboard.writeText(coverLetter)
-                          alert('Cover letter copied to clipboard!')
+                          navigator.clipboard.writeText(coverLetter);
+                          alert("Cover letter copied to clipboard!");
                         }}
                         variant="outline"
                         className="w-full"
@@ -293,5 +297,5 @@ export default function AnalyzePage() {
         </div>
       </div>
     </div>
-  )
+  );
 }

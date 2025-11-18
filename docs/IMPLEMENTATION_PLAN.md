@@ -1,4 +1,5 @@
 # Job Hunt AI - Implementation Plan
+
 **MVP Phase 1 Detailed Breakdown**
 
 Version: 1.0
@@ -17,14 +18,17 @@ This implementation plan breaks down the MVP Phase 1 (8 weeks) into concrete, ac
 ---
 
 ## Phase 1.1: Foundation Setup (Week 1-2)
+
 **Goal:** Production-ready project foundation with core infrastructure
 
 ### Task 1.1.1: Next.js Project Initialization
+
 **Priority:** Critical
 **Estimated Time:** 2-3 hours
 **Dependencies:** None
 
 **Steps:**
+
 ```bash
 # Create Next.js 14+ with TypeScript
 npx create-next-app@latest job-hunt-ai --typescript --tailwind --app --eslint
@@ -52,6 +56,7 @@ job-hunt-ai/
 ```
 
 **Configuration Files:**
+
 - `tsconfig.json` - Strict TypeScript settings
 - `next.config.js` - Next.js configuration
 - `.env.example` - Environment variables template
@@ -59,6 +64,7 @@ job-hunt-ai/
 - `prettier.config.js` - Code formatting
 
 **Acceptance Criteria:**
+
 - [x] Project runs with `npm run dev`
 - [x] TypeScript strict mode enabled
 - [x] ESLint and Prettier configured
@@ -67,11 +73,13 @@ job-hunt-ai/
 ---
 
 ### Task 1.1.2: Install Core Dependencies
+
 **Priority:** Critical
 **Estimated Time:** 1 hour
 **Dependencies:** Task 1.1.1
 
 **Dependencies to Install:**
+
 ```json
 {
   "dependencies": {
@@ -110,6 +118,7 @@ job-hunt-ai/
 ```
 
 **Acceptance Criteria:**
+
 - [x] All dependencies installed
 - [x] No security vulnerabilities
 - [x] Package lock file committed
@@ -117,6 +126,7 @@ job-hunt-ai/
 ---
 
 ### Task 1.1.3: Prisma Setup with PostgreSQL
+
 **Priority:** Critical
 **Estimated Time:** 3-4 hours
 **Dependencies:** Task 1.1.2
@@ -124,17 +134,20 @@ job-hunt-ai/
 **Steps:**
 
 1. **Initialize Prisma:**
+
 ```bash
 npx prisma init
 ```
 
 2. **Configure Database Connection:**
+
 ```env
 # .env
 DATABASE_URL="postgresql://user:password@localhost:5432/jobhuntai?schema=public"
 ```
 
 3. **Create Initial Schema** (from your spec):
+
 ```prisma
 // prisma/schema.prisma
 generator client {
@@ -178,33 +191,37 @@ enum Plan {
 ```
 
 4. **Run Migration:**
+
 ```bash
 npx prisma migrate dev --name init
 npx prisma generate
 ```
 
 5. **Create Database Client:**
+
 ```typescript
 // src/lib/db/prisma.ts
-import { PrismaClient } from '@prisma/client'
+import { PrismaClient } from "@prisma/client";
 
 const globalForPrisma = globalThis as unknown as {
-  prisma: PrismaClient | undefined
-}
+  prisma: PrismaClient | undefined;
+};
 
-export const prisma = globalForPrisma.prisma ?? new PrismaClient()
+export const prisma = globalForPrisma.prisma ?? new PrismaClient();
 
-if (process.env.NODE_ENV !== 'production') globalForPrisma.prisma = prisma
+if (process.env.NODE_ENV !== "production") globalForPrisma.prisma = prisma;
 ```
 
 **Database Options:**
+
 - **Local Development:** PostgreSQL via Docker
 - **Staging/Production:** Neon, Supabase, or Railway
 
 **Docker Setup (Optional):**
+
 ```yaml
 # docker-compose.yml
-version: '3.8'
+version: "3.8"
 services:
   postgres:
     image: postgres:16
@@ -222,6 +239,7 @@ volumes:
 ```
 
 **Acceptance Criteria:**
+
 - [x] Prisma schema matches specification
 - [x] Database migrations run successfully
 - [x] Prisma Client generated
@@ -231,6 +249,7 @@ volumes:
 ---
 
 ### Task 1.1.4: Configure TailwindCSS and Shadcn/ui
+
 **Priority:** High
 **Estimated Time:** 2-3 hours
 **Dependencies:** Task 1.1.1
@@ -238,16 +257,19 @@ volumes:
 **Steps:**
 
 1. **Initialize Shadcn/ui:**
+
 ```bash
 npx shadcn-ui@latest init
 ```
 
 Configuration:
+
 - Style: Default
 - Base color: Slate
 - CSS variables: Yes
 
 2. **Install Base Components:**
+
 ```bash
 npx shadcn-ui@latest add button
 npx shadcn-ui@latest add card
@@ -267,6 +289,7 @@ npx shadcn-ui@latest add skeleton
 ```
 
 3. **Configure Custom Colors** (from your spec):
+
 ```typescript
 // tailwind.config.ts
 export default {
@@ -274,43 +297,45 @@ export default {
     extend: {
       colors: {
         brand: {
-          primary: '#2563eb',
-          'primary-dark': '#1e40af',
-          'primary-light': '#3b82f6',
+          primary: "#2563eb",
+          "primary-dark": "#1e40af",
+          "primary-light": "#3b82f6",
         },
         status: {
-          applied: '#6b7280',
-          screening: '#3b82f6',
-          technical: '#8b5cf6',
-          final: '#f59e0b',
-          offer: '#10b981',
-          rejected: '#ef4444',
-          ghosted: '#6b7280',
+          applied: "#6b7280",
+          screening: "#3b82f6",
+          technical: "#8b5cf6",
+          final: "#f59e0b",
+          offer: "#10b981",
+          rejected: "#ef4444",
+          ghosted: "#6b7280",
         },
         match: {
-          poor: '#ef4444',
-          okay: '#f59e0b',
-          good: '#3b82f6',
-          excellent: '#10b981',
+          poor: "#ef4444",
+          okay: "#f59e0b",
+          good: "#3b82f6",
+          excellent: "#10b981",
         },
       },
     },
   },
-}
+};
 ```
 
 4. **Create Utility Functions:**
+
 ```typescript
 // src/lib/utils/cn.ts
-import { clsx, type ClassValue } from 'clsx'
-import { twMerge } from 'tailwind-merge'
+import { clsx, type ClassValue } from "clsx";
+import { twMerge } from "tailwind-merge";
 
 export function cn(...inputs: ClassValue[]) {
-  return twMerge(clsx(inputs))
+  return twMerge(clsx(inputs));
 }
 ```
 
 **Acceptance Criteria:**
+
 - [x] Shadcn/ui installed and configured
 - [x] All base components working
 - [x] Custom colors applied
@@ -320,6 +345,7 @@ export function cn(...inputs: ClassValue[]) {
 ---
 
 ### Task 1.1.5: Setup tRPC
+
 **Priority:** High
 **Estimated Time:** 3-4 hours
 **Dependencies:** Task 1.1.2, Task 1.1.3
@@ -327,19 +353,20 @@ export function cn(...inputs: ClassValue[]) {
 **Steps:**
 
 1. **Create tRPC Context:**
+
 ```typescript
 // src/server/trpc.ts
-import { initTRPC } from '@trpc/server'
-import { ZodError } from 'zod'
-import superjson from 'superjson'
-import { prisma } from '@/lib/db/prisma'
+import { initTRPC } from "@trpc/server";
+import { ZodError } from "zod";
+import superjson from "superjson";
+import { prisma } from "@/lib/db/prisma";
 
 export const createTRPCContext = async (opts: { headers: Headers }) => {
   return {
     prisma,
     userId: null, // Will be populated by auth middleware
-  }
-}
+  };
+};
 
 const t = initTRPC.context<typeof createTRPCContext>().create({
   transformer: superjson,
@@ -348,64 +375,67 @@ const t = initTRPC.context<typeof createTRPCContext>().create({
       ...shape,
       data: {
         ...shape.data,
-        zodError:
-          error.cause instanceof ZodError ? error.cause.flatten() : null,
+        zodError: error.cause instanceof ZodError ? error.cause.flatten() : null,
       },
-    }
+    };
   },
-})
+});
 
-export const createTRPCRouter = t.router
-export const publicProcedure = t.procedure
+export const createTRPCRouter = t.router;
+export const publicProcedure = t.procedure;
 ```
 
 2. **Create Root Router:**
+
 ```typescript
 // src/server/routers/_app.ts
-import { createTRPCRouter } from '../trpc'
-import { userRouter } from './user'
-import { cvRouter } from './cv'
-import { jobRouter } from './job'
-import { applicationRouter } from './application'
+import { createTRPCRouter } from "../trpc";
+import { userRouter } from "./user";
+import { cvRouter } from "./cv";
+import { jobRouter } from "./job";
+import { applicationRouter } from "./application";
 
 export const appRouter = createTRPCRouter({
   user: userRouter,
   cv: cvRouter,
   job: jobRouter,
   application: applicationRouter,
-})
+});
 
-export type AppRouter = typeof appRouter
+export type AppRouter = typeof appRouter;
 ```
 
 3. **Setup API Route:**
+
 ```typescript
 // src/app/api/trpc/[trpc]/route.ts
-import { fetchRequestHandler } from '@trpc/server/adapters/fetch'
-import { appRouter } from '@/server/routers/_app'
-import { createTRPCContext } from '@/server/trpc'
+import { fetchRequestHandler } from "@trpc/server/adapters/fetch";
+import { appRouter } from "@/server/routers/_app";
+import { createTRPCContext } from "@/server/trpc";
 
 const handler = (req: Request) =>
   fetchRequestHandler({
-    endpoint: '/api/trpc',
+    endpoint: "/api/trpc",
     req,
     router: appRouter,
     createContext: createTRPCContext,
-  })
+  });
 
-export { handler as GET, handler as POST }
+export { handler as GET, handler as POST };
 ```
 
 4. **Create Client:**
+
 ```typescript
 // src/lib/api/client.ts
-import { createTRPCReact } from '@trpc/react-query'
-import type { AppRouter } from '@/server/routers/_app'
+import { createTRPCReact } from "@trpc/react-query";
+import type { AppRouter } from "@/server/routers/_app";
 
-export const trpc = createTRPCReact<AppRouter>()
+export const trpc = createTRPCReact<AppRouter>();
 ```
 
 5. **Provider Setup:**
+
 ```typescript
 // src/app/providers.tsx
 'use client'
@@ -437,6 +467,7 @@ export function Providers({ children }: { children: React.ReactNode }) {
 ```
 
 **Acceptance Criteria:**
+
 - [x] tRPC server configured
 - [x] tRPC client configured
 - [x] API routes working
@@ -446,6 +477,7 @@ export function Providers({ children }: { children: React.ReactNode }) {
 ---
 
 ### Task 1.1.6: Authentication Setup (NextAuth.js)
+
 **Priority:** High
 **Estimated Time:** 4-5 hours
 **Dependencies:** Task 1.1.3, Task 1.1.5
@@ -453,12 +485,14 @@ export function Providers({ children }: { children: React.ReactNode }) {
 **Steps:**
 
 1. **Install NextAuth v5:**
+
 ```bash
 npm install next-auth@beta
 npm install @auth/prisma-adapter
 ```
 
 2. **Update Prisma Schema:**
+
 ```prisma
 // Add to schema.prisma
 model Account {
@@ -505,17 +539,19 @@ model User {
 ```
 
 3. **Run Migration:**
+
 ```bash
 npx prisma migrate dev --name add_auth_models
 ```
 
 4. **Configure NextAuth:**
+
 ```typescript
 // src/lib/auth/auth.config.ts
-import { NextAuthConfig } from 'next-auth'
-import GoogleProvider from 'next-auth/providers/google'
-import GitHubProvider from 'next-auth/providers/github'
-import EmailProvider from 'next-auth/providers/email'
+import { NextAuthConfig } from "next-auth";
+import GoogleProvider from "next-auth/providers/google";
+import GitHubProvider from "next-auth/providers/github";
+import EmailProvider from "next-auth/providers/email";
 
 export const authConfig: NextAuthConfig = {
   providers: [
@@ -533,36 +569,38 @@ export const authConfig: NextAuthConfig = {
     }),
   ],
   pages: {
-    signIn: '/auth/signin',
-    signOut: '/auth/signout',
-    error: '/auth/error',
+    signIn: "/auth/signin",
+    signOut: "/auth/signout",
+    error: "/auth/error",
   },
-}
+};
 ```
 
 ```typescript
 // src/lib/auth/auth.ts
-import NextAuth from 'next-auth'
-import { PrismaAdapter } from '@auth/prisma-adapter'
-import { prisma } from '@/lib/db/prisma'
-import { authConfig } from './auth.config'
+import NextAuth from "next-auth";
+import { PrismaAdapter } from "@auth/prisma-adapter";
+import { prisma } from "@/lib/db/prisma";
+import { authConfig } from "./auth.config";
 
 export const { handlers, auth, signIn, signOut } = NextAuth({
   adapter: PrismaAdapter(prisma),
-  session: { strategy: 'jwt' },
+  session: { strategy: "jwt" },
   ...authConfig,
-})
+});
 ```
 
 5. **API Route:**
+
 ```typescript
 // src/app/api/auth/[...nextauth]/route.ts
-import { handlers } from '@/lib/auth/auth'
+import { handlers } from "@/lib/auth/auth";
 
-export const { GET, POST } = handlers
+export const { GET, POST } = handlers;
 ```
 
 6. **Session Provider:**
+
 ```typescript
 // Update src/app/providers.tsx
 import { SessionProvider } from 'next-auth/react'
@@ -577,6 +615,7 @@ export function Providers({ children }: { children: React.ReactNode }) {
 ```
 
 7. **Environment Variables:**
+
 ```env
 # .env
 NEXTAUTH_URL=http://localhost:3000
@@ -593,6 +632,7 @@ EMAIL_FROM=noreply@jobhuntai.com
 ```
 
 **Acceptance Criteria:**
+
 - [x] NextAuth configured with Prisma adapter
 - [x] Google OAuth working
 - [x] GitHub OAuth working
@@ -603,18 +643,21 @@ EMAIL_FROM=noreply@jobhuntai.com
 ---
 
 ## Phase 1.2: Master CV System (Week 3-4)
+
 **Goal:** Complete Master CV builder and management system
 
 ### Task 1.2.1: Master CV Data Layer
+
 **Priority:** Critical
 **Estimated Time:** 4-5 hours
 **Dependencies:** Task 1.1.3, Task 1.1.5
 
 **tRPC Router:**
+
 ```typescript
 // src/server/routers/cv.ts
-import { z } from 'zod'
-import { createTRPCRouter, protectedProcedure } from '../trpc'
+import { z } from "zod";
+import { createTRPCRouter, protectedProcedure } from "../trpc";
 
 export const cvRouter = createTRPCRouter({
   getMasterCV: protectedProcedure.query(async ({ ctx }) => {
@@ -623,13 +666,13 @@ export const cvRouter = createTRPCRouter({
       include: {
         experiences: {
           include: { bullets: true },
-          orderBy: { order: 'asc' },
+          orderBy: { order: "asc" },
         },
-        projects: { orderBy: { order: 'asc' } },
+        projects: { orderBy: { order: "asc" } },
         education: true,
         certifications: true,
       },
-    })
+    });
   }),
 
   createOrUpdateMasterCV: protectedProcedure
@@ -651,7 +694,7 @@ export const cvRouter = createTRPCRouter({
         where: { userId: ctx.userId },
         create: { ...input, userId: ctx.userId },
         update: input,
-      })
+      });
     }),
 
   addExperience: protectedProcedure
@@ -667,11 +710,11 @@ export const cvRouter = createTRPCRouter({
       })
     )
     .mutation(async ({ ctx, input }) => {
-      const { bullets, ...experienceData } = input
+      const { bullets, ...experienceData } = input;
 
       const masterCV = await ctx.prisma.masterCV.findUniqueOrThrow({
         where: { userId: ctx.userId },
-      })
+      });
 
       return ctx.prisma.experience.create({
         data: {
@@ -685,7 +728,7 @@ export const cvRouter = createTRPCRouter({
           },
         },
         include: { bullets: true },
-      })
+      });
     }),
 
   updateExperience: protectedProcedure
@@ -701,12 +744,12 @@ export const cvRouter = createTRPCRouter({
       })
     )
     .mutation(async ({ ctx, input }) => {
-      const { id, ...data } = input
+      const { id, ...data } = input;
       return ctx.prisma.experience.update({
         where: { id },
         data,
         include: { bullets: true },
-      })
+      });
     }),
 
   deleteExperience: protectedProcedure
@@ -714,45 +757,52 @@ export const cvRouter = createTRPCRouter({
     .mutation(async ({ ctx, input }) => {
       return ctx.prisma.experience.delete({
         where: { id: input.id },
-      })
+      });
     }),
 
   // Similar endpoints for projects, education, certifications...
-})
+});
 ```
 
 **Validation Schemas:**
+
 ```typescript
 // src/lib/validations/cv.ts
-import { z } from 'zod'
+import { z } from "zod";
 
 export const contactInfoSchema = z.object({
-  fullName: z.string().min(2, 'Name must be at least 2 characters'),
-  email: z.string().email('Invalid email address'),
+  fullName: z.string().min(2, "Name must be at least 2 characters"),
+  email: z.string().email("Invalid email address"),
   phone: z.string().optional(),
-  location: z.string().min(2, 'Location is required'),
-  linkedIn: z.string().url('Invalid LinkedIn URL').optional().or(z.literal('')),
-  github: z.string().url('Invalid GitHub URL').optional().or(z.literal('')),
-  portfolio: z.string().url('Invalid portfolio URL').optional().or(z.literal('')),
-})
+  location: z.string().min(2, "Location is required"),
+  linkedIn: z.string().url("Invalid LinkedIn URL").optional().or(z.literal("")),
+  github: z.string().url("Invalid GitHub URL").optional().or(z.literal("")),
+  portfolio: z.string().url("Invalid portfolio URL").optional().or(z.literal("")),
+});
 
 export const experienceSchema = z.object({
-  company: z.string().min(2, 'Company name is required'),
-  role: z.string().min(2, 'Role is required'),
+  company: z.string().min(2, "Company name is required"),
+  role: z.string().min(2, "Role is required"),
   location: z.string().optional(),
   startDate: z.date(),
   endDate: z.date().optional(),
   current: z.boolean().default(false),
-  bullets: z.array(z.string().min(10, 'Bullet must be at least 10 characters')).min(1, 'Add at least one achievement'),
-})
+  bullets: z
+    .array(z.string().min(10, "Bullet must be at least 10 characters"))
+    .min(1, "Add at least one achievement"),
+});
 
 export const summarySchema = z.object({
-  summary: z.string().min(50, 'Summary must be at least 50 characters').max(500, 'Summary must be less than 500 characters'),
-  skills: z.array(z.string()).min(5, 'Add at least 5 skills'),
-})
+  summary: z
+    .string()
+    .min(50, "Summary must be at least 50 characters")
+    .max(500, "Summary must be less than 500 characters"),
+  skills: z.array(z.string()).min(5, "Add at least 5 skills"),
+});
 ```
 
 **Acceptance Criteria:**
+
 - [x] All CRUD operations for MasterCV
 - [x] Experience management endpoints
 - [x] Project management endpoints
@@ -763,6 +813,7 @@ export const summarySchema = z.object({
 ---
 
 ### Task 1.2.2: Master CV Builder UI - Onboarding Flow
+
 **Priority:** Critical
 **Estimated Time:** 8-10 hours
 **Dependencies:** Task 1.2.1
@@ -770,6 +821,7 @@ export const summarySchema = z.object({
 **Steps:**
 
 1. **Create Multi-Step Form Component:**
+
 ```typescript
 // src/components/features/onboarding/OnboardingWizard.tsx
 'use client'
@@ -841,6 +893,7 @@ export function OnboardingWizard() {
 ```
 
 2. **Step 1: Contact Info**
+
 ```typescript
 // src/components/features/onboarding/steps/ContactInfoStep.tsx
 'use client'
@@ -942,6 +995,7 @@ export function ContactInfoStep({ onNext, initialData }) {
 ```
 
 3. **Step 3: Experience (Most Complex)**
+
 ```typescript
 // src/components/features/onboarding/steps/ExperienceStep.tsx
 'use client'
@@ -1050,6 +1104,7 @@ function ExperienceForm({ onSubmit, onCancel }) {
 ```
 
 **Acceptance Criteria:**
+
 - [x] 5-step onboarding wizard
 - [x] Form validation on each step
 - [x] Progress indicator
@@ -1062,11 +1117,13 @@ function ExperienceForm({ onSubmit, onCancel }) {
 ---
 
 ### Task 1.2.3: Master CV Edit Page
+
 **Priority:** Medium
 **Estimated Time:** 4-5 hours
 **Dependencies:** Task 1.2.2
 
 **Dashboard-style editor:**
+
 ```typescript
 // src/app/cv/edit/page.tsx
 'use client'
@@ -1127,6 +1184,7 @@ export default function EditMasterCV() {
 ```
 
 **Acceptance Criteria:**
+
 - [x] Tabbed interface for sections
 - [x] Inline editing
 - [x] Real-time updates
@@ -1137,9 +1195,11 @@ export default function EditMasterCV() {
 ---
 
 ## Phase 1.3: Job Analysis (Week 5-6)
+
 **Goal:** Claude API integration for job analysis
 
 ### Task 1.3.1: Claude API Integration
+
 **Priority:** Critical
 **Estimated Time:** 4-5 hours
 **Dependencies:** Task 1.1.2
@@ -1147,18 +1207,20 @@ export default function EditMasterCV() {
 **Steps:**
 
 1. **Install Anthropic SDK:**
+
 ```bash
 npm install @anthropic-ai/sdk
 ```
 
 2. **Create Claude Client:**
+
 ```typescript
 // src/lib/ai/claude.ts
-import Anthropic from '@anthropic-ai/sdk'
+import Anthropic from "@anthropic-ai/sdk";
 
 const client = new Anthropic({
   apiKey: process.env.ANTHROPIC_API_KEY!,
-})
+});
 
 export async function analyzeJobDescription(
   jobDescription: string,
@@ -1172,12 +1234,16 @@ ${jobDescription}
 Candidate CV:
 Name: ${masterCV.fullName}
 Summary: ${masterCV.summary}
-Skills: ${masterCV.skills.join(', ')}
+Skills: ${masterCV.skills.join(", ")}
 Experience:
-${masterCV.experiences.map((exp: any) => `
+${masterCV.experiences
+  .map(
+    (exp: any) => `
   ${exp.role} at ${exp.company}
-  ${exp.bullets.map((b: any) => `- ${b.content}`).join('\n')}
-`).join('\n')}
+  ${exp.bullets.map((b: any) => `- ${b.content}`).join("\n")}
+`
+  )
+  .join("\n")}
 
 Provide a JSON response with:
 1. company: Company name (string)
@@ -1193,56 +1259,57 @@ Provide a JSON response with:
 11. coverLetterHook: Opening paragraph for cover letter (string)
 12. keyPoints: 3-5 points to emphasize in CV (array of strings)
 
-Be honest about gaps but focus on strengths. Match score should be realistic.`
+Be honest about gaps but focus on strengths. Match score should be realistic.`;
 
   const response = await client.messages.create({
-    model: 'claude-sonnet-4-5-20250929',
+    model: "claude-sonnet-4-5-20250929",
     max_tokens: 2000,
-    messages: [{ role: 'user', content: prompt }],
-  })
+    messages: [{ role: "user", content: prompt }],
+  });
 
-  const content = response.content[0]
-  if (content.type !== 'text') {
-    throw new Error('Unexpected response type')
+  const content = response.content[0];
+  if (content.type !== "text") {
+    throw new Error("Unexpected response type");
   }
 
   // Parse JSON response
-  const jsonMatch = content.text.match(/\{[\s\S]*\}/)
+  const jsonMatch = content.text.match(/\{[\s\S]*\}/);
   if (!jsonMatch) {
-    throw new Error('Failed to parse Claude response')
+    throw new Error("Failed to parse Claude response");
   }
 
-  return JSON.parse(jsonMatch[0])
+  return JSON.parse(jsonMatch[0]);
 }
 
 export interface JobAnalysisResult {
-  company: string
-  role: string
-  location: string | null
-  remote: boolean
-  matchScore: number
-  requirements: string[]
-  skillsMatch: string[]
-  gaps: string[]
-  redFlags: string[]
-  recommendedStyle: 'modern' | 'minimalist' | 'professional'
-  coverLetterHook: string
-  keyPoints: string[]
+  company: string;
+  role: string;
+  location: string | null;
+  remote: boolean;
+  matchScore: number;
+  requirements: string[];
+  skillsMatch: string[];
+  gaps: string[];
+  redFlags: string[];
+  recommendedStyle: "modern" | "minimalist" | "professional";
+  coverLetterHook: string;
+  keyPoints: string[];
 }
 ```
 
 3. **Create tRPC Endpoint:**
+
 ```typescript
 // src/server/routers/job.ts
-import { z } from 'zod'
-import { createTRPCRouter, protectedProcedure } from '../trpc'
-import { analyzeJobDescription } from '@/lib/ai/claude'
+import { z } from "zod";
+import { createTRPCRouter, protectedProcedure } from "../trpc";
+import { analyzeJobDescription } from "@/lib/ai/claude";
 
 export const jobRouter = createTRPCRouter({
   analyze: protectedProcedure
     .input(
       z.object({
-        jobDescription: z.string().min(100, 'Job description is too short'),
+        jobDescription: z.string().min(100, "Job description is too short"),
         jobUrl: z.string().url().optional(),
       })
     )
@@ -1254,13 +1321,10 @@ export const jobRouter = createTRPCRouter({
           experiences: { include: { bullets: true } },
           projects: true,
         },
-      })
+      });
 
       // Analyze with Claude
-      const analysis = await analyzeJobDescription(
-        input.jobDescription,
-        masterCV
-      )
+      const analysis = await analyzeJobDescription(input.jobDescription, masterCV);
 
       // Save to database
       return ctx.prisma.jobAnalysis.create({
@@ -1280,33 +1344,33 @@ export const jobRouter = createTRPCRouter({
           recommendedStyle: analysis.recommendedStyle,
           coverLetterHook: analysis.coverLetterHook,
         },
-      })
+      });
     }),
 
   getAll: protectedProcedure.query(async ({ ctx }) => {
     return ctx.prisma.jobAnalysis.findMany({
       where: { userId: ctx.userId },
-      orderBy: { analyzedAt: 'desc' },
+      orderBy: { analyzedAt: "desc" },
       take: 20,
-    })
+    });
   }),
 
-  getById: protectedProcedure
-    .input(z.object({ id: z.string() }))
-    .query(async ({ ctx, input }) => {
-      return ctx.prisma.jobAnalysis.findUniqueOrThrow({
-        where: { id: input.id, userId: ctx.userId },
-      })
-    }),
-})
+  getById: protectedProcedure.input(z.object({ id: z.string() })).query(async ({ ctx, input }) => {
+    return ctx.prisma.jobAnalysis.findUniqueOrThrow({
+      where: { id: input.id, userId: ctx.userId },
+    });
+  }),
+});
 ```
 
 **Environment Variables:**
+
 ```env
 ANTHROPIC_API_KEY=your-api-key
 ```
 
 **Acceptance Criteria:**
+
 - [x] Claude API client configured
 - [x] Job analysis prompt optimized
 - [x] JSON parsing robust
@@ -1317,11 +1381,13 @@ ANTHROPIC_API_KEY=your-api-key
 ---
 
 ### Task 1.3.2: Job Analysis UI
+
 **Priority:** Critical
 **Estimated Time:** 6-8 hours
 **Dependencies:** Task 1.3.1
 
 **Main Analysis Page:**
+
 ```typescript
 // src/app/jobs/analyze/page.tsx
 'use client'
@@ -1411,6 +1477,7 @@ export default function AnalyzeJobPage() {
 ```
 
 **Analysis Results Component:**
+
 ```typescript
 // src/components/features/jobs/AnalysisResults.tsx
 import { Badge } from '@/components/ui/badge'
@@ -1540,6 +1607,7 @@ export function AnalysisResults({ analysis }: AnalysisResultsProps) {
 ```
 
 **Acceptance Criteria:**
+
 - [x] Job description input (textarea)
 - [x] URL extraction from paste
 - [x] Loading state during analysis
@@ -1553,9 +1621,11 @@ export function AnalysisResults({ analysis }: AnalysisResultsProps) {
 ---
 
 ## Phase 1.4: CV Generation & Application Tracking (Week 7-8)
+
 **Goal:** Complete the application flow
 
 ### Task 1.4.1: CV Tailoring Logic
+
 **Priority:** Critical
 **Estimated Time:** 8-10 hours
 **Dependencies:** Task 1.3.1
@@ -1563,6 +1633,7 @@ export function AnalysisResults({ analysis }: AnalysisResultsProps) {
 This is a large task involving Claude API prompting for CV tailoring. See original spec for detailed requirements.
 
 **Key Components:**
+
 - Bullet rewriting based on job requirements
 - Skills reordering
 - Summary customization
@@ -1571,11 +1642,13 @@ This is a large task involving Claude API prompting for CV tailoring. See origin
 ---
 
 ### Task 1.4.2: PDF Generation
+
 **Priority:** Critical
 **Estimated Time:** 6-8 hours
 **Dependencies:** Task 1.4.1
 
 **Options:**
+
 1. **@react-pdf/renderer** - React-based PDF generation
 2. **Puppeteer** - HTML to PDF (heavier)
 3. **pdfkit** - Node.js PDF generation
@@ -1583,6 +1656,7 @@ This is a large task involving Claude API prompting for CV tailoring. See origin
 **Recommended: @react-pdf/renderer**
 
 **Create CV Templates:**
+
 ```typescript
 // src/lib/pdf/templates/ModernCV.tsx
 import { Document, Page, Text, View, StyleSheet } from '@react-pdf/renderer'
@@ -1646,40 +1720,42 @@ export function ModernCV({ data }) {
 ---
 
 ### Task 1.4.3: Application Tracking System
+
 **Priority:** Critical
 **Estimated Time:** 6-8 hours
 **Dependencies:** Task 1.4.2
 
 **Natural Language Processing:**
+
 ```typescript
 // src/lib/ai/context-extraction.ts
 export async function extractApplicationContext(
   message: string,
   recentAnalyses: JobAnalysis[]
 ): Promise<ApplicationContext | null> {
-  const lowerMessage = message.toLowerCase()
+  const lowerMessage = message.toLowerCase();
 
   // Check if user indicated they applied
   const appliedKeywords = [
-    'i applied',
+    "i applied",
     "i've applied",
-    'just applied',
-    'applied to',
-    'submitted application',
-    'sent my application',
-  ]
+    "just applied",
+    "applied to",
+    "submitted application",
+    "sent my application",
+  ];
 
-  const isApplication = appliedKeywords.some(kw => lowerMessage.includes(kw))
-  if (!isApplication) return null
+  const isApplication = appliedKeywords.some((kw) => lowerMessage.includes(kw));
+  if (!isApplication) return null;
 
   // Use most recent analysis if no specific company mentioned
-  let targetAnalysis = recentAnalyses[0]
+  let targetAnalysis = recentAnalyses[0];
 
   // Check if user mentioned specific company
   for (const analysis of recentAnalyses) {
     if (lowerMessage.includes(analysis.company.toLowerCase())) {
-      targetAnalysis = analysis
-      break
+      targetAnalysis = analysis;
+      break;
     }
   }
 
@@ -1687,11 +1763,12 @@ export async function extractApplicationContext(
     jobAnalysisId: targetAnalysis.id,
     confidence: targetAnalysis === recentAnalyses[0] ? 0.9 : 1.0,
     needsConfirmation: recentAnalyses.length > 3,
-  }
+  };
 }
 ```
 
 **tRPC Endpoint:**
+
 ```typescript
 // src/server/routers/application.ts
 export const applicationRouter = createTRPCRouter({
@@ -1704,43 +1781,40 @@ export const applicationRouter = createTRPCRouter({
       })
     )
     .mutation(async ({ ctx, input }) => {
-      let jobAnalysisId = input.jobAnalysisId
+      let jobAnalysisId = input.jobAnalysisId;
 
       // If no ID provided, extract from message
       if (!jobAnalysisId && input.message) {
         const recentAnalyses = await ctx.prisma.jobAnalysis.findMany({
           where: { userId: ctx.userId },
-          orderBy: { analyzedAt: 'desc' },
+          orderBy: { analyzedAt: "desc" },
           take: 5,
-        })
+        });
 
-        const context = await extractApplicationContext(
-          input.message,
-          recentAnalyses
-        )
+        const context = await extractApplicationContext(input.message, recentAnalyses);
 
         if (!context) {
-          throw new Error('Could not determine which job you applied to')
+          throw new Error("Could not determine which job you applied to");
         }
 
-        jobAnalysisId = context.jobAnalysisId
+        jobAnalysisId = context.jobAnalysisId;
       }
 
       if (!jobAnalysisId) {
-        throw new Error('Job analysis ID required')
+        throw new Error("Job analysis ID required");
       }
 
       // Get job analysis and tailored CV
       const jobAnalysis = await ctx.prisma.jobAnalysis.findUniqueOrThrow({
         where: { id: jobAnalysisId },
-      })
+      });
 
       const tailoredCV = await ctx.prisma.tailoredCV.findFirst({
         where: { jobAnalysisId },
-      })
+      });
 
       if (!tailoredCV) {
-        throw new Error('No CV generated for this job')
+        throw new Error("No CV generated for this job");
       }
 
       // Create application
@@ -1757,17 +1831,19 @@ export const applicationRouter = createTRPCRouter({
           matchScore: jobAnalysis.matchScore,
           cvStyle: tailoredCV.style,
           cvFileUrl: tailoredCV.pdfUrl,
-          coverLetterUrl: tailoredCV.coverLetterFileName || '',
-          folderPath: `users/${ctx.userId}/applications/${jobAnalysis.company}-${format(new Date(), 'MMMyyyy')}`,
-          status: 'APPLIED',
+          coverLetterUrl: tailoredCV.coverLetterFileName || "",
+          folderPath: `users/${ctx.userId}/applications/${jobAnalysis.company}-${format(new Date(), "MMMyyyy")}`,
+          status: "APPLIED",
         },
-      })
+      });
     }),
 
   getAll: protectedProcedure
     .input(
       z.object({
-        status: z.enum(['APPLIED', 'SCREENING', 'TECHNICAL', 'FINAL', 'OFFER', 'REJECTED', 'GHOSTED']).optional(),
+        status: z
+          .enum(["APPLIED", "SCREENING", "TECHNICAL", "FINAL", "OFFER", "REJECTED", "GHOSTED"])
+          .optional(),
         page: z.number().default(1),
         limit: z.number().default(20),
       })
@@ -1776,41 +1852,49 @@ export const applicationRouter = createTRPCRouter({
       const where = {
         userId: ctx.userId,
         ...(input.status && { status: input.status }),
-      }
+      };
 
       const [applications, total] = await Promise.all([
         ctx.prisma.application.findMany({
           where,
-          orderBy: { appliedAt: 'desc' },
+          orderBy: { appliedAt: "desc" },
           skip: (input.page - 1) * input.limit,
           take: input.limit,
         }),
         ctx.prisma.application.count({ where }),
-      ])
+      ]);
 
       return {
         applications,
         total,
         page: input.page,
         pages: Math.ceil(total / input.limit),
-      }
+      };
     }),
 
   updateStatus: protectedProcedure
     .input(
       z.object({
         id: z.string(),
-        status: z.enum(['APPLIED', 'SCREENING', 'TECHNICAL', 'FINAL', 'OFFER', 'REJECTED', 'GHOSTED']),
+        status: z.enum([
+          "APPLIED",
+          "SCREENING",
+          "TECHNICAL",
+          "FINAL",
+          "OFFER",
+          "REJECTED",
+          "GHOSTED",
+        ]),
         notes: z.string().optional(),
       })
     )
     .mutation(async ({ ctx, input }) => {
-      const { id, status, notes } = input
+      const { id, status, notes } = input;
 
       // Get current application
       const app = await ctx.prisma.application.findUniqueOrThrow({
         where: { id, userId: ctx.userId },
-      })
+      });
 
       // Update application and create status update
       const [updatedApp] = await ctx.prisma.$transaction([
@@ -1826,21 +1910,23 @@ export const applicationRouter = createTRPCRouter({
             notes,
           },
         }),
-      ])
+      ]);
 
-      return updatedApp
+      return updatedApp;
     }),
-})
+});
 ```
 
 ---
 
 ### Task 1.4.4: Dashboard UI
+
 **Priority:** Critical
 **Estimated Time:** 8-10 hours
 **Dependencies:** Task 1.4.3
 
 **Main Dashboard:**
+
 ```typescript
 // src/app/dashboard/page.tsx
 'use client'
@@ -1887,6 +1973,7 @@ export default function Dashboard() {
 ```
 
 **Kanban Board:**
+
 ```typescript
 // src/components/features/dashboard/KanbanView.tsx
 import { Card } from '@/components/ui/card'
@@ -1952,36 +2039,42 @@ function ApplicationCard({ application }) {
 ## Phase 1.5: Polish & Deploy (Week 8)
 
 ### Task 1.5.1: Error Handling & Loading States
+
 - Implement error boundaries
 - Add skeleton loaders
 - Handle API failures gracefully
 - Toast notifications for actions
 
 ### Task 1.5.2: Responsive Design
+
 - Mobile-first approach
 - Test on various screen sizes
 - Touch-friendly interactions
 - Mobile navigation
 
 ### Task 1.5.3: Environment Setup
+
 - Staging environment (Vercel)
 - Database (Neon/Supabase)
 - S3/R2 for file storage
 - Environment variables
 
 ### Task 1.5.4: Testing
+
 - Unit tests for critical functions
 - Integration tests for API
 - E2E tests for key flows
 - Manual QA checklist
 
 ### Task 1.5.5: Documentation
+
 - README with setup instructions
 - API documentation
 - User guide
 - Contribution guidelines
 
 ### Task 1.5.6: Deployment
+
 - Deploy to Vercel
 - Configure domain
 - Set up monitoring (Sentry)
@@ -1992,6 +2085,7 @@ function ApplicationCard({ application }) {
 ## Success Criteria for MVP
 
 **Technical:**
+
 - [x] All features from Phase 1 working
 - [x] <2s page load times
 - [x] <5s job analysis
@@ -2000,6 +2094,7 @@ function ApplicationCard({ application }) {
 - [x] Mobile responsive
 
 **User Experience:**
+
 - [x] Can complete onboarding in <10 minutes
 - [x] Can analyze job in <1 minute
 - [x] Can generate tailored CV in <2 minutes
@@ -2007,6 +2102,7 @@ function ApplicationCard({ application }) {
 - [x] Dashboard shows clear pipeline view
 
 **Business:**
+
 - [x] Beta users can sign up
 - [x] Payment integration (Stripe) ready
 - [x] Analytics tracking events
@@ -2039,6 +2135,7 @@ function ApplicationCard({ application }) {
 ## Next Steps After MVP
 
 **Phase 2 Features (Weeks 9-16):**
+
 - Email notifications
 - Calendar integration
 - Advanced analytics
@@ -2047,6 +2144,7 @@ function ApplicationCard({ application }) {
 - Chrome extension (autofill)
 
 **Phase 3 Features (Weeks 17-24):**
+
 - Team accounts
 - API for integrations
 - Mobile app
@@ -2058,17 +2156,20 @@ function ApplicationCard({ application }) {
 ## Development Environment Setup
 
 **Required:**
+
 - Node.js 20+
 - PostgreSQL 16
 - Claude API key
 - Git
 
 **Optional:**
+
 - Docker (for local PostgreSQL)
 - Vercel CLI
 - Postman/Insomnia (API testing)
 
 **Commands:**
+
 ```bash
 # Install dependencies
 npm install
@@ -2094,14 +2195,14 @@ vercel deploy
 
 ## Estimated Timeline Summary
 
-| Phase | Duration | Deliverable |
-|-------|----------|-------------|
-| 1.1 Foundation | 1-2 weeks | Project setup, auth, database |
-| 1.2 Master CV | 1-2 weeks | CV builder and editor |
-| 1.3 Job Analysis | 1-2 weeks | Claude integration, analysis UI |
-| 1.4 CV Generation | 2-3 weeks | Tailoring, PDF, tracking |
-| 1.5 Polish | 1 week | Testing, deployment |
-| **Total** | **6-10 weeks** | **Working MVP** |
+| Phase             | Duration       | Deliverable                     |
+| ----------------- | -------------- | ------------------------------- |
+| 1.1 Foundation    | 1-2 weeks      | Project setup, auth, database   |
+| 1.2 Master CV     | 1-2 weeks      | CV builder and editor           |
+| 1.3 Job Analysis  | 1-2 weeks      | Claude integration, analysis UI |
+| 1.4 CV Generation | 2-3 weeks      | Tailoring, PDF, tracking        |
+| 1.5 Polish        | 1 week         | Testing, deployment             |
+| **Total**         | **6-10 weeks** | **Working MVP**                 |
 
 **Part-time (20h/week):** 10 weeks
 **Full-time (40h/week):** 6-7 weeks
@@ -2111,9 +2212,11 @@ vercel deploy
 ## Budget Considerations
 
 **Development Costs:**
+
 - $0 (self-developed)
 
 **Monthly Infrastructure:**
+
 - Vercel: $20/month (Pro)
 - Neon/Supabase: $25/month (Pro)
 - Cloudflare R2: ~$5/month (storage)
@@ -2122,6 +2225,7 @@ vercel deploy
 - **Total: ~$120-150/month**
 
 **Annual:**
+
 - Domain: $15/year
 - Infrastructure: $1,800/year
 - **Total: ~$1,815/year**
