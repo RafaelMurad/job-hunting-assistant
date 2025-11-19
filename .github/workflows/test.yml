@@ -1,8 +1,6 @@
 name: Tests
 
 on:
-  pull_request:
-    types: [opened, synchronize, reopened]
   push:
     branches: [main]
 
@@ -32,15 +30,8 @@ jobs:
         uses: codecov/codecov-action@v4
         with:
           files: ./coverage/coverage-final.json
-          flags: unittests
+          flags: main-branch
           fail_ci_if_error: false
-      
-      - name: Comment PR with coverage
-        if: github.event_name == 'pull_request'
-        uses: romeovs/lcov-reporter-action@v0.3.1
-        with:
-          lcov-file: ./coverage/lcov.info
-          github-token: ${{ secrets.GITHUB_TOKEN }}
 
 One or more tests are failing. Please fix them before merging.
 

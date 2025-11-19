@@ -1,0 +1,46 @@
+#-------------------------------------------------------------------------------#
+#               Qodana analysis is configured by qodana.yaml file               #
+#             https://www.jetbrains.com/help/qodana/qodana-yaml.html            #
+#-------------------------------------------------------------------------------#
+version: "1.0"
+
+# Configure inspection profile
+profile:
+  name: qodana.recommended
+
+# Disable specific inspections if needed
+# exclude:
+#   - name: Eslint
+#   - name: DuplicatedCode
+
+# Include specific paths for analysis
+include:
+  - name: All
+    paths:
+      - app/
+      - components/
+      - lib/
+      - __tests__/
+
+# Exclude paths from analysis
+exclude:
+  - name: All
+    paths:
+      - .next/
+      - node_modules/
+      - dist/
+      - build/
+      - coverage/
+      - prisma/migrations/
+
+# License and baseline (uncomment when you have a baseline)
+# linter: jetbrains/qodana-js:latest
+# baseline: qodana.sarif.json
+
+# Set fail threshold (number of problems before build fails)
+failureConditions:
+  severityThresholds:
+    any: 100  # Fail if more than 100 issues of any severity
+    critical: 10
+    high: 20
+    moderate: 50
