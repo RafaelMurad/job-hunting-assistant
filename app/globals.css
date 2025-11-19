@@ -1,5 +1,43 @@
 @import "tailwindcss";
 
+@theme {
+  /* Nordic Neutrals */
+  --color-snow: #ffffff;
+  --color-frost: #f9fafb;
+  --color-mist: #f3f4f6;
+  --color-ash: #e5e7eb;
+  
+  /* Text Scale */
+  --color-midnight: #111827;
+  --color-midnight-light: #374151;
+  --color-slate: #64748b;
+  --color-stone: #9ca3af;
+  
+  /* Nordic Blue (Fjords) */
+  --color-fjord-50: #f0f9ff;
+  --color-fjord-100: #e0f2fe;
+  --color-fjord-200: #bae6fd;
+  --color-fjord-300: #7dd3fc;
+  --color-fjord-400: #38bdf8;
+  --color-fjord-500: #0ea5e9;
+  --color-fjord-600: #0284c7;
+  --color-fjord-700: #0369a1;
+  --color-fjord-800: #075985;
+  --color-fjord-900: #0c4a6e;
+  
+  /* Accent Colors */
+  --color-forest: #10b981;
+  --color-forest-dark: #059669;
+  --color-amber: #f59e0b;
+  --color-amber-dark: #d97706;
+  --color-clay: #ef4444;
+  --color-clay-dark: #dc2626;
+}
+
+:root {
+  --font-inter: 'Inter', system-ui, -apple-system, sans-serif;
+}
+
 :root {
   --font-inter: 'Inter', system-ui, -apple-system, sans-serif;
 }
