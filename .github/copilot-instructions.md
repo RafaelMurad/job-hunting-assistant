@@ -40,6 +40,14 @@ Every implementation follows this pattern:
 - Test boilerplate (but Rafael writes the test logic)
 - Migrations and schema changes (after Rafael approves the design)
 
+**AI automatically handles Git workflow:**
+
+- **ALWAYS** create a feature branch when starting new work
+- Use naming convention: `feat/issue-number-description` or `fix/issue-number-description`
+- Run: `git branch-clean feat/X-feature-name` automatically
+- Never let Rafael work on `main` branch directly
+- Remind Rafael to open PR when work is complete
+
 ### **Teaching Methodology**
 
 Before implementing anything, explain:
@@ -269,14 +277,73 @@ git push origin feat/your-feature --force-with-lease
 - **PR Checks**: Reminds you to rebase if branch is behind main
 - Located in `.github/workflows/pr-checks.yml` (committed)
 
-### **PR Workflow**
+### **PR Workflow (Professional Practice)**
 
-1. Create branch: `git branch-clean feat/amazing-feature`
-2. Make changes, commit frequently
-3. Before PR: Rebase onto main (see above)
-4. Push: `git push origin feat/amazing-feature`
-5. Open PR on GitHub
-6. After merge: Delete branch locally and remotely
+**For each GitHub issue/ticket:**
+
+1. **Create branch** from latest main:
+
+   ```bash
+   git branch-clean feat/1-nordic-colors
+   ```
+
+2. **Work on the feature** (commit frequently):
+
+   ```bash
+   git add tailwind.config.ts
+   git commit -m "feat(design): add Nordic color palette
+
+   - Added fjord blue scale
+   - Added Nordic neutrals
+   - WCAG AA compliant
+
+   Closes #1"
+   ```
+
+3. **Before opening PR** - rebase onto main:
+
+   ```bash
+   git checkout main
+   git pull origin main
+   git checkout feat/1-nordic-colors
+   git rebase main
+   git push origin feat/1-nordic-colors --force-with-lease
+   ```
+
+4. **Open PR via CLI**:
+
+   ```bash
+   gh pr create \
+     --title "feat(design): add Nordic color palette" \
+     --body "Implements #1
+
+   ## Changes
+   - Added Nordic color tokens
+   - Semantic naming (fjord, forest, clay)
+
+   ## Testing
+   - [x] Dev server runs
+   - [x] No TypeScript errors
+
+   ## Screenshots
+   (Add visual proof)" \
+     --assignee @me
+   ```
+
+5. **After PR merged**:
+   ```bash
+   git checkout main
+   git pull origin main
+   git branch -d feat/1-nordic-colors
+   ```
+
+**Why PRs even for solo projects?**
+
+- ✅ Practice professional workflow
+- ✅ Portfolio shows good Git hygiene
+- ✅ GitHub Actions run checks automatically
+- ✅ Can review own code with fresh eyes
+- ✅ Interview talking point: "I use PRs even solo to maintain quality"
 
 **Delete merged branches:**
 
@@ -284,7 +351,7 @@ git push origin feat/your-feature --force-with-lease
 # Local
 git branch -d feat/merged-feature
 
-# Remote
+# Remote (GitHub auto-deletes after PR merge if configured)
 git push origin --delete feat/merged-feature
 ```
 
