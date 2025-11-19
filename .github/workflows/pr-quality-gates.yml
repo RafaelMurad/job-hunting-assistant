@@ -9,6 +9,11 @@ jobs:
   quality-checks:
     name: Quality Checks
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: write
+      issues: write
+      checks: write
     
     steps:
       - name: Checkout code
