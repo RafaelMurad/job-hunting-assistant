@@ -4,9 +4,15 @@
 #-------------------------------------------------------------------------------#
 version: "1.0"
 
+# Configure linter
+linter: jetbrains/qodana-js:latest
+
 # Configure inspection profile
 profile:
   name: qodana.recommended
+
+# Bootstrap command to install dependencies
+bootstrap: npm ci
 
 # Disable specific inspections if needed
 # exclude:
