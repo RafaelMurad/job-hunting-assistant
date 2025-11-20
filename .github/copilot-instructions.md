@@ -368,21 +368,16 @@ git push origin --delete feat/merged-feature
 
 ## 📝 Commit Strategy
 
-**Conventional Commits with Learning Context (FIRST PERSON - as Rafael):**
+**Conventional Commits Format:**
 
 ```
-feat(ai): add Gemini streaming for real-time analysis
+feat(scope): brief description
 
-- Implemented streaming API to show progress tokens
-- Learned: Gemini SDK uses async generators for streaming
-- Trade-off: More complex but better UX than waiting
+Longer explanation of what changed and why.
+Can be multiple paragraphs if needed.
 
-Why: I want to show progress so users don't think it's frozen
-What: Stream tokens as they're generated instead of waiting
-How: Used model.generateContentStream() and processed chunks
+Closes #issue
 ```
-
-**CRITICAL: All commit messages, documentation, and comments MUST be in FIRST PERSON ("I did", "I learned", "I want") as if Rafael wrote them. Never use third person ("Rafael needs", "The user wants").**
 
 **Commit Types:**
 
@@ -393,10 +388,13 @@ How: Used model.generateContentStream() and processed chunks
 - `test:` Tests
 - `chore:` Build/tooling changes
 
-**One Logical Concern Per Commit:**
+**Best Practices:**
 
-- ❌ Don't: "Add feature X, fix bug Y, update docs"
-- ✅ Do: Three separate commits
+- Write in first person ("I added", "I fixed")
+- Keep subject line under 50 characters
+- Explain WHY, not just WHAT
+- Reference issues when applicable
+- One logical change per commit
 
 ---
 
