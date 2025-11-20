@@ -43,20 +43,20 @@ export default function TrackerPage(): React.JSX.Element {
 
   const getStatusBadgeVariant = (status: string): string => {
     const variants: Record<string, string> = {
-      saved: "bg-gray-100 text-gray-800",
-      applied: "bg-blue-100 text-blue-800",
-      interviewing: "bg-purple-100 text-purple-800",
-      offer: "bg-green-100 text-green-800",
-      rejected: "bg-red-100 text-red-800",
+      saved: "bg-nordic-neutral-100 text-nordic-neutral-700 border border-nordic-neutral-200",
+      applied: "bg-fjord-50 text-fjord-700 border border-fjord-200",
+      interviewing: "bg-forest-50 text-forest-700 border border-forest-200",
+      offer: "bg-forest-100 text-forest-800 border border-forest-300",
+      rejected: "bg-clay-100 text-clay-700 border border-clay-300",
     };
-    return variants[status] || "bg-gray-100 text-gray-800";
+    return variants[status] || "bg-nordic-neutral-100 text-nordic-neutral-700";
   };
 
   const getMatchColor = (score: number): string => {
-    if (score >= 80) return "text-green-600 font-semibold";
-    if (score >= 60) return "text-blue-600 font-semibold";
-    if (score >= 40) return "text-yellow-600 font-semibold";
-    return "text-red-600 font-semibold";
+    if (score >= 80) return "text-forest-700 font-semibold";
+    if (score >= 60) return "text-fjord-600 font-semibold";
+    if (score >= 40) return "text-clay-600 font-semibold";
+    return "text-nordic-neutral-600 font-semibold";
   };
 
   const stats = {
@@ -145,24 +145,51 @@ export default function TrackerPage(): React.JSX.Element {
                 <Button onClick={() => router.push("/analyze")}>Analyze Your First Job →</Button>
               </div>
             ) : (
-              <div className="space-y-3">
+              <div className="space-y-4">
                 {applications.map((app) => (
                   <div
                     key={app.id}
-                    className="border rounded-lg p-4 hover:bg-gray-50 transition-colors"
+                    className="border border-gray-200 p-6 hover:border-gray-300 hover:shadow-sm transition-all duration-200"
+                    style={{
+                      borderRadius: "var(--radius-lg)",
+                      backgroundColor: "white",
+                    }}
                   >
                     <div className="flex justify-between items-start">
                       <div className="flex-1">
-                        <h3 className="font-semibold text-lg">{app.company}</h3>
-                        <p className="text-gray-600">{app.role}</p>
-                        <div className="flex gap-2 mt-2">
+                        <h3
+                          className="font-semibold mb-1"
+                          style={{
+                            fontSize: "var(--text-heading-sm)",
+                            lineHeight: "var(--leading-heading)",
+                            color: "var(--color-nordic-neutral-900)",
+                          }}
+                        >
+                          {app.company}
+                        </h3>
+                        <p
+                          className="mb-3"
+                          style={{
+                            fontSize: "var(--text-body)",
+                            color: "var(--color-nordic-neutral-600)",
+                          }}
+                        >
+                          {app.role}
+                        </p>
+                        <div className="flex gap-3 items-center">
                           <Badge className={getStatusBadgeVariant(app.status)}>{app.status}</Badge>
                           <span className={getMatchColor(app.matchScore)}>
                             {app.matchScore}% match
                           </span>
                         </div>
                       </div>
-                      <div className="text-right text-sm text-gray-500">
+                      <div
+                        className="text-right"
+                        style={{
+                          fontSize: "var(--text-small)",
+                          color: "var(--color-nordic-neutral-500)",
+                        }}
+                      >
                         <p>
                           {app.appliedAt
                             ? `Applied ${format(new Date(app.appliedAt), "MMM d")}`
