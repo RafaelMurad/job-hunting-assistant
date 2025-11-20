@@ -25,13 +25,41 @@
   --color-fjord-800: #075985;
   --color-fjord-900: #0c4a6e;
   
-  /* Accent Colors */
-  --color-forest: #10b981;
-  --color-forest-dark: #059669;
-  --color-amber: #f59e0b;
-  --color-amber-dark: #d97706;
-  --color-clay: #ef4444;
-  --color-clay-dark: #dc2626;
+  /* Nordic Green (Forest) */
+  --color-forest-50: #f0fdf4;
+  --color-forest-100: #dcfce7;
+  --color-forest-200: #bbf7d0;
+  --color-forest-300: #86efac;
+  --color-forest-400: #4ade80;
+  --color-forest-500: #22c55e;
+  --color-forest-600: #16a34a;
+  --color-forest-700: #15803d;
+  --color-forest-800: #166534;
+  --color-forest-900: #14532d;
+  
+  /* Nordic Red (Clay) */
+  --color-clay-50: #fef2f2;
+  --color-clay-100: #fee2e2;
+  --color-clay-200: #fecaca;
+  --color-clay-300: #fca5a5;
+  --color-clay-400: #f87171;
+  --color-clay-500: #ef4444;
+  --color-clay-600: #dc2626;
+  --color-clay-700: #b91c1c;
+  --color-clay-800: #991b1b;
+  --color-clay-900: #7f1d1d;
+  
+  /* Nordic Neutrals (Extended) */
+  --color-nordic-neutral-50: #f9fafb;
+  --color-nordic-neutral-100: #f3f4f6;
+  --color-nordic-neutral-200: #e5e7eb;
+  --color-nordic-neutral-300: #d1d5db;
+  --color-nordic-neutral-400: #9ca3af;
+  --color-nordic-neutral-500: #6b7280;
+  --color-nordic-neutral-600: #4b5563;
+  --color-nordic-neutral-700: #374151;
+  --color-nordic-neutral-800: #1f2937;
+  --color-nordic-neutral-900: #111827;
 
   /* Nordic Typography - Font Families */
   --font-family-sans: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
@@ -68,6 +96,20 @@
   --letter-spacing-wide: 0.025em;
   --letter-spacing-wider: 0.05em;
   --letter-spacing-widest: 0.1em;
+  
+  /* Nordic Typography - Semantic Sizes */
+  --text-small: 0.875rem;        /* 14px */
+  --text-body: 1rem;             /* 16px */
+  --text-heading-sm: 1.25rem;    /* 20px */
+  --text-heading-md: 1.563rem;   /* 25px */
+  --text-heading-lg: 1.953rem;   /* 31px */
+  --text-heading-xl: 3.052rem;   /* 49px */
+  
+  /* Nordic Typography - Semantic Line Heights */
+  --leading-tight: 1.25;
+  --leading-heading: 1.25;
+  --leading-normal: 1.5;
+  --leading-relaxed: 1.625;
 
   /* Nordic Spacing - Generous Whitespace (Base 8px scale) */
   --spacing-0: 0;
