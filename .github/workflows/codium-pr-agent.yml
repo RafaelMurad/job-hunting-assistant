@@ -1,0 +1,25 @@
+name: Codium AI PR Agent
+
+on:
+  pull_request:
+    types: [opened, reopened, synchronize]
+  issue_comment:
+    types: [created, edited]
+
+jobs:
+  pr_agent:
+    name: AI Code Review
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
+      issues: write
+    
+    steps:
+      - name: PR Agent Action
+        uses: Codium-ai/pr-agent@main
+        env:
+          OPENAI_KEY: ${{ secrets.OPENAI_API_KEY }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          # Use your existing OpenAI key or get a free Codium AI key
+          # Alternative: Use Codium's free tier (no API key needed for basic features)

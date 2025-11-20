@@ -45,3 +45,6 @@ next-env.d.ts
 
 *.db
 *.db-journal
+
+# Local Copilot instructions (private collaboration context)
+.copilot-local.md

@@ -1,0 +1,67 @@
+# Codium AI PR Agent Configuration
+# https://github.com/Codium-ai/pr-agent
+
+[config]
+# Model selection (uses your OPENAI_API_KEY)
+model = "gpt-4o-mini"  # Cost-effective, fast
+# model = "gpt-4o"     # More powerful, higher cost
+
+[pr_reviewer]
+# Enable automatic review on PR creation
+auto_review = true
+# Require security review
+require_security_review = true
+# Require tests review
+require_tests_review = true
+# Enable inline comments
+inline_comments = true
+# Number of code suggestions per review
+num_code_suggestions = 4
+
+[pr_description]
+# Auto-generate PR descriptions
+auto_generate = false  # Set to true if you want AI to write PR descriptions
+# Include file walkthrough
+add_original_user_description = true
+# Extra instructions for PR descriptions
+extra_instructions = """
+- Focus on Nordic design principles when reviewing UI changes
+- Highlight accessibility concerns
+- Check for proper TypeScript types
+- Verify test coverage for new code
+"""
+
+[pr_code_suggestions]
+# Auto-suggest code improvements
+auto_review = true
+# Number of suggestions
+num_code_suggestions = 3
+# Suggestion types
+suggestions_score_threshold = 7  # Only show high-quality suggestions (7-10)
+
+[pr_questions]
+# Enable AI to ask clarifying questions
+enable = true
+
+[pr_test]
+# Auto-generate test suggestions
+enable = true
+# Testing framework
+testing_framework = "vitest"
+# Extra instructions
+extra_instructions = """
+- Use React Testing Library patterns
+- Follow the test-utils.tsx helper
+- Ensure 80% coverage for new code
+"""
+
+[pr_improve]
+# Code improvement suggestions
+enable = true
+# Focus areas
+extra_instructions = """
+- Next.js 16 best practices
+- React 19 patterns
+- Performance optimizations
+- Security vulnerabilities
+"""
