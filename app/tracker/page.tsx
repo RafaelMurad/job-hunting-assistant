@@ -87,7 +87,7 @@ export default function TrackerPage(): React.JSX.Element {
             <p className="text-gray-600">Track all your job applications in one place</p>
           </div>
           <div className="flex gap-4">
-            <Button variant="outline" onClick={() => router.push("/")}>
+            <Button variant="outline" onClick={() => router.push("/profile")}>
               Profile
             </Button>
             <Button onClick={() => router.push("/analyze")}>+ Analyze New Job</Button>

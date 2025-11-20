@@ -30,7 +30,10 @@ export default function RootLayout({
                   Job Hunt AI
                 </Link>
                 <div className="hidden md:flex gap-6">
-                  <Link href="/" className="text-slate-600 hover:text-slate-900 transition-colors">
+                  <Link
+                    href="/profile"
+                    className="text-slate-600 hover:text-slate-900 transition-colors"
+                  >
                     Profile
                   </Link>
                   <Link
