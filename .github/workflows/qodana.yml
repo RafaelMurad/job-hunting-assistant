@@ -25,9 +25,6 @@ jobs:
         uses: JetBrains/qodana-action@v2024.3
         with:
           pr-mode: false
-          args: |
-            --apply-fixes
-            --property=idea.headless.enable.statistics=false
         env:
           QODANA_TOKEN: ${{ secrets.QODANA_TOKEN }}
       
