@@ -73,10 +73,10 @@ export default function Home(): React.JSX.Element {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-slate-50">
+      <div className="min-h-screen flex items-center justify-center bg-nordic-neutral-50">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
-          <p className="text-slate-600">Loading your profile...</p>
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-fjord-600 mx-auto mb-4"></div>
+          <p className="text-nordic-neutral-600">Loading your profile...</p>
         </div>
       </div>
     );
@@ -84,10 +84,10 @@ export default function Home(): React.JSX.Element {
 
   if (!user) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-slate-50">
+      <div className="min-h-screen flex items-center justify-center bg-nordic-neutral-50">
         <div className="text-center">
-          <p className="text-slate-900 text-lg font-medium">Error loading user data</p>
-          <p className="text-slate-600 mt-2">Please refresh the page</p>
+          <p className="text-nordic-neutral-900 text-lg font-medium">Error loading user data</p>
+          <p className="text-nordic-neutral-600 mt-2">Please refresh the page</p>
         </div>
       </div>
     );
@@ -97,25 +97,21 @@ export default function Home(): React.JSX.Element {
     user.name && user.email && user.location && user.summary && user.experience && user.skills;
 
   return (
-    <div className="min-h-screen bg-slate-50 py-8">
+    <div className="min-h-screen bg-nordic-neutral-50 py-8">
       <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Header */}
         <div className="mb-8">
-          <h1 className="text-3xl font-bold text-slate-900 mb-2">Your Master CV</h1>
-          <p className="text-slate-600">
+          <h1 className="text-3xl font-bold text-nordic-neutral-900 mb-2">Your Master CV</h1>
+          <p className="text-nordic-neutral-600">
             Complete your profile to start analyzing jobs and generating cover letters
           </p>
         </div>
 
         {/* Profile Completion Status */}
         {!isProfileComplete && (
-          <div className="mb-6 bg-amber-50 border border-amber-200 rounded-lg p-4">
+          <div className="mb-6 bg-clay-50 border border-clay-200 rounded-lg p-4">
             <div className="flex items-start gap-3">
-              <svg
-                className="w-5 h-5 text-amber-600 mt-0.5"
-                fill="currentColor"
-                viewBox="0 0 20 20"
-              >
+              <svg className="w-5 h-5 text-clay-600 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
                 <path
                   fillRule="evenodd"
                   d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z"
@@ -123,8 +119,8 @@ export default function Home(): React.JSX.Element {
                 />
               </svg>
               <div>
-                <h3 className="font-medium text-amber-900">Profile Incomplete</h3>
-                <p className="text-sm text-amber-700 mt-1">
+                <h3 className="font-medium text-clay-900">Profile Incomplete</h3>
+                <p className="text-sm text-clay-700 mt-1">
                   Please fill in all required fields (*) to unlock job analysis features
                 </p>
               </div>
@@ -133,9 +129,9 @@ export default function Home(): React.JSX.Element {
         )}
 
         <Card className="shadow-sm">
-          <CardHeader className="bg-white border-b border-slate-200">
-            <CardTitle className="text-slate-900">Profile Information</CardTitle>
-            <CardDescription className="text-slate-600">
+          <CardHeader className="bg-white border-b border-nordic-neutral-200">
+            <CardTitle className="text-nordic-neutral-900">Profile Information</CardTitle>
+            <CardDescription className="text-nordic-neutral-600">
               This information will be used to analyze job matches and generate personalized cover
               letters
             </CardDescription>
@@ -145,7 +141,7 @@ export default function Home(): React.JSX.Element {
               {/* Contact Info */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                  <Label htmlFor="name" className="text-slate-900 font-medium">
+                  <Label htmlFor="name" className="text-nordic-neutral-900 font-medium">
                     Full Name *
                   </Label>
                   <Input
@@ -154,11 +150,11 @@ export default function Home(): React.JSX.Element {
                     onChange={(e) => updateField("name", e.target.value)}
                     placeholder="Rafael Murad"
                     required
-                    className="mt-2 text-slate-900"
+                    className="mt-2 text-nordic-neutral-900"
                   />
                 </div>
                 <div>
-                  <Label htmlFor="email" className="text-slate-900 font-medium">
+                  <Label htmlFor="email" className="text-nordic-neutral-900 font-medium">
                     Email *
                   </Label>
                   <Input
@@ -168,14 +164,14 @@ export default function Home(): React.JSX.Element {
                     onChange={(e) => updateField("email", e.target.value)}
                     placeholder="your@email.com"
                     required
-                    className="mt-2 text-slate-900"
+                    className="mt-2 text-nordic-neutral-900"
                   />
                 </div>
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                  <Label htmlFor="phone" className="text-slate-900 font-medium">
+                  <Label htmlFor="phone" className="text-nordic-neutral-900 font-medium">
                     Phone
                   </Label>
                   <Input
@@ -183,11 +179,11 @@ export default function Home(): React.JSX.Element {
                     value={user.phone || ""}
                     onChange={(e) => updateField("phone", e.target.value)}
                     placeholder="+44 7714 002131"
-                    className="mt-2 text-slate-900"
+                    className="mt-2 text-nordic-neutral-900"
                   />
                 </div>
                 <div>
-                  <Label htmlFor="location" className="text-slate-900 font-medium">
+                  <Label htmlFor="location" className="text-nordic-neutral-900 font-medium">
                     Location *
                   </Label>
                   <Input
@@ -196,14 +192,14 @@ export default function Home(): React.JSX.Element {
                     onChange={(e) => updateField("location", e.target.value)}
                     placeholder="Brazil"
                     required
-                    className="mt-2 text-slate-900"
+                    className="mt-2 text-nordic-neutral-900"
                   />
                 </div>
               </div>
 
               {/* Professional Summary */}
               <div>
-                <Label htmlFor="summary" className="text-slate-900 font-medium">
+                <Label htmlFor="summary" className="text-nordic-neutral-900 font-medium">
                   Professional Summary *
                 </Label>
                 <Textarea
@@ -213,16 +209,16 @@ export default function Home(): React.JSX.Element {
                   placeholder="Frontend Software Engineer with 4+ years of experience..."
                   rows={4}
                   required
-                  className="mt-2 text-slate-900"
+                  className="mt-2 text-nordic-neutral-900"
                 />
-                <p className="text-sm text-slate-500 mt-2">
+                <p className="text-sm text-nordic-neutral-500 mt-2">
                   A brief overview of your professional background and expertise.
                 </p>
               </div>
 
               {/* Work Experience */}
               <div>
-                <Label htmlFor="experience" className="text-slate-900 font-medium">
+                <Label htmlFor="experience" className="text-nordic-neutral-900 font-medium">
                   Work Experience *
                 </Label>
                 <Textarea
@@ -232,16 +228,16 @@ export default function Home(): React.JSX.Element {
                   placeholder="Just Eat Takeaway | Frontend Software Engineer (March 2023 - Present)&#10;- Owned Jet+ cancellation flow..."
                   rows={10}
                   required
-                  className="mt-2 text-slate-900"
+                  className="mt-2 text-nordic-neutral-900"
                 />
-                <p className="text-sm text-slate-500 mt-2">
+                <p className="text-sm text-nordic-neutral-500 mt-2">
                   Include company, role, dates, and key achievements for each position.
                 </p>
               </div>
 
               {/* Skills */}
               <div>
-                <Label htmlFor="skills" className="text-slate-900 font-medium">
+                <Label htmlFor="skills" className="text-nordic-neutral-900 font-medium">
                   Skills *
                 </Label>
                 <Textarea
@@ -251,20 +247,16 @@ export default function Home(): React.JSX.Element {
                   placeholder="React, TypeScript, Next.js, Redux, Jest, React Testing Library..."
                   rows={3}
                   required
-                  className="mt-2 text-slate-900"
+                  className="mt-2 text-nordic-neutral-900"
                 />
-                <p className="text-sm text-slate-500 mt-2">
+                <p className="text-sm text-nordic-neutral-500 mt-2">
                   Comma-separated list of your skills and technologies.
                 </p>
               </div>
 
               {/* Action Buttons */}
               <div className="flex gap-4 pt-4">
-                <Button
-                  type="submit"
-                  disabled={saving}
-                  className="flex-1 bg-blue-600 hover:bg-blue-700 text-white font-medium py-2.5"
-                >
+                <Button type="submit" disabled={saving} className="flex-1">
                   {saving ? (
                     <span className="flex items-center justify-center gap-2">
                       <svg className="animate-spin h-4 w-4" viewBox="0 0 24 24">
@@ -294,7 +286,7 @@ export default function Home(): React.JSX.Element {
                   variant="outline"
                   onClick={() => router.push("/analyze")}
                   disabled={!isProfileComplete}
-                  className="flex-1 border-slate-300 hover:bg-slate-50 disabled:opacity-50"
+                  className="flex-1"
                 >
                   Analyze a Job →
                 </Button>
@@ -302,22 +294,22 @@ export default function Home(): React.JSX.Element {
                   type="button"
                   variant="outline"
                   onClick={() => router.push("/tracker")}
-                  className="flex-1 border-slate-300 hover:bg-slate-50"
+                  className="flex-1"
                 >
                   View Tracker
                 </Button>
               </div>
 
               {isProfileComplete && (
-                <div className="flex items-center gap-2 p-4 bg-green-50 border border-green-200 rounded-lg">
-                  <svg className="w-5 h-5 text-green-600" fill="currentColor" viewBox="0 0 20 20">
+                <div className="flex items-center gap-2 p-4 bg-forest-50 border border-forest-200 rounded-lg">
+                  <svg className="w-5 h-5 text-forest-600" fill="currentColor" viewBox="0 0 20 20">
                     <path
                       fillRule="evenodd"
                       d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
                       clipRule="evenodd"
                     />
                   </svg>
-                  <span className="text-sm font-medium text-green-900">
+                  <span className="text-sm font-medium text-forest-900">
                     Profile complete! You can now analyze jobs and generate cover letters.
                   </span>
                 </div>
