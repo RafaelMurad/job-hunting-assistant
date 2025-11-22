@@ -44,10 +44,20 @@ export async function GET(): Promise<NextResponse> {
 
 // POST/PUT update user
 export async function POST(request: NextRequest): Promise<NextResponse> {
-  try {
-    const body = await request.json();
-    const { id, name, email, phone, location, summary, experience, skills } = body;
+  // Parse body first so variables are available in catch block
+  const body = await request.json();
+  const { id, name, email, phone, location, summary, experience, skills } = body as {
+    id?: string;
+    name?: string;
+    email?: string;
+    phone?: string;
+    location?: string;
+    summary?: string;
+    experience?: string;
+    skills?: string;
+  };
 
+  try {
     let user;
     if (id) {
       // Update existing user
