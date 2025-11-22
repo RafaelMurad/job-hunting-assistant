@@ -21,22 +21,38 @@ export default function TrackerPage(): React.JSX.Element {
   const router = useRouter();
   const [applications, setApplications] = useState<Application[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     // Get user first
     fetch("/api/user")
-      .then((res) => res.json())
+      .then((res) => {
+        if (!res.ok) throw new Error("Failed to fetch user");
+        return res.json();
+      })
       .then((user) => {
+        if (!user || !user.id) {
+          throw new Error("No user found");
+        }
         // Then load applications
         return fetch(`/api/applications?userId=${user.id}`);
       })
-      .then((res) => res.json())
+      .then((res) => {
+        if (!res.ok) throw new Error("Failed to fetch applications");
+        return res.json();
+      })
       .then((data) => {
-        setApplications(data);
+        // Ensure data is an array
+        if (Array.isArray(data)) {
+          setApplications(data);
+        } else {
+          setApplications([]);
+        }
         setLoading(false);
       })
       .catch((err) => {
         console.error("Error loading applications:", err);
+        setError(err.message || "Failed to load applications");
         setLoading(false);
       });
   }, []);
@@ -76,6 +92,30 @@ export default function TrackerPage(): React.JSX.Element {
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-fjord-600 mx-auto mb-4"></div>
           <p className="text-nordic-neutral-600">Loading applications...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-nordic-neutral-50">
+        <div className="text-center max-w-md mx-auto px-4">
+          <div className="w-16 h-16 bg-clay-100 rounded-full flex items-center justify-center mx-auto mb-4">
+            <svg className="w-8 h-8 text-clay-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+            </svg>
+          </div>
+          <h2 className="text-xl font-semibold text-nordic-neutral-900 mb-2">Unable to Load Applications</h2>
+          <p className="text-nordic-neutral-600 mb-4">{error}</p>
+          <div className="flex gap-3 justify-center">
+            <Button variant="outline" onClick={() => window.location.reload()}>
+              Try Again
+            </Button>
+            <Button onClick={() => router.push("/profile")}>
+              Go to Profile
+            </Button>
+          </div>
         </div>
       </div>
     );
