@@ -1,0 +1,12 @@
+{
+  "name": "@job-hunter/shared",
+  "version": "1.0.0",
+  "main": "index.ts",
+  "types": "index.ts",
+  "exports": {
+    ".": "./index.ts",
+    "./types": "./types/index.ts",
+    "./utils": "./utils/index.ts",
+    "./api": "./api/index.ts"
+  }
+}

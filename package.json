@@ -2,7 +2,14 @@
   "name": "job-hunting-assistant",
   "version": "0.1.0",
   "private": true,
+  "workspaces": [
+    "packages/*",
+    "mobile"
+  ],
   "scripts": {
+    "mobile": "npm run start --workspace=mobile",
+    "mobile:ios": "npm run ios --workspace=mobile",
+    "mobile:android": "npm run android --workspace=mobile",
     "dev": "next dev",
     "build": "next build",
     "build:production": "prisma generate && next build",
