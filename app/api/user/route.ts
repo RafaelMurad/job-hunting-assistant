@@ -60,18 +60,20 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
   try {
     let user;
     if (id) {
+      // Build update data object - only include fields that have values
+      const updateData: Record<string, string | null> = {};
+      if (name !== undefined) updateData.name = name;
+      if (email !== undefined) updateData.email = email;
+      if (phone !== undefined) updateData.phone = phone;
+      if (location !== undefined) updateData.location = location;
+      if (summary !== undefined) updateData.summary = summary;
+      if (experience !== undefined) updateData.experience = experience;
+      if (skills !== undefined) updateData.skills = skills;
+
       // Update existing user
       user = await prisma.user.update({
         where: { id },
-        data: {
-          name: name || undefined,
-          email: email || undefined,
-          phone: phone || undefined,
-          location: location || undefined,
-          summary: summary || undefined,
-          experience: experience || undefined,
-          skills: skills || undefined,
-        },
+        data: updateData,
       });
     } else {
       // Create new user
