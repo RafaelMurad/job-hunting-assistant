@@ -72,19 +72,22 @@ export default function TrackerPage(): React.JSX.Element {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <p>Loading applications...</p>
+      <div className="min-h-screen flex items-center justify-center bg-nordic-neutral-50">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-fjord-600 mx-auto mb-4"></div>
+          <p className="text-nordic-neutral-600">Loading applications...</p>
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 py-12">
-      <div className="max-w-7xl mx-auto px-4">
-        <div className="mb-8 flex justify-between items-center">
+    <div className="min-h-screen bg-nordic-neutral-50 py-12">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="mb-8 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
           <div>
-            <h1 className="text-4xl font-bold mb-2">Application Tracker</h1>
-            <p className="text-gray-600">Track all your job applications in one place</p>
+            <h1 className="text-3xl font-bold text-nordic-neutral-900 mb-2">Application Tracker</h1>
+            <p className="text-nordic-neutral-600">Track all your job applications in one place</p>
           </div>
           <div className="flex gap-4">
             <Button variant="outline" onClick={() => router.push("/profile")}>
@@ -95,52 +98,52 @@ export default function TrackerPage(): React.JSX.Element {
         </div>
 
         {/* Stats */}
-        <div className="grid grid-cols-5 gap-4 mb-6">
-          <Card>
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4 mb-6">
+          <Card className="border-nordic-neutral-200 shadow-sm">
             <CardHeader className="pb-2">
-              <CardDescription>Total</CardDescription>
-              <CardTitle className="text-3xl">{stats.total}</CardTitle>
+              <CardDescription className="text-nordic-neutral-600">Total</CardDescription>
+              <CardTitle className="text-3xl text-nordic-neutral-900">{stats.total}</CardTitle>
             </CardHeader>
           </Card>
-          <Card>
+          <Card className="border-fjord-200 bg-fjord-50/50 shadow-sm">
             <CardHeader className="pb-2">
-              <CardDescription>Applied</CardDescription>
-              <CardTitle className="text-3xl text-blue-600">{stats.applied}</CardTitle>
+              <CardDescription className="text-fjord-700">Applied</CardDescription>
+              <CardTitle className="text-3xl text-fjord-600">{stats.applied}</CardTitle>
             </CardHeader>
           </Card>
-          <Card>
+          <Card className="border-forest-200 bg-forest-50/50 shadow-sm">
             <CardHeader className="pb-2">
-              <CardDescription>Interviewing</CardDescription>
-              <CardTitle className="text-3xl text-purple-600">{stats.interviewing}</CardTitle>
+              <CardDescription className="text-forest-700">Interviewing</CardDescription>
+              <CardTitle className="text-3xl text-forest-600">{stats.interviewing}</CardTitle>
             </CardHeader>
           </Card>
-          <Card>
+          <Card className="border-forest-300 bg-forest-100/50 shadow-sm">
             <CardHeader className="pb-2">
-              <CardDescription>Offers</CardDescription>
-              <CardTitle className="text-3xl text-green-600">{stats.offers}</CardTitle>
+              <CardDescription className="text-forest-800">Offers</CardDescription>
+              <CardTitle className="text-3xl text-forest-700">{stats.offers}</CardTitle>
             </CardHeader>
           </Card>
-          <Card>
+          <Card className="border-nordic-neutral-200 shadow-sm">
             <CardHeader className="pb-2">
-              <CardDescription>Avg Match</CardDescription>
-              <CardTitle className="text-3xl">{stats.avgMatch}%</CardTitle>
+              <CardDescription className="text-nordic-neutral-600">Avg Match</CardDescription>
+              <CardTitle className="text-3xl text-nordic-neutral-900">{stats.avgMatch}%</CardTitle>
             </CardHeader>
           </Card>
         </div>
 
         {/* Applications List */}
-        <Card>
-          <CardHeader>
-            <CardTitle>All Applications</CardTitle>
-            <CardDescription>
+        <Card className="border-nordic-neutral-200 shadow-sm">
+          <CardHeader className="bg-white border-b border-nordic-neutral-200">
+            <CardTitle className="text-nordic-neutral-900">All Applications</CardTitle>
+            <CardDescription className="text-nordic-neutral-600">
               {applications.length === 0
                 ? "No applications yet"
                 : `${applications.length} total applications`}
             </CardDescription>
           </CardHeader>
-          <CardContent>
+          <CardContent className="bg-white pt-6">
             {applications.length === 0 ? (
-              <div className="text-center py-12 text-gray-500">
+              <div className="text-center py-12 text-nordic-neutral-500">
                 <p className="mb-4">No applications tracked yet</p>
                 <Button onClick={() => router.push("/analyze")}>Analyze Your First Job →</Button>
               </div>
@@ -149,31 +152,14 @@ export default function TrackerPage(): React.JSX.Element {
                 {applications.map((app) => (
                   <div
                     key={app.id}
-                    className="border border-gray-200 p-6 hover:border-gray-300 hover:shadow-sm transition-all duration-200"
-                    style={{
-                      borderRadius: "var(--radius-lg)",
-                      backgroundColor: "white",
-                    }}
+                    className="border border-nordic-neutral-200 p-6 hover:border-nordic-neutral-300 hover:shadow-sm transition-all duration-200 rounded-lg bg-white"
                   >
                     <div className="flex justify-between items-start">
                       <div className="flex-1">
-                        <h3
-                          className="font-semibold mb-1"
-                          style={{
-                            fontSize: "var(--text-heading-sm)",
-                            lineHeight: "var(--leading-heading)",
-                            color: "var(--color-nordic-neutral-900)",
-                          }}
-                        >
+                        <h3 className="font-semibold mb-1 text-lg text-nordic-neutral-900">
                           {app.company}
                         </h3>
-                        <p
-                          className="mb-3"
-                          style={{
-                            fontSize: "var(--text-body)",
-                            color: "var(--color-nordic-neutral-600)",
-                          }}
-                        >
+                        <p className="mb-3 text-nordic-neutral-600">
                           {app.role}
                         </p>
                         <div className="flex gap-3 items-center">
@@ -183,13 +169,7 @@ export default function TrackerPage(): React.JSX.Element {
                           </span>
                         </div>
                       </div>
-                      <div
-                        className="text-right"
-                        style={{
-                          fontSize: "var(--text-small)",
-                          color: "var(--color-nordic-neutral-500)",
-                        }}
-                      >
+                      <div className="text-right text-sm text-nordic-neutral-500">
                         <p>
                           {app.appliedAt
                             ? `Applied ${format(new Date(app.appliedAt), "MMM d")}`
