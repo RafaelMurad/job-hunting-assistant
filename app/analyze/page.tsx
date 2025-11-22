@@ -122,40 +122,40 @@ export default function AnalyzePage(): React.JSX.Element {
   };
 
   const getMatchColor = (score: number): string => {
-    if (score >= 80) return "bg-green-100 text-green-800";
-    if (score >= 60) return "bg-blue-100 text-blue-800";
-    if (score >= 40) return "bg-yellow-100 text-yellow-800";
-    return "bg-red-100 text-red-800";
+    if (score >= 80) return "bg-forest-100 text-forest-800 border border-forest-200";
+    if (score >= 60) return "bg-fjord-100 text-fjord-800 border border-fjord-200";
+    if (score >= 40) return "bg-clay-50 text-clay-700 border border-clay-200";
+    return "bg-clay-100 text-clay-800 border border-clay-300";
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 py-12">
-      <div className="max-w-6xl mx-auto px-4">
+    <div className="min-h-screen bg-nordic-neutral-50 py-12">
+      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="mb-8 flex justify-between items-center">
           <div>
-            <h1 className="text-4xl font-bold mb-2">Analyze Job</h1>
-            <p className="text-gray-600">Paste a job description to get AI-powered analysis</p>
+            <h1 className="text-3xl font-bold text-nordic-neutral-900 mb-2">Analyze Job</h1>
+            <p className="text-nordic-neutral-600">Paste a job description to get AI-powered analysis</p>
           </div>
           <Button variant="outline" onClick={() => router.push("/")}>
-            ← Back to Profile
+            ← Back Home
           </Button>
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           {/* Input Section */}
           <div>
-            <Card>
-              <CardHeader>
-                <CardTitle>Job Description</CardTitle>
-                <CardDescription>Paste the full job posting here</CardDescription>
+            <Card className="border-nordic-neutral-200 shadow-sm">
+              <CardHeader className="bg-white border-b border-nordic-neutral-200">
+                <CardTitle className="text-nordic-neutral-900">Job Description</CardTitle>
+                <CardDescription className="text-nordic-neutral-600">Paste the full job posting here</CardDescription>
               </CardHeader>
-              <CardContent>
+              <CardContent className="bg-white pt-6">
                 <Textarea
                   value={jobDescription}
                   onChange={(e) => setJobDescription(e.target.value)}
                   placeholder="Paste job description here..."
                   rows={20}
-                  className="mb-4"
+                  className="mb-4 text-nordic-neutral-900"
                 />
                 <Button
                   onClick={handleAnalyze}
@@ -172,23 +172,23 @@ export default function AnalyzePage(): React.JSX.Element {
           <div>
             {analysis && (
               <div className="space-y-4">
-                <Card>
-                  <CardHeader>
-                    <CardTitle className="flex justify-between items-center">
+                <Card className="border-nordic-neutral-200 shadow-sm">
+                  <CardHeader className="bg-white border-b border-nordic-neutral-200">
+                    <CardTitle className="flex justify-between items-center text-nordic-neutral-900">
                       <span>{analysis.company}</span>
                       <Badge className={getMatchColor(analysis.matchScore)}>
                         {analysis.matchScore}% Match
                       </Badge>
                     </CardTitle>
-                    <CardDescription>{analysis.role}</CardDescription>
+                    <CardDescription className="text-nordic-neutral-600">{analysis.role}</CardDescription>
                   </CardHeader>
-                  <CardContent className="space-y-4">
+                  <CardContent className="space-y-4 bg-white pt-6">
                     {/* Top Requirements */}
                     <div>
-                      <Label className="text-base mb-2 block">Top Requirements</Label>
+                      <Label className="text-base mb-2 block text-nordic-neutral-900">Top Requirements</Label>
                       <ul className="space-y-1">
                         {analysis.topRequirements.map((req, i) => (
-                          <li key={i} className="text-sm">
+                          <li key={i} className="text-sm text-nordic-neutral-700">
                             • {req}
                           </li>
                         ))}
@@ -197,10 +197,10 @@ export default function AnalyzePage(): React.JSX.Element {
 
                     {/* Skills Match */}
                     <div>
-                      <Label className="text-base mb-2 block">Your Matching Skills</Label>
+                      <Label className="text-base mb-2 block text-nordic-neutral-900">Your Matching Skills</Label>
                       <div className="flex flex-wrap gap-2">
                         {analysis.skillsMatch.map((skill, i) => (
-                          <Badge key={i} variant="secondary" className="bg-green-100">
+                          <Badge key={i} variant="secondary" className="bg-forest-100 text-forest-800 border border-forest-200">
                             {skill}
                           </Badge>
                         ))}
@@ -210,10 +210,10 @@ export default function AnalyzePage(): React.JSX.Element {
                     {/* Gaps */}
                     {analysis.gaps.length > 0 && (
                       <div>
-                        <Label className="text-base mb-2 block">Skills to Address</Label>
+                        <Label className="text-base mb-2 block text-nordic-neutral-900">Skills to Address</Label>
                         <div className="flex flex-wrap gap-2">
                           {analysis.gaps.map((gap, i) => (
-                            <Badge key={i} variant="outline" className="bg-yellow-50">
+                            <Badge key={i} variant="outline" className="bg-clay-50 text-clay-700 border border-clay-200">
                               {gap}
                             </Badge>
                           ))}
@@ -224,10 +224,10 @@ export default function AnalyzePage(): React.JSX.Element {
                     {/* Red Flags */}
                     {analysis.redFlags.length > 0 && (
                       <div>
-                        <Label className="text-base mb-2 block text-red-600">Concerns</Label>
+                        <Label className="text-base mb-2 block text-clay-600">Concerns</Label>
                         <ul className="space-y-1">
                           {analysis.redFlags.map((flag, i) => (
-                            <li key={i} className="text-sm text-red-600">
+                            <li key={i} className="text-sm text-clay-600">
                               ⚠️ {flag}
                             </li>
                           ))}
@@ -258,17 +258,17 @@ export default function AnalyzePage(): React.JSX.Element {
 
                 {/* Cover Letter */}
                 {coverLetter && (
-                  <Card>
-                    <CardHeader>
-                      <CardTitle>Generated Cover Letter</CardTitle>
-                      <CardDescription>Edit as needed before applying</CardDescription>
+                  <Card className="border-nordic-neutral-200 shadow-sm">
+                    <CardHeader className="bg-white border-b border-nordic-neutral-200">
+                      <CardTitle className="text-nordic-neutral-900">Generated Cover Letter</CardTitle>
+                      <CardDescription className="text-nordic-neutral-600">Edit as needed before applying</CardDescription>
                     </CardHeader>
-                    <CardContent>
+                    <CardContent className="bg-white pt-6">
                       <Textarea
                         value={coverLetter}
                         onChange={(e) => setCoverLetter(e.target.value)}
                         rows={12}
-                        className="mb-4"
+                        className="mb-4 text-nordic-neutral-900"
                       />
                       <Button
                         onClick={() => {
@@ -287,8 +287,8 @@ export default function AnalyzePage(): React.JSX.Element {
             )}
 
             {!analysis && (
-              <Card>
-                <CardContent className="py-12 text-center text-gray-500">
+              <Card className="border-nordic-neutral-200">
+                <CardContent className="py-12 text-center text-nordic-neutral-500">
                   <p>Paste a job description and click &quot;Analyze&quot; to get started</p>
                 </CardContent>
               </Card>
