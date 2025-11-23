@@ -99,6 +99,13 @@ export const FEATURE_FLAGS: FeatureFlag[] = [
     defaultEnabled: false,
     category: "experimental",
   },
+  {
+    key: "cv_studio",
+    name: "CV Studio",
+    description: "Import, edit, analyze, and export CVs with AI assistance",
+    defaultEnabled: false,
+    category: "experimental",
+  },
 
   // ===================
   // BETA FLAGS
