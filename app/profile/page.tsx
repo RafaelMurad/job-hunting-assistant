@@ -28,6 +28,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
+import { CVUpload, ExtractedCVData } from "@/components/cv-upload";
 
 /**
  * User interface - matches the Prisma model.
@@ -78,6 +79,9 @@ export default function ProfilePage(): React.JSX.Element {
   // Feedback states
   const [toast, setToast] = useState<Toast | null>(null);
   const [fieldErrors, setFieldErrors] = useState<FieldErrors>({});
+
+  // Input mode: manual form entry vs CV upload
+  const [inputMode, setInputMode] = useState<"manual" | "upload">("manual");
 
   // ============================================
   // DATA FETCHING
@@ -199,6 +203,32 @@ export default function ProfilePage(): React.JSX.Element {
     }
   };
 
+  /**
+   * Handle extracted CV data from the CVUpload component.
+   *
+   * WHY: When a CV is uploaded and parsed, we want to populate the form
+   * with the extracted data so the user can review and edit before saving.
+   *
+   * WHAT: Takes extracted data and updates the user state, then switches
+   * to manual mode so the user can verify/edit the populated fields.
+   */
+  const handleCVExtracted = useCallback((extractedData: ExtractedCVData) => {
+    setUser((prev) => ({
+      id: prev?.id || "",
+      name: extractedData.name || prev?.name || "",
+      email: extractedData.email || prev?.email || "",
+      phone: extractedData.phone || prev?.phone || "",
+      location: extractedData.location || prev?.location || "",
+      summary: extractedData.summary || prev?.summary || "",
+      experience: extractedData.experience || prev?.experience || "",
+      skills: extractedData.skills || prev?.skills || "",
+    }));
+
+    // Switch to manual mode so user can review/edit the extracted data
+    setInputMode("manual");
+    showToast("success", "CV data extracted! Please review and save.");
+  }, []);
+
   // ============================================
   // COMPUTED VALUES
   // ============================================
@@ -295,10 +325,40 @@ export default function ProfilePage(): React.JSX.Element {
 
         {/* Header */}
         <div className="mb-8">
-          <h1 className="text-3xl font-bold text-nordic-neutral-900 mb-2">Your Master CV</h1>
-          <p className="text-nordic-neutral-600">
-            Complete your profile to start analyzing jobs and generating cover letters
-          </p>
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+            <div>
+              <h1 className="text-3xl font-bold text-nordic-neutral-900 mb-2">Your Master CV</h1>
+              <p className="text-nordic-neutral-600">
+                Complete your profile to start analyzing jobs and generating cover letters
+              </p>
+            </div>
+
+            {/* Input Mode Toggle */}
+            <div className="flex items-center gap-2 bg-nordic-neutral-100 rounded-lg p-1">
+              <button
+                type="button"
+                onClick={() => setInputMode("manual")}
+                className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
+                  inputMode === "manual"
+                    ? "bg-white text-nordic-neutral-900 shadow-sm"
+                    : "text-nordic-neutral-600 hover:text-nordic-neutral-900"
+                }`}
+              >
+                Manual Entry
+              </button>
+              <button
+                type="button"
+                onClick={() => setInputMode("upload")}
+                className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
+                  inputMode === "upload"
+                    ? "bg-white text-nordic-neutral-900 shadow-sm"
+                    : "text-nordic-neutral-600 hover:text-nordic-neutral-900"
+                }`}
+              >
+                Upload CV
+              </button>
+            </div>
+          </div>
         </div>
 
         {/* Profile Completion Status */}
@@ -322,211 +382,221 @@ export default function ProfilePage(): React.JSX.Element {
           </div>
         )}
 
-        <Card className="shadow-sm">
-          <CardHeader className="bg-white border-b border-nordic-neutral-200">
-            <CardTitle className="text-nordic-neutral-900">Profile Information</CardTitle>
-            <CardDescription className="text-nordic-neutral-600">
-              This information will be used to analyze job matches and generate personalized cover
-              letters
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="bg-white pt-6">
-            <form onSubmit={handleSave} className="space-y-6">
-              {/* Contact Info */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <Label htmlFor="name" className="text-nordic-neutral-900 font-medium">
-                    Full Name *
-                  </Label>
-                  <Input
-                    id="name"
-                    value={user.name}
-                    onChange={(e) => updateField("name", e.target.value)}
-                    placeholder="John Doe"
-                    className={`mt-2 text-nordic-neutral-900 ${
-                      fieldErrors.name ? "border-clay-500 focus:ring-clay-500" : ""
-                    }`}
-                  />
-                  {fieldErrors.name && (
-                    <p className="text-sm text-clay-600 mt-1">{fieldErrors.name}</p>
-                  )}
-                </div>
-                <div>
-                  <Label htmlFor="email" className="text-nordic-neutral-900 font-medium">
-                    Email *
-                  </Label>
-                  <Input
-                    id="email"
-                    type="email"
-                    value={user.email}
-                    onChange={(e) => updateField("email", e.target.value)}
-                    placeholder="john@example.com"
-                    className={`mt-2 text-nordic-neutral-900 ${
-                      fieldErrors.email ? "border-clay-500 focus:ring-clay-500" : ""
-                    }`}
-                  />
-                  {fieldErrors.email && (
-                    <p className="text-sm text-clay-600 mt-1">{fieldErrors.email}</p>
-                  )}
-                </div>
-              </div>
+        {/* CV Upload Mode */}
+        {inputMode === "upload" && <CVUpload onExtracted={handleCVExtracted} />}
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <Label htmlFor="phone" className="text-nordic-neutral-900 font-medium">
-                    Phone
-                  </Label>
-                  <Input
-                    id="phone"
-                    value={user.phone || ""}
-                    onChange={(e) => updateField("phone", e.target.value)}
-                    placeholder="+1 555 123 4567"
-                    className="mt-2 text-nordic-neutral-900"
-                  />
-                </div>
-                <div>
-                  <Label htmlFor="location" className="text-nordic-neutral-900 font-medium">
-                    Location *
-                  </Label>
-                  <Input
-                    id="location"
-                    value={user.location}
-                    onChange={(e) => updateField("location", e.target.value)}
-                    placeholder="San Francisco, CA"
-                    className={`mt-2 text-nordic-neutral-900 ${
-                      fieldErrors.location ? "border-clay-500 focus:ring-clay-500" : ""
-                    }`}
-                  />
-                  {fieldErrors.location && (
-                    <p className="text-sm text-clay-600 mt-1">{fieldErrors.location}</p>
-                  )}
-                </div>
-              </div>
-
-              {/* Professional Summary */}
-              <div>
-                <Label htmlFor="summary" className="text-nordic-neutral-900 font-medium">
-                  Professional Summary *
-                </Label>
-                <Textarea
-                  id="summary"
-                  value={user.summary}
-                  onChange={(e) => updateField("summary", e.target.value)}
-                  placeholder="Senior Software Engineer with 5+ years of experience building scalable web applications..."
-                  rows={4}
-                  className={`mt-2 text-nordic-neutral-900 ${
-                    fieldErrors.summary ? "border-clay-500 focus:ring-clay-500" : ""
-                  }`}
-                />
-                {fieldErrors.summary && (
-                  <p className="text-sm text-clay-600 mt-1">{fieldErrors.summary}</p>
-                )}
-                <p className="text-sm text-nordic-neutral-500 mt-2">
-                  A brief overview of your professional background and expertise.
-                </p>
-              </div>
-
-              {/* Work Experience */}
-              <div>
-                <Label htmlFor="experience" className="text-nordic-neutral-900 font-medium">
-                  Work Experience *
-                </Label>
-                <Textarea
-                  id="experience"
-                  value={user.experience}
-                  onChange={(e) => updateField("experience", e.target.value)}
-                  placeholder="Company Name | Role (Start Date - End Date)&#10;- Key achievement 1&#10;- Key achievement 2&#10;&#10;Previous Company | Previous Role..."
-                  rows={10}
-                  className={`mt-2 text-nordic-neutral-900 ${
-                    fieldErrors.experience ? "border-clay-500 focus:ring-clay-500" : ""
-                  }`}
-                />
-                {fieldErrors.experience && (
-                  <p className="text-sm text-clay-600 mt-1">{fieldErrors.experience}</p>
-                )}
-                <p className="text-sm text-nordic-neutral-500 mt-2">
-                  Include company, role, dates, and key achievements for each position.
-                </p>
-              </div>
-
-              {/* Skills */}
-              <div>
-                <Label htmlFor="skills" className="text-nordic-neutral-900 font-medium">
-                  Skills *
-                </Label>
-                <Textarea
-                  id="skills"
-                  value={user.skills}
-                  onChange={(e) => updateField("skills", e.target.value)}
-                  placeholder="React, TypeScript, Node.js, PostgreSQL, AWS, Docker, Git..."
-                  rows={3}
-                  className={`mt-2 text-nordic-neutral-900 ${
-                    fieldErrors.skills ? "border-clay-500 focus:ring-clay-500" : ""
-                  }`}
-                />
-                {fieldErrors.skills && (
-                  <p className="text-sm text-clay-600 mt-1">{fieldErrors.skills}</p>
-                )}
-                <p className="text-sm text-nordic-neutral-500 mt-2">
-                  Comma-separated list of your skills and technologies.
-                </p>
-              </div>
-
-              {/* Action Buttons */}
-              <div className="flex gap-4 pt-4">
-                <Button type="submit" disabled={saving} className="flex-1 sm:flex-none">
-                  {saving ? (
-                    <span className="flex items-center justify-center gap-2">
-                      <svg className="animate-spin h-4 w-4" viewBox="0 0 24 24">
-                        <circle
-                          className="opacity-25"
-                          cx="12"
-                          cy="12"
-                          r="10"
-                          stroke="currentColor"
-                          strokeWidth="4"
-                          fill="none"
-                        />
-                        <path
-                          className="opacity-75"
-                          fill="currentColor"
-                          d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                        />
-                      </svg>
-                      Saving...
-                    </span>
-                  ) : (
-                    "Save Profile"
-                  )}
-                </Button>
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={() => router.push("/dashboard")}
-                  className="flex-1 sm:flex-none"
-                >
-                  ← Back to Dashboard
-                </Button>
-              </div>
-
-              {/* Profile Complete Banner */}
-              {isProfileComplete && (
-                <div className="flex items-center gap-2 p-4 bg-forest-50 border border-forest-200 rounded-lg">
-                  <svg className="w-5 h-5 text-forest-600" fill="currentColor" viewBox="0 0 20 20">
-                    <path
-                      fillRule="evenodd"
-                      d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
-                      clipRule="evenodd"
+        {/* Manual Entry Mode */}
+        {inputMode === "manual" && (
+          <Card className="shadow-sm">
+            <CardHeader className="bg-white border-b border-nordic-neutral-200">
+              <CardTitle className="text-nordic-neutral-900">Profile Information</CardTitle>
+              <CardDescription className="text-nordic-neutral-600">
+                This information will be used to analyze job matches and generate personalized cover
+                letters
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="bg-white pt-6">
+              <form onSubmit={handleSave} className="space-y-6">
+                {/* Contact Info */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <Label htmlFor="name" className="text-nordic-neutral-900 font-medium">
+                      Full Name *
+                    </Label>
+                    <Input
+                      id="name"
+                      value={user.name}
+                      onChange={(e) => updateField("name", e.target.value)}
+                      placeholder="John Doe"
+                      className={`mt-2 text-nordic-neutral-900 ${
+                        fieldErrors.name ? "border-clay-500 focus:ring-clay-500" : ""
+                      }`}
                     />
-                  </svg>
-                  <span className="text-sm font-medium text-forest-900">
-                    Profile complete! You can now analyze jobs and generate cover letters.
-                  </span>
+                    {fieldErrors.name && (
+                      <p className="text-sm text-clay-600 mt-1">{fieldErrors.name}</p>
+                    )}
+                  </div>
+                  <div>
+                    <Label htmlFor="email" className="text-nordic-neutral-900 font-medium">
+                      Email *
+                    </Label>
+                    <Input
+                      id="email"
+                      type="email"
+                      value={user.email}
+                      onChange={(e) => updateField("email", e.target.value)}
+                      placeholder="john@example.com"
+                      className={`mt-2 text-nordic-neutral-900 ${
+                        fieldErrors.email ? "border-clay-500 focus:ring-clay-500" : ""
+                      }`}
+                    />
+                    {fieldErrors.email && (
+                      <p className="text-sm text-clay-600 mt-1">{fieldErrors.email}</p>
+                    )}
+                  </div>
                 </div>
-              )}
-            </form>
-          </CardContent>
-        </Card>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <Label htmlFor="phone" className="text-nordic-neutral-900 font-medium">
+                      Phone
+                    </Label>
+                    <Input
+                      id="phone"
+                      value={user.phone || ""}
+                      onChange={(e) => updateField("phone", e.target.value)}
+                      placeholder="+1 555 123 4567"
+                      className="mt-2 text-nordic-neutral-900"
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="location" className="text-nordic-neutral-900 font-medium">
+                      Location *
+                    </Label>
+                    <Input
+                      id="location"
+                      value={user.location}
+                      onChange={(e) => updateField("location", e.target.value)}
+                      placeholder="San Francisco, CA"
+                      className={`mt-2 text-nordic-neutral-900 ${
+                        fieldErrors.location ? "border-clay-500 focus:ring-clay-500" : ""
+                      }`}
+                    />
+                    {fieldErrors.location && (
+                      <p className="text-sm text-clay-600 mt-1">{fieldErrors.location}</p>
+                    )}
+                  </div>
+                </div>
+
+                {/* Professional Summary */}
+                <div>
+                  <Label htmlFor="summary" className="text-nordic-neutral-900 font-medium">
+                    Professional Summary *
+                  </Label>
+                  <Textarea
+                    id="summary"
+                    value={user.summary}
+                    onChange={(e) => updateField("summary", e.target.value)}
+                    placeholder="Senior Software Engineer with 5+ years of experience building scalable web applications..."
+                    rows={4}
+                    className={`mt-2 text-nordic-neutral-900 ${
+                      fieldErrors.summary ? "border-clay-500 focus:ring-clay-500" : ""
+                    }`}
+                  />
+                  {fieldErrors.summary && (
+                    <p className="text-sm text-clay-600 mt-1">{fieldErrors.summary}</p>
+                  )}
+                  <p className="text-sm text-nordic-neutral-500 mt-2">
+                    A brief overview of your professional background and expertise.
+                  </p>
+                </div>
+
+                {/* Work Experience */}
+                <div>
+                  <Label htmlFor="experience" className="text-nordic-neutral-900 font-medium">
+                    Work Experience *
+                  </Label>
+                  <Textarea
+                    id="experience"
+                    value={user.experience}
+                    onChange={(e) => updateField("experience", e.target.value)}
+                    placeholder="Company Name | Role (Start Date - End Date)&#10;- Key achievement 1&#10;- Key achievement 2&#10;&#10;Previous Company | Previous Role..."
+                    rows={10}
+                    className={`mt-2 text-nordic-neutral-900 ${
+                      fieldErrors.experience ? "border-clay-500 focus:ring-clay-500" : ""
+                    }`}
+                  />
+                  {fieldErrors.experience && (
+                    <p className="text-sm text-clay-600 mt-1">{fieldErrors.experience}</p>
+                  )}
+                  <p className="text-sm text-nordic-neutral-500 mt-2">
+                    Include company, role, dates, and key achievements for each position.
+                  </p>
+                </div>
+
+                {/* Skills */}
+                <div>
+                  <Label htmlFor="skills" className="text-nordic-neutral-900 font-medium">
+                    Skills *
+                  </Label>
+                  <Textarea
+                    id="skills"
+                    value={user.skills}
+                    onChange={(e) => updateField("skills", e.target.value)}
+                    placeholder="React, TypeScript, Node.js, PostgreSQL, AWS, Docker, Git..."
+                    rows={3}
+                    className={`mt-2 text-nordic-neutral-900 ${
+                      fieldErrors.skills ? "border-clay-500 focus:ring-clay-500" : ""
+                    }`}
+                  />
+                  {fieldErrors.skills && (
+                    <p className="text-sm text-clay-600 mt-1">{fieldErrors.skills}</p>
+                  )}
+                  <p className="text-sm text-nordic-neutral-500 mt-2">
+                    Comma-separated list of your skills and technologies.
+                  </p>
+                </div>
+
+                {/* Action Buttons */}
+                <div className="flex gap-4 pt-4">
+                  <Button type="submit" disabled={saving} className="flex-1 sm:flex-none">
+                    {saving ? (
+                      <span className="flex items-center justify-center gap-2">
+                        <svg className="animate-spin h-4 w-4" viewBox="0 0 24 24">
+                          <circle
+                            className="opacity-25"
+                            cx="12"
+                            cy="12"
+                            r="10"
+                            stroke="currentColor"
+                            strokeWidth="4"
+                            fill="none"
+                          />
+                          <path
+                            className="opacity-75"
+                            fill="currentColor"
+                            d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                          />
+                        </svg>
+                        Saving...
+                      </span>
+                    ) : (
+                      "Save Profile"
+                    )}
+                  </Button>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => router.push("/dashboard")}
+                    className="flex-1 sm:flex-none"
+                  >
+                    ← Back to Dashboard
+                  </Button>
+                </div>
+
+                {/* Profile Complete Banner */}
+                {isProfileComplete && (
+                  <div className="flex items-center gap-2 p-4 bg-forest-50 border border-forest-200 rounded-lg">
+                    <svg
+                      className="w-5 h-5 text-forest-600"
+                      fill="currentColor"
+                      viewBox="0 0 20 20"
+                    >
+                      <path
+                        fillRule="evenodd"
+                        d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
+                        clipRule="evenodd"
+                      />
+                    </svg>
+                    <span className="text-sm font-medium text-forest-900">
+                      Profile complete! You can now analyze jobs and generate cover letters.
+                    </span>
+                  </div>
+                )}
+              </form>
+            </CardContent>
+          </Card>
+        )}
       </div>
     </div>
   );
