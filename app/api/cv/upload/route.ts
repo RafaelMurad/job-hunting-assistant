@@ -16,8 +16,6 @@
  */
 
 import { NextRequest, NextResponse } from "next/server";
-// @ts-expect-error - pdf-parse doesn't have proper ESM exports
-import pdf from "pdf-parse/lib/pdf-parse.js";
 import mammoth from "mammoth";
 
 // AI provider imports
@@ -25,8 +23,14 @@ const AI_PROVIDER = process.env.AI_PROVIDER || "gemini";
 
 /**
  * Extract text from PDF buffer
+ *
+ * WHY: pdf-parse has ESM compatibility issues with Turbopack, so we use
+ * dynamic import with require() to load it at runtime.
  */
 async function extractFromPDF(buffer: Buffer): Promise<string> {
+  // Dynamic require to avoid Turbopack ESM issues
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
+  const pdf = require("pdf-parse");
   const data = await pdf(buffer);
   return data.text;
 }
