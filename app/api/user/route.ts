@@ -127,7 +127,16 @@ export async function PUT(request: NextRequest): Promise<NextResponse> {
 
     // Handle other errors
     console.error("[PUT /api/user] Error:", error);
-    return NextResponse.json({ error: "Failed to save user profile" }, { status: 500 });
+
+    // In development/preview, include error details for debugging
+    const errorMessage = error instanceof Error ? error.message : "Unknown error";
+    return NextResponse.json(
+      {
+        error: "Failed to save user profile",
+        details: process.env.NODE_ENV !== "production" ? errorMessage : undefined,
+      },
+      { status: 500 }
+    );
   }
 }
 
