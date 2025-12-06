@@ -33,6 +33,12 @@ export default function RootLayout({
                   </Link>
                   <div className="hidden md:flex gap-6">
                     <Link
+                      href="/dashboard"
+                      className="text-slate-600 hover:text-slate-900 transition-colors"
+                    >
+                      Dashboard
+                    </Link>
+                    <Link
                       href="/profile"
                       className="text-slate-600 hover:text-slate-900 transition-colors"
                     >

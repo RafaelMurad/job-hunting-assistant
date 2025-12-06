@@ -72,14 +72,14 @@ export default function LandingPage(): React.JSX.Element {
                 gap: "var(--spacing-4)",
               }}
             >
-              <Link href="/analyze">
+              <Link href="/dashboard">
                 <Button size="lg" className="w-full sm:w-auto">
                   Get Started Free
                 </Button>
               </Link>
-              <Link href="/tracker">
+              <Link href="/analyze">
                 <Button size="lg" variant="outline" className="w-full sm:w-auto">
-                  View Tracker
+                  Analyze a Job
                 </Button>
               </Link>
             </div>
