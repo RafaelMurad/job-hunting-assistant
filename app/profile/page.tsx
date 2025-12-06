@@ -474,7 +474,7 @@ export default function ProfilePage(): React.JSX.Element {
 
               {/* Action Buttons */}
               <div className="flex gap-4 pt-4">
-                <Button type="submit" disabled={saving} className="flex-1">
+                <Button type="submit" disabled={saving} className="flex-1 sm:flex-none">
                   {saving ? (
                     <span className="flex items-center justify-center gap-2">
                       <svg className="animate-spin h-4 w-4" viewBox="0 0 24 24">
@@ -502,19 +502,10 @@ export default function ProfilePage(): React.JSX.Element {
                 <Button
                   type="button"
                   variant="outline"
-                  onClick={() => router.push("/analyze")}
-                  disabled={!isProfileComplete}
-                  className="flex-1"
+                  onClick={() => router.push("/dashboard")}
+                  className="flex-1 sm:flex-none"
                 >
-                  Analyze a Job →
-                </Button>
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={() => router.push("/tracker")}
-                  className="flex-1"
-                >
-                  View Tracker
+                  ← Back to Dashboard
                 </Button>
               </div>
 
