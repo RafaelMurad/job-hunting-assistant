@@ -13,7 +13,7 @@
 
 "use client";
 
-import { useState, useCallback, useRef } from "react";
+import { useState, useCallback, useRef, type JSX, type DragEvent, type ChangeEvent } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 
@@ -37,7 +37,7 @@ interface CVUploadProps {
 
 type UploadStatus = "idle" | "uploading" | "processing" | "success" | "error";
 
-export function CVUpload({ onExtracted, onCancel }: CVUploadProps): React.JSX.Element {
+export function CVUpload({ onExtracted, onCancel }: CVUploadProps): JSX.Element {
   const [status, setStatus] = useState<UploadStatus>("idle");
   const [error, setError] = useState<string | null>(null);
   const [isDragOver, setIsDragOver] = useState(false);
@@ -80,7 +80,9 @@ export function CVUpload({ onExtracted, onCancel }: CVUploadProps): React.JSX.El
         const result = await response.json();
 
         if (!response.ok) {
-          throw new Error(result.error || "Failed to process CV");
+          setError(result.error || "Failed to process CV");
+          setStatus("error");
+          return;
         }
 
         setStatus("success");
@@ -99,7 +101,7 @@ export function CVUpload({ onExtracted, onCancel }: CVUploadProps): React.JSX.El
   );
 
   const handleDrop = useCallback(
-    (e: React.DragEvent<HTMLDivElement>) => {
+    (e: DragEvent<HTMLDivElement>) => {
       e.preventDefault();
       setIsDragOver(false);
 
@@ -111,18 +113,18 @@ export function CVUpload({ onExtracted, onCancel }: CVUploadProps): React.JSX.El
     [handleFile]
   );
 
-  const handleDragOver = useCallback((e: React.DragEvent<HTMLDivElement>) => {
+  const handleDragOver = useCallback((e: DragEvent<HTMLDivElement>) => {
     e.preventDefault();
     setIsDragOver(true);
   }, []);
 
-  const handleDragLeave = useCallback((e: React.DragEvent<HTMLDivElement>) => {
+  const handleDragLeave = useCallback((e: DragEvent<HTMLDivElement>) => {
     e.preventDefault();
     setIsDragOver(false);
   }, []);
 
   const handleFileSelect = useCallback(
-    (e: React.ChangeEvent<HTMLInputElement>) => {
+    (e: ChangeEvent<HTMLInputElement>) => {
       const file = e.target.files?.[0];
       if (file) {
         handleFile(file);

@@ -59,9 +59,8 @@ function mergeFlags(base: FlagState, overrides?: FlagState): FlagState {
   if (!overrides) return base;
   const result: FlagState = { ...base };
   for (const [key, value] of Object.entries(overrides)) {
-    if (typeof value === "boolean") {
-      result[key] = value;
-    }
+    // FlagState values are always boolean, assign directly
+    result[key] = value;
   }
   return result;
 }
