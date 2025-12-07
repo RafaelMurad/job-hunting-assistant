@@ -21,6 +21,7 @@
 
 "use client";
 
+import type { JSX, FormEvent } from "react";
 import { useEffect, useState, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -62,7 +63,7 @@ interface Toast {
   message: string;
 }
 
-export default function ProfilePage(): React.JSX.Element {
+export default function ProfilePage(): JSX.Element {
   const router = useRouter();
 
   // ============================================
@@ -123,7 +124,7 @@ export default function ProfilePage(): React.JSX.Element {
 
   // Fetch user on mount
   useEffect(() => {
-    loadUser();
+    void loadUser();
   }, [loadUser]);
 
   // ============================================
@@ -162,7 +163,7 @@ export default function ProfilePage(): React.JSX.Element {
    * Handle form submission.
    * Sends data to API and handles success/error responses.
    */
-  const handleSave = async (e: React.FormEvent): Promise<void> => {
+  const handleSave = async (e: FormEvent): Promise<void> => {
     e.preventDefault();
     if (!user) return;
 

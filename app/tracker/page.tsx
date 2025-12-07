@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, type JSX } from "react";
 import { useRouter } from "next/navigation";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -27,7 +27,7 @@ const STATUS_OPTIONS = [
 
 const FILTER_OPTIONS = [{ value: "all", label: "All Statuses" }, ...STATUS_OPTIONS];
 
-export default function TrackerPage(): React.JSX.Element {
+export default function TrackerPage(): JSX.Element {
   const router = useRouter();
   const [applications, setApplications] = useState<Application[]>([]);
   const [loading, setLoading] = useState(true);
@@ -76,7 +76,10 @@ export default function TrackerPage(): React.JSX.Element {
         }),
       });
 
-      if (!res.ok) throw new Error("Failed to update status");
+      if (!res.ok) {
+        console.error("Failed to update status");
+        return;
+      }
 
       // Update local state
       setApplications((prev) =>
@@ -103,7 +106,11 @@ export default function TrackerPage(): React.JSX.Element {
         method: "DELETE",
       });
 
-      if (!res.ok) throw new Error("Failed to delete");
+      if (!res.ok) {
+        console.error("Failed to delete application");
+        setDeletingId(null);
+        return;
+      }
 
       // Remove from local state
       setApplications((prev) => prev.filter((app) => app.id !== appId));
@@ -122,7 +129,12 @@ export default function TrackerPage(): React.JSX.Element {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ notes: notesDraft }),
       });
-      if (!res.ok) throw new Error("Failed to save notes");
+
+      if (!res.ok) {
+        console.error("Failed to save notes");
+        return;
+      }
+
       setApplications((prev) =>
         prev.map((app) => (app.id === appId ? { ...app, notes: notesDraft } : app))
       );

@@ -25,7 +25,7 @@
  * ```
  */
 
-import { createContext, useCallback, useEffect, useState, type ReactNode } from "react";
+import { createContext, useCallback, useEffect, useState, type ReactNode, type JSX } from "react";
 import { type FlagState, getInitialFlagState, loadFlagState, saveFlagState } from "./index";
 import type { FeatureFlagKey } from "./flags.config";
 
@@ -59,9 +59,8 @@ function mergeFlags(base: FlagState, overrides?: FlagState): FlagState {
   if (!overrides) return base;
   const result: FlagState = { ...base };
   for (const [key, value] of Object.entries(overrides)) {
-    if (typeof value === "boolean") {
-      result[key] = value;
-    }
+    // FlagState values are always boolean, assign directly
+    result[key] = value;
   }
   return result;
 }
@@ -69,7 +68,7 @@ function mergeFlags(base: FlagState, overrides?: FlagState): FlagState {
 export function FeatureFlagProvider({
   children,
   initialOverrides,
-}: FeatureFlagProviderProps): React.JSX.Element {
+}: FeatureFlagProviderProps): JSX.Element {
   // Start with defaults for SSR
   const [flags, setFlags] = useState<FlagState>(() => {
     const initial = getInitialFlagState();

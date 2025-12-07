@@ -1,7 +1,8 @@
 import Link from "next/link";
+import { type JSX } from "react";
 import { Button } from "@/components/ui/button";
 
-export default function LandingPage(): React.JSX.Element {
+export default function LandingPage(): JSX.Element {
   return (
     <div className="min-h-screen bg-linear-to-b from-white to-nordic-neutral-50">
       {/* Hero Section */}

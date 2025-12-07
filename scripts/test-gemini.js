@@ -47,4 +47,4 @@ async function listModels() {
   }
 }
 
-listModels();
+void listModels();
