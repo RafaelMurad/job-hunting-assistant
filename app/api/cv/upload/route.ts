@@ -10,17 +10,16 @@
  * HOW:
  * 1. Receive file upload via FormData
  * 2. Validate file type and size
- * 3. For PDFs: Send directly to Gemini (native document vision)
+ * 3. For PDFs: Use Gemini vision (native document understanding)
  * 4. For DOCX: Extract text with mammoth, then send to Gemini
  * 5. Return extracted profile data for user review
  *
- * LEARNING: Gemini has native PDF understanding - it can "see" the document
- * layout, not just extract text. This is more accurate than text extraction
- * libraries and works perfectly in serverless environments.
+ * NOTE: Uses centralized AI config from lib/ai.ts for model version management.
  */
 
 import { NextRequest, NextResponse } from "next/server";
 import mammoth from "mammoth";
+import { parseCVWithGeminiVision, parseCVWithGeminiText } from "@/lib/ai";
 
 /**
  * Extract text from DOCX buffer using mammoth.
@@ -29,111 +28,6 @@ import mammoth from "mammoth";
 async function extractFromDOCX(buffer: Buffer): Promise<string> {
   const result = await mammoth.extractRawText({ buffer });
   return result.value;
-}
-
-/**
- * The prompt we send to Gemini for CV parsing.
- * Shared between PDF (with document) and DOCX (with text).
- */
-const CV_EXTRACTION_PROMPT = `You are a CV/Resume parser. Analyze this CV and extract the following information as a valid JSON object.
-
-Required fields (use empty string "" if not found):
-- name: Full name of the person
-- email: Email address  
-- phone: Phone number (include country code if present)
-- location: City, Country or full address
-- summary: Professional summary or objective (2-3 sentences). If not explicitly stated, create one based on their experience.
-- experience: Work history formatted as "Company | Role (Start - End)\\n- Achievement 1\\n- Achievement 2\\n\\n" for each job. Most recent first.
-- skills: Comma-separated list of skills, technologies, and tools mentioned
-
-Return ONLY the JSON object, no markdown code blocks, no explanation.`;
-
-/**
- * Shared return type for CV parsing functions.
- */
-interface ParsedCV {
-  name: string;
-  email: string;
-  phone: string;
-  location: string;
-  summary: string;
-  experience: string;
-  skills: string;
-}
-
-/**
- * Type for Gemini content parts - either inline data or text.
- */
-type GeminiPart = { inline_data: { mime_type: string; data: string } } | { text: string };
-
-/**
- * Core Gemini API call with response parsing.
- * Shared logic extracted from both PDF and text parsing functions.
- */
-async function callGeminiAndParse(parts: GeminiPart[]): Promise<ParsedCV> {
-  const response = await fetch(
-    `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${process.env.GEMINI_API_KEY}`,
-    {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        contents: [{ parts }],
-        generationConfig: {
-          temperature: 0.1,
-          maxOutputTokens: 2000,
-        },
-      }),
-    }
-  );
-
-  if (!response.ok) {
-    const errorText = await response.text();
-    console.error("[CV Upload] Gemini API error:", errorText);
-    throw new Error(`Gemini API error: ${response.status}`);
-  }
-
-  const data = await response.json();
-  const text = data.candidates?.[0]?.content?.parts?.[0]?.text || "";
-
-  // Parse JSON from response (remove any markdown code blocks if present)
-  const jsonMatch = text.match(/{[\s\S]*}/);
-  if (!jsonMatch) {
-    console.error("[CV Upload] Could not parse JSON from:", text);
-    throw new Error("Could not parse AI response as JSON");
-  }
-
-  return JSON.parse(jsonMatch[0]) as ParsedCV;
-}
-
-/**
- * Parse CV using Gemini with native PDF vision.
- * Sends the PDF directly to Gemini - no text extraction needed.
- */
-async function parseWithGeminiVision(pdfBuffer: Buffer): Promise<ParsedCV> {
-  const base64Data = pdfBuffer.toString("base64");
-
-  return callGeminiAndParse([
-    {
-      inline_data: {
-        mime_type: "application/pdf",
-        data: base64Data,
-      },
-    },
-    {
-      text: CV_EXTRACTION_PROMPT,
-    },
-  ]);
-}
-
-/**
- * Parse CV using Gemini with extracted text (for DOCX files).
- */
-async function parseWithGeminiText(cvText: string): Promise<ParsedCV> {
-  return callGeminiAndParse([
-    {
-      text: `${CV_EXTRACTION_PROMPT}\n\nCV Text:\n${cvText.substring(0, 15000)}`,
-    },
-  ]);
 }
 
 /**
@@ -177,10 +71,10 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
       let profileData;
 
       if (file.type === "application/pdf") {
-        // PDF: Send directly to Gemini vision (native document understanding)
-        profileData = await parseWithGeminiVision(buffer);
+        // PDF: Use centralized Gemini vision function
+        profileData = await parseCVWithGeminiVision(buffer);
       } else {
-        // DOCX: Extract text first, then send to Gemini
+        // DOCX: Extract text first, then use centralized Gemini text function
         const docxText = await extractFromDOCX(buffer);
 
         if (!docxText || docxText.trim().length < 50) {
@@ -193,7 +87,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
           );
         }
 
-        profileData = await parseWithGeminiText(docxText);
+        profileData = await parseCVWithGeminiText(docxText);
       }
 
       return NextResponse.json({

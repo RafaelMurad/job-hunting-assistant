@@ -15,8 +15,8 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
-import { CVUpload } from "@/components/cv-upload";
-import { useUser, type User, type ExtractedCVData } from "@/lib/hooks";
+import { CVUpload, type ExtractedCVData } from "@/components/cv-upload";
+import { useUser, type User } from "@/lib/hooks";
 
 /**
  * Toast notification state.

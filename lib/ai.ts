@@ -251,6 +251,100 @@ async function generateCoverLetterWithClaude(
 }
 
 // ============================================
+// CV PARSING (SHARED FOR REST & TRPC)
+// ============================================
+
+/**
+ * Parsed CV data structure.
+ */
+export interface ParsedCVData {
+  name: string;
+  email: string;
+  phone: string;
+  location: string;
+  summary: string;
+  experience: string;
+  skills: string;
+}
+
+/**
+ * The prompt for CV parsing.
+ */
+const CV_EXTRACTION_PROMPT = `You are a CV/Resume parser. Analyze this CV and extract the following information as a valid JSON object.
+
+Required fields (use empty string "" if not found):
+- name: Full name of the person
+- email: Email address  
+- phone: Phone number (include country code if present)
+- location: City, Country or full address
+- summary: Professional summary or objective (2-3 sentences). If not explicitly stated, create one based on their experience.
+- experience: Work history formatted as "Company | Role (Start - End)\\n- Achievement 1\\n- Achievement 2\\n\\n" for each job. Most recent first.
+- skills: Comma-separated list of skills, technologies, and tools mentioned
+
+Return ONLY the JSON object, no markdown code blocks, no explanation.`;
+
+/**
+ * Parse CV using Gemini with native PDF vision.
+ * Sends the PDF directly to Gemini - no text extraction needed.
+ */
+export async function parseCVWithGeminiVision(pdfBuffer: Buffer): Promise<ParsedCVData> {
+  const { GoogleGenerativeAI } = await import("@google/generative-ai");
+
+  const genAI = new GoogleGenerativeAI(AI_CONFIG.apiKeys.gemini!);
+  const model = genAI.getGenerativeModel({
+    model: AI_CONFIG.models.gemini,
+  });
+
+  const base64Data = pdfBuffer.toString("base64");
+
+  const result = await model.generateContent([
+    {
+      inlineData: {
+        mimeType: "application/pdf",
+        data: base64Data,
+      },
+    },
+    CV_EXTRACTION_PROMPT,
+  ]);
+
+  const text = result.response.text();
+
+  // Parse JSON from response (remove any markdown code blocks if present)
+  const jsonMatch = text.match(/{[\s\S]*}/);
+  if (!jsonMatch) {
+    throw new Error("Could not parse AI response as JSON");
+  }
+
+  return JSON.parse(jsonMatch[0]) as ParsedCVData;
+}
+
+/**
+ * Parse CV using Gemini with extracted text (for DOCX files).
+ */
+export async function parseCVWithGeminiText(cvText: string): Promise<ParsedCVData> {
+  const { GoogleGenerativeAI } = await import("@google/generative-ai");
+
+  const genAI = new GoogleGenerativeAI(AI_CONFIG.apiKeys.gemini!);
+  const model = genAI.getGenerativeModel({
+    model: AI_CONFIG.models.gemini,
+  });
+
+  const result = await model.generateContent(
+    `${CV_EXTRACTION_PROMPT}\n\nCV Text:\n${cvText.substring(0, 15000)}`
+  );
+
+  const text = result.response.text();
+
+  // Parse JSON from response (remove any markdown code blocks if present)
+  const jsonMatch = text.match(/{[\s\S]*}/);
+  if (!jsonMatch) {
+    throw new Error("Could not parse AI response as JSON");
+  }
+
+  return JSON.parse(jsonMatch[0]) as ParsedCVData;
+}
+
+// ============================================
 // UNIFIED EXPORTS
 // ============================================
 export async function analyzeJob(
