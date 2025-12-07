@@ -85,6 +85,41 @@ git branch-clean feat/x  # Create clean feature branch from main
 4. **API route structure** — `app/api/{resource}/route.ts` for REST endpoints
 5. **Component location** — Shadcn components in `components/ui/`, feature components in `components/`
 
+## Code Quality Patterns
+
+### React Imports (Qodana-compliant)
+
+```typescript
+// ✅ Use named imports, not namespace imports
+import type { JSX, ReactNode, FormEvent } from "react";
+import { forwardRef, useState, useCallback } from "react";
+
+// ❌ Avoid - creates UMD global warnings
+import * as React from "react";
+```
+
+### Promise Handling
+
+```typescript
+// ✅ Use void for intentionally ignored promises
+useEffect(() => {
+  void loadData();
+}, []);
+
+// ❌ Avoid - Qodana warns about ignored promises
+useEffect(() => {
+  loadData();
+}, []);
+```
+
+### Dynamic Pages with Prisma
+
+```typescript
+// ✅ Force dynamic rendering for database pages
+export const dynamic = "force-dynamic";
+import { prisma } from "@/lib/db";
+```
+
 ## Environment Variables
 
 ```bash
