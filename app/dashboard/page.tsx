@@ -10,6 +10,9 @@
  * Uses Server Components for initial data (no useEffect needed!).
  */
 
+// Force dynamic rendering - this page uses Prisma which requires DATABASE_URL at runtime
+export const dynamic = "force-dynamic";
+
 import Link from "next/link";
 import { prisma } from "@/lib/db";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
