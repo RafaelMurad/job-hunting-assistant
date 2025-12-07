@@ -1,5 +1,7 @@
 "use client";
 
+import { type JSX } from "react";
+
 /**
  * Feature Flags Admin Panel
  *
@@ -17,7 +19,7 @@ import {
   type FeatureFlag,
 } from "@/lib/feature-flags/flags.config";
 
-export default function FeatureFlagsAdminPage(): React.JSX.Element {
+export default function FeatureFlagsAdminPage(): JSX.Element {
   const { flags, toggle, resetAll } = useFeatureFlags();
   const isHydrated = useFeatureFlagHydrated();
 
@@ -158,12 +160,7 @@ interface FlagToggleProps {
   categoryColor: string;
 }
 
-function FlagToggle({
-  flag,
-  isEnabled,
-  onToggle,
-  categoryColor,
-}: FlagToggleProps): React.JSX.Element {
+function FlagToggle({ flag, isEnabled, onToggle, categoryColor }: FlagToggleProps): JSX.Element {
   return (
     <div
       className={`rounded-lg border ${categoryColor} p-4 transition-all ${

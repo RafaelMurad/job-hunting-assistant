@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, type JSX } from "react";
 import { useRouter } from "next/navigation";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/textarea";
@@ -27,7 +27,7 @@ interface StatusMessage {
   text: string;
 }
 
-export default function AnalyzePage(): React.JSX.Element {
+export default function AnalyzePage(): JSX.Element {
   const router = useRouter();
   const [userId, setUserId] = useState<string>("");
   const [jobDescription, setJobDescription] = useState("");
@@ -85,7 +85,15 @@ export default function AnalyzePage(): React.JSX.Element {
         body: JSON.stringify({ jobDescription, userId }),
       });
 
-      if (!res.ok) throw new Error("Analysis failed");
+      if (!res.ok) {
+        setAnalyzeState("error");
+        setAnalyzeError({
+          type: "error",
+          text: "Failed to analyze job. Make sure you've filled in your profile first.",
+        });
+        resetButtonState(setAnalyzeState, 3000);
+        return;
+      }
 
       const data = await res.json();
       setAnalysis(data);
@@ -96,7 +104,7 @@ export default function AnalyzePage(): React.JSX.Element {
       setAnalyzeState("error");
       setAnalyzeError({
         type: "error",
-        text: "Failed to analyze job. Make sure you've filled in your profile first.",
+        text: "Network error. Please try again.",
       });
       resetButtonState(setAnalyzeState, 3000);
     } finally {
@@ -118,7 +126,12 @@ export default function AnalyzePage(): React.JSX.Element {
         body: JSON.stringify({ jobDescription, userId, analysis }),
       });
 
-      if (!res.ok) throw new Error("Cover letter generation failed");
+      if (!res.ok) {
+        setCoverLetterState("error");
+        setCoverLetterError({ type: "error", text: "Failed to generate cover letter" });
+        resetButtonState(setCoverLetterState, 3000);
+        return;
+      }
 
       const data = await res.json();
       setCoverLetter(data.coverLetter);
@@ -127,7 +140,7 @@ export default function AnalyzePage(): React.JSX.Element {
     } catch (error) {
       console.error("Error:", error);
       setCoverLetterState("error");
-      setCoverLetterError({ type: "error", text: "Failed to generate cover letter" });
+      setCoverLetterError({ type: "error", text: "Network error. Please try again." });
       resetButtonState(setCoverLetterState, 3000);
     } finally {
       setGeneratingCoverLetter(false);
@@ -157,7 +170,12 @@ export default function AnalyzePage(): React.JSX.Element {
         }),
       });
 
-      if (!res.ok) throw new Error("Save failed");
+      if (!res.ok) {
+        setSaveState("error");
+        setSaveError({ type: "error", text: "Failed to save application" });
+        resetButtonState(setSaveState, 3000);
+        return;
+      }
 
       setSaveState("success");
       // Redirect after brief success feedback
@@ -165,7 +183,7 @@ export default function AnalyzePage(): React.JSX.Element {
     } catch (error) {
       console.error("Error:", error);
       setSaveState("error");
-      setSaveError({ type: "error", text: "Failed to save application" });
+      setSaveError({ type: "error", text: "Network error. Please try again." });
       resetButtonState(setSaveState, 3000);
     } finally {
       setSaving(false);
