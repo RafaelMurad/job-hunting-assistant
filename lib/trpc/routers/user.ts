@@ -70,39 +70,46 @@ export const userRouter = router({
    */
   uploadCV: publicProcedure.input(cvUploadSchema).mutation(async ({ input }) => {
     const { contentBase64, mimeType } = input;
+    const buffer = Buffer.from(contentBase64, "base64");
 
-    try {
-      let extractedData;
+    // Handle DOCX: Check text extraction before try-catch to avoid exception for control flow
+    if (mimeType !== "application/pdf") {
+      const result = await mammoth.extractRawText({ buffer });
+      const docxText = result.value;
 
-      if (mimeType === "application/pdf") {
-        // PDF: Use centralized Gemini vision function
-        const buffer = Buffer.from(contentBase64, "base64");
-        extractedData = await parseCVWithGeminiVision(buffer);
-      } else {
-        // DOCX: Extract text first, then use centralized Gemini text function
-        const buffer = Buffer.from(contentBase64, "base64");
-        const result = await mammoth.extractRawText({ buffer });
-        const docxText = result.value;
-
-        if (!docxText || docxText.trim().length < 50) {
-          throw new TRPCError({
-            code: "BAD_REQUEST",
-            message: "Could not extract enough text from the DOCX file.",
-          });
-        }
-
-        extractedData = await parseCVWithGeminiText(docxText);
+      if (!docxText || docxText.trim().length < 50) {
+        throw new TRPCError({
+          code: "BAD_REQUEST",
+          message: "Could not extract enough text from the DOCX file.",
+        });
       }
 
+      try {
+        const extractedData = await parseCVWithGeminiText(docxText);
+        return {
+          success: true,
+          extractedData,
+          message: "CV parsed successfully. Please review the extracted data.",
+        };
+      } catch (error) {
+        console.error("[CV Upload] DOCX processing error:", error);
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: "Failed to parse CV. Please try again or enter details manually.",
+        });
+      }
+    }
+
+    // Handle PDF
+    try {
+      const extractedData = await parseCVWithGeminiVision(buffer);
       return {
         success: true,
         extractedData,
         message: "CV parsed successfully. Please review the extracted data.",
       };
     } catch (error) {
-      if (error instanceof TRPCError) throw error;
-
-      console.error("[CV Upload] Processing error:", error);
+      console.error("[CV Upload] PDF processing error:", error);
       throw new TRPCError({
         code: "INTERNAL_SERVER_ERROR",
         message: "Failed to parse CV. Please try again or enter details manually.",

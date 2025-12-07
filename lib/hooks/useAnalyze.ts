@@ -10,6 +10,7 @@
 
 "use client";
 
+import type { Dispatch, SetStateAction } from "react";
 import { useState } from "react";
 import { trpc } from "@/lib/trpc/client";
 import { getErrorMessage } from "@/lib/trpc/errors";
@@ -84,10 +85,7 @@ export function useAnalyze(): UseAnalyzeReturn {
   const [coverLetterError, setCoverLetterError] = useState<string | null>(null);
 
   // Helper to reset button state after delay
-  const resetButtonState = (
-    setter: React.Dispatch<React.SetStateAction<ButtonState>>,
-    delay = 2000
-  ): void => {
+  const resetButtonState = (setter: Dispatch<SetStateAction<ButtonState>>, delay = 2000): void => {
     setTimeout(() => setter("idle"), delay);
   };
 

@@ -57,9 +57,8 @@ export const analyzeRouter = router({
 
     // Build CV string and analyze
     const userCV = buildUserCV(user);
-    const analysis = await analyzeJob(input.jobDescription, userCV);
 
-    return analysis;
+    return analyzeJob(input.jobDescription, userCV);
   }),
 
   /**
