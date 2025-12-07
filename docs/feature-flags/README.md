@@ -40,12 +40,12 @@ lib/feature-flags/
 
 ## Files
 
-| File | Purpose |
-|------|---------|
-| `flags.config.ts` | Define all flags here |
-| `index.ts` | Core functions, storage logic |
-| `provider.tsx` | React Context for app-wide state |
-| `hooks.ts` | `useFeatureFlag()` hook |
+| File              | Purpose                          |
+| ----------------- | -------------------------------- |
+| `flags.config.ts` | Define all flags here            |
+| `index.ts`        | Core functions, storage logic    |
+| `provider.tsx`    | React Context for app-wide state |
+| `hooks.ts`        | `useFeatureFlag()` hook          |
 
 ## Next Steps
 

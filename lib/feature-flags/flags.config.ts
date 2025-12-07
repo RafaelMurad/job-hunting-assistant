@@ -119,9 +119,7 @@ export function getFlagDefinition(key: string): FeatureFlag | undefined {
 /**
  * Get all flags in a category
  */
-export function getFlagsByCategory(
-  category: FeatureFlag["category"]
-): FeatureFlag[] {
+export function getFlagsByCategory(category: FeatureFlag["category"]): FeatureFlag[] {
   return FEATURE_FLAGS.filter((flag) => flag.category === category);
 }
 

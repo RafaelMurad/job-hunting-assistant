@@ -9,11 +9,11 @@ export const FEATURE_FLAGS: FeatureFlag[] = [
   // ... existing flags
 
   {
-    key: "my_new_feature",          // Unique identifier (snake_case)
-    name: "My New Feature",          // Human-readable name
+    key: "my_new_feature", // Unique identifier (snake_case)
+    name: "My New Feature", // Human-readable name
     description: "What this feature does",
-    defaultEnabled: false,           // Start disabled
-    category: "experimental",        // core | experimental | beta | deprecated
+    defaultEnabled: false, // Start disabled
+    category: "experimental", // core | experimental | beta | deprecated
   },
 ];
 ```
@@ -29,7 +29,7 @@ export function MyComponent() {
   const isEnabled = useFeatureFlag("my_new_feature");
 
   if (!isEnabled) {
-    return <LegacyComponent />;  // or null
+    return <LegacyComponent />; // or null
   }
 
   return <NewFeature />;
@@ -44,12 +44,12 @@ export function MyComponent() {
 
 ## Categories
 
-| Category | Use For |
-|----------|---------|
-| `core` | Essential features, usually enabled |
-| `experimental` | New features in development |
-| `beta` | Features ready for testing |
-| `deprecated` | Features being phased out |
+| Category       | Use For                             |
+| -------------- | ----------------------------------- |
+| `core`         | Essential features, usually enabled |
+| `experimental` | New features in development         |
+| `beta`         | Features ready for testing          |
+| `deprecated`   | Features being phased out           |
 
 ## Environment Variables
 
