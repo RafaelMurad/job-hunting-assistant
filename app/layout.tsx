@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import type { JSX, ReactNode } from "react";
 import { Inter } from "next/font/google";
 import "./globals.css";
 import Link from "next/link";
@@ -17,8 +18,8 @@ export const metadata: Metadata = {
 export default function RootLayout({
   children,
 }: Readonly<{
-  children: React.ReactNode;
-}>): React.JSX.Element {
+  children: ReactNode;
+}>): JSX.Element {
   return (
     <html lang="en">
       <body className={`${inter.variable} font-sans antialiased bg-slate-50`}>

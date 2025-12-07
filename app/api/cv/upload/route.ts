@@ -102,7 +102,7 @@ async function parseWithGeminiVision(pdfBuffer: Buffer): Promise<{
   const text = data.candidates?.[0]?.content?.parts?.[0]?.text || "";
 
   // Parse JSON from response (remove any markdown code blocks if present)
-  const jsonMatch = text.match(/\{[\s\S]*\}/);
+  const jsonMatch = text.match(/{[\s\S]*}/);
   if (!jsonMatch) {
     console.error("[CV Upload] Could not parse JSON from:", text);
     throw new Error("Could not parse AI response as JSON");
@@ -156,7 +156,7 @@ async function parseWithGeminiText(cvText: string): Promise<{
   const text = data.candidates?.[0]?.content?.parts?.[0]?.text || "";
 
   // Parse JSON from response
-  const jsonMatch = text.match(/\{[\s\S]*\}/);
+  const jsonMatch = text.match(/{[\s\S]*}/);
   if (!jsonMatch) {
     console.error("[CV Upload] Could not parse JSON from:", text);
     throw new Error("Could not parse AI response as JSON");
