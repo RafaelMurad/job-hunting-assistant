@@ -95,3 +95,26 @@ export const userPatchSchema = userSchema.partial().extend({
 });
 
 export type UserPatchInput = z.infer<typeof userPatchSchema>;
+
+/**
+ * Schema for CV upload via tRPC (base64 encoded).
+ * Max file size: 2MB (base64 encoded = ~2.67MB string)
+ */
+export const cvUploadSchema = z.object({
+  filename: z
+    .string()
+    .min(1, { message: "Filename is required" })
+    .refine((name) => name.endsWith(".pdf") || name.endsWith(".docx"), {
+      message: "Only PDF and DOCX files are supported",
+    }),
+  contentBase64: z
+    .string()
+    .min(1, { message: "File content is required" })
+    .max(2800000, { message: "File too large. Maximum size is 2MB." }), // ~2MB base64
+  mimeType: z.enum(
+    ["application/pdf", "application/vnd.openxmlformats-officedocument.wordprocessingml.document"],
+    { message: "Invalid file type. Please upload a PDF or DOCX file." }
+  ),
+});
+
+export type CVUploadInput = z.infer<typeof cvUploadSchema>;

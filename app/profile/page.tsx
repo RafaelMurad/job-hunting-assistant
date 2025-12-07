@@ -1,62 +1,25 @@
 /**
- * Profile Page (Improved Version)
+ * Profile Page
  *
- * WHY: This is a Client Component because it needs interactivity:
- * - Form state management (useState)
- * - API calls on user action (fetch)
- * - Real-time UI updates
- *
- * WHAT: A form that lets users view/edit their profile.
- * Connected to PUT /api/user for persistence.
- *
- * HOW: Uses React hooks for state, fetches API on load and save.
- *
- * Learning Points:
- * 1. "use client" directive makes this a Client Component
- * 2. useEffect for data fetching on mount
- * 3. Controlled form inputs (value + onChange)
- * 4. Async form submission with loading states
- * 5. Field-level error display from Zod validation
+ * User profile management with CV upload and manual entry.
+ * Uses the useUser hook for all data operations.
  */
 
 "use client";
 
 import type { JSX, FormEvent } from "react";
-import { useEffect, useState, useCallback } from "react";
+import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
-import { CVUpload, ExtractedCVData } from "@/components/cv-upload";
-
-/**
- * User interface - matches the Prisma model.
- * In a larger app, you'd import this from a shared types file.
- */
-interface User {
-  id: string;
-  name: string;
-  email: string;
-  phone?: string | null;
-  location: string;
-  summary: string;
-  experience: string;
-  skills: string;
-}
-
-/**
- * Field error from API validation.
- * Maps field names to error messages.
- */
-interface FieldErrors {
-  [key: string]: string;
-}
+import { CVUpload } from "@/components/cv-upload";
+import { useUser, type User, type ExtractedCVData } from "@/lib/hooks";
 
 /**
  * Toast notification state.
- * Shows feedback after save attempts.
  */
 interface Toast {
   type: "success" | "error";
@@ -67,154 +30,81 @@ export default function ProfilePage(): JSX.Element {
   const router = useRouter();
 
   // ============================================
-  // STATE MANAGEMENT
+  // HOOKS
   // ============================================
 
-  // User data from API
-  const [user, setUser] = useState<User | null>(null);
+  const {
+    user: userData,
+    loading,
+    saving,
+    error,
+    fieldErrors,
+    save,
+    isProfileComplete,
+  } = useUser();
 
-  // Loading states
-  const [loading, setLoading] = useState(true);
-  const [saving, setSaving] = useState(false);
+  // ============================================
+  // LOCAL STATE
+  // ============================================
 
-  // Feedback states
+  // Local form state for editing - initialized from hook data
+  const [formData, setFormData] = useState<User | null>(null);
   const [toast, setToast] = useState<Toast | null>(null);
-  const [fieldErrors, setFieldErrors] = useState<FieldErrors>({});
-
-  // Input mode: manual form entry vs CV upload
   const [inputMode, setInputMode] = useState<"manual" | "upload">("manual");
+  const [lastError, setLastError] = useState<string | null>(null);
+
+  // Initialize form data once when userData becomes available
+  // (using a ref pattern to avoid useEffect + setState)
+  if (userData && !formData && !loading) {
+    setFormData(userData);
+  }
+
+  // Show toast for new errors (comparing to track changes)
+  if (error && error !== lastError) {
+    setLastError(error);
+    setToast({ type: "error", message: error });
+    setTimeout(() => setToast(null), 5000);
+  }
 
   // ============================================
-  // DATA FETCHING
+  // HANDLERS
   // ============================================
 
-  /**
-   * Load user profile on component mount.
-   *
-   * useCallback memoizes the function so it doesn't change on every render.
-   * This is important when the function is a dependency of useEffect.
-   */
-  const loadUser = useCallback(async () => {
-    try {
-      const res = await fetch("/api/user");
-      const data = await res.json();
-
-      if (data.user) {
-        setUser(data.user);
-      } else {
-        // No user exists yet - create empty form
-        setUser({
-          id: "",
-          name: "",
-          email: "",
-          phone: "",
-          location: "",
-          summary: "",
-          experience: "",
-          skills: "",
-        });
-      }
-    } catch (err) {
-      console.error("Error loading user:", err);
-      showToast("error", "Failed to load profile. Please refresh the page.");
-    } finally {
-      setLoading(false);
-    }
-  }, []);
-
-  // Fetch user on mount
-  useEffect(() => {
-    void loadUser();
-  }, [loadUser]);
-
-  // ============================================
-  // FORM HANDLERS
-  // ============================================
-
-  /**
-   * Update a single field in the user state.
-   * This is a "controlled input" pattern - React owns the form state.
-   */
-  const updateField = (field: keyof User, value: string): void => {
-    if (!user) return;
-
-    // Clear any existing error for this field when user types
-    if (fieldErrors[field]) {
-      setFieldErrors((prev) => {
-        const next = { ...prev };
-        delete next[field];
-        return next;
-      });
-    }
-
-    setUser({ ...user, [field]: value });
-  };
-
-  /**
-   * Show a toast notification.
-   * Auto-hides after 5 seconds.
-   */
   const showToast = (type: "success" | "error", message: string): void => {
     setToast({ type, message });
     setTimeout(() => setToast(null), 5000);
   };
 
-  /**
-   * Handle form submission.
-   * Sends data to API and handles success/error responses.
-   */
+  const updateField = (field: keyof User, value: string): void => {
+    if (!formData) return;
+    setFormData({ ...formData, [field]: value });
+  };
+
   const handleSave = async (e: FormEvent): Promise<void> => {
     e.preventDefault();
-    if (!user) return;
+    if (!formData) return;
 
-    // Clear previous errors
-    setFieldErrors({});
-    setSaving(true);
+    // Build save input - only include phone if it has a value
+    const saveInput = {
+      name: formData.name,
+      email: formData.email,
+      location: formData.location,
+      summary: formData.summary,
+      experience: formData.experience,
+      skills: formData.skills,
+      ...(formData.phone ? { phone: formData.phone } : {}),
+    };
 
-    try {
-      const res = await fetch("/api/user", {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(user),
-      });
+    save(saveInput);
 
-      const data = await res.json();
-
-      if (res.ok) {
-        // Success - update local state with saved user
-        setUser(data.user);
-        showToast("success", "Profile saved successfully!");
-      } else if (res.status === 400 && data.details) {
-        // Validation error - show field-level errors
-        const errors: FieldErrors = {};
-        for (const detail of data.details) {
-          errors[detail.field] = detail.message;
-        }
-        setFieldErrors(errors);
-        showToast("error", "Please fix the errors below.");
-      } else {
-        // Other error
-        showToast("error", data.error || "Failed to save profile");
-      }
-    } catch (err) {
-      console.error("Error saving user:", err);
-      showToast("error", "Network error. Please try again.");
-    } finally {
-      setSaving(false);
+    // Show success toast (error handled by hook)
+    if (!error) {
+      showToast("success", "Profile saved successfully!");
     }
   };
 
-  /**
-   * Handle extracted CV data from the CVUpload component.
-   *
-   * WHY: When a CV is uploaded and parsed, we want to populate the form
-   * with the extracted data so the user can review and edit before saving.
-   *
-   * WHAT: Takes extracted data and updates the user state, then switches
-   * to manual mode so the user can verify/edit the populated fields.
-   */
-  const handleCVExtracted = useCallback((extractedData: ExtractedCVData) => {
-    setUser((prev) => ({
+  const handleCVExtracted = (extractedData: ExtractedCVData): void => {
+    setFormData((prev) => ({
       id: prev?.id || "",
       name: extractedData.name || prev?.name || "",
       email: extractedData.email || prev?.email || "",
@@ -224,27 +114,9 @@ export default function ProfilePage(): JSX.Element {
       experience: extractedData.experience || prev?.experience || "",
       skills: extractedData.skills || prev?.skills || "",
     }));
-
-    // Switch to manual mode so user can review/edit the extracted data
     setInputMode("manual");
     showToast("success", "CV data extracted! Please review and save.");
-  }, []);
-
-  // ============================================
-  // COMPUTED VALUES
-  // ============================================
-
-  /**
-   * Check if profile has all required fields filled.
-   * Used to enable/disable the "Analyze a Job" button.
-   */
-  const isProfileComplete =
-    user?.name &&
-    user?.email &&
-    user?.location &&
-    user?.summary &&
-    user?.experience &&
-    user?.skills;
+  };
 
   // ============================================
   // RENDER: LOADING STATE
@@ -261,11 +133,7 @@ export default function ProfilePage(): JSX.Element {
     );
   }
 
-  // ============================================
-  // RENDER: ERROR STATE
-  // ============================================
-
-  if (!user) {
+  if (!formData) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-nordic-neutral-50">
         <div className="text-center">
@@ -406,14 +274,14 @@ export default function ProfilePage(): JSX.Element {
                     </Label>
                     <Input
                       id="name"
-                      value={user.name}
+                      value={formData.name}
                       onChange={(e) => updateField("name", e.target.value)}
                       placeholder="John Doe"
                       className={`mt-2 text-nordic-neutral-900 ${
-                        fieldErrors.name ? "border-clay-500 focus:ring-clay-500" : ""
+                        fieldErrors?.name ? "border-clay-500 focus:ring-clay-500" : ""
                       }`}
                     />
-                    {fieldErrors.name && (
+                    {fieldErrors?.name && (
                       <p className="text-sm text-clay-600 mt-1">{fieldErrors.name}</p>
                     )}
                   </div>
@@ -424,14 +292,14 @@ export default function ProfilePage(): JSX.Element {
                     <Input
                       id="email"
                       type="email"
-                      value={user.email}
+                      value={formData.email}
                       onChange={(e) => updateField("email", e.target.value)}
                       placeholder="john@example.com"
                       className={`mt-2 text-nordic-neutral-900 ${
-                        fieldErrors.email ? "border-clay-500 focus:ring-clay-500" : ""
+                        fieldErrors?.email ? "border-clay-500 focus:ring-clay-500" : ""
                       }`}
                     />
-                    {fieldErrors.email && (
+                    {fieldErrors?.email && (
                       <p className="text-sm text-clay-600 mt-1">{fieldErrors.email}</p>
                     )}
                   </div>
@@ -444,7 +312,7 @@ export default function ProfilePage(): JSX.Element {
                     </Label>
                     <Input
                       id="phone"
-                      value={user.phone || ""}
+                      value={formData.phone || ""}
                       onChange={(e) => updateField("phone", e.target.value)}
                       placeholder="+1 555 123 4567"
                       className="mt-2 text-nordic-neutral-900"
@@ -456,14 +324,14 @@ export default function ProfilePage(): JSX.Element {
                     </Label>
                     <Input
                       id="location"
-                      value={user.location}
+                      value={formData.location}
                       onChange={(e) => updateField("location", e.target.value)}
                       placeholder="San Francisco, CA"
                       className={`mt-2 text-nordic-neutral-900 ${
-                        fieldErrors.location ? "border-clay-500 focus:ring-clay-500" : ""
+                        fieldErrors?.location ? "border-clay-500 focus:ring-clay-500" : ""
                       }`}
                     />
-                    {fieldErrors.location && (
+                    {fieldErrors?.location && (
                       <p className="text-sm text-clay-600 mt-1">{fieldErrors.location}</p>
                     )}
                   </div>
@@ -476,15 +344,15 @@ export default function ProfilePage(): JSX.Element {
                   </Label>
                   <Textarea
                     id="summary"
-                    value={user.summary}
+                    value={formData.summary}
                     onChange={(e) => updateField("summary", e.target.value)}
                     placeholder="Senior Software Engineer with 5+ years of experience building scalable web applications..."
                     rows={4}
                     className={`mt-2 text-nordic-neutral-900 ${
-                      fieldErrors.summary ? "border-clay-500 focus:ring-clay-500" : ""
+                      fieldErrors?.summary ? "border-clay-500 focus:ring-clay-500" : ""
                     }`}
                   />
-                  {fieldErrors.summary && (
+                  {fieldErrors?.summary && (
                     <p className="text-sm text-clay-600 mt-1">{fieldErrors.summary}</p>
                   )}
                   <p className="text-sm text-nordic-neutral-500 mt-2">
@@ -499,15 +367,15 @@ export default function ProfilePage(): JSX.Element {
                   </Label>
                   <Textarea
                     id="experience"
-                    value={user.experience}
+                    value={formData.experience}
                     onChange={(e) => updateField("experience", e.target.value)}
                     placeholder="Company Name | Role (Start Date - End Date)&#10;- Key achievement 1&#10;- Key achievement 2&#10;&#10;Previous Company | Previous Role..."
                     rows={10}
                     className={`mt-2 text-nordic-neutral-900 ${
-                      fieldErrors.experience ? "border-clay-500 focus:ring-clay-500" : ""
+                      fieldErrors?.experience ? "border-clay-500 focus:ring-clay-500" : ""
                     }`}
                   />
-                  {fieldErrors.experience && (
+                  {fieldErrors?.experience && (
                     <p className="text-sm text-clay-600 mt-1">{fieldErrors.experience}</p>
                   )}
                   <p className="text-sm text-nordic-neutral-500 mt-2">
@@ -522,15 +390,15 @@ export default function ProfilePage(): JSX.Element {
                   </Label>
                   <Textarea
                     id="skills"
-                    value={user.skills}
+                    value={formData.skills}
                     onChange={(e) => updateField("skills", e.target.value)}
                     placeholder="React, TypeScript, Node.js, PostgreSQL, AWS, Docker, Git..."
                     rows={3}
                     className={`mt-2 text-nordic-neutral-900 ${
-                      fieldErrors.skills ? "border-clay-500 focus:ring-clay-500" : ""
+                      fieldErrors?.skills ? "border-clay-500 focus:ring-clay-500" : ""
                     }`}
                   />
-                  {fieldErrors.skills && (
+                  {fieldErrors?.skills && (
                     <p className="text-sm text-clay-600 mt-1">{fieldErrors.skills}</p>
                   )}
                   <p className="text-sm text-nordic-neutral-500 mt-2">

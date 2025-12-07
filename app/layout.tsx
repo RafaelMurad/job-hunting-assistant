@@ -4,6 +4,7 @@ import { Inter } from "next/font/google";
 import "./globals.css";
 import Link from "next/link";
 import { FeatureFlagProvider } from "@/lib/feature-flags/provider";
+import { TRPCProvider } from "@/lib/trpc/provider";
 
 const inter = Inter({
   subsets: ["latin"],
@@ -23,49 +24,51 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className={`${inter.variable} font-sans antialiased bg-slate-50`}>
-        <FeatureFlagProvider>
-          {/* Navigation */}
-          <nav className="bg-white border-b border-slate-200">
-            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-              <div className="flex justify-between h-16 items-center">
-                <div className="flex items-center gap-8">
-                  <Link href="/" className="text-xl font-bold text-slate-900">
-                    Job Hunt AI
-                  </Link>
-                  <div className="hidden md:flex gap-6">
-                    <Link
-                      href="/dashboard"
-                      className="text-slate-600 hover:text-slate-900 transition-colors"
-                    >
-                      Dashboard
+        <TRPCProvider>
+          <FeatureFlagProvider>
+            {/* Navigation */}
+            <nav className="bg-white border-b border-slate-200">
+              <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                <div className="flex justify-between h-16 items-center">
+                  <div className="flex items-center gap-8">
+                    <Link href="/" className="text-xl font-bold text-slate-900">
+                      Job Hunt AI
                     </Link>
-                    <Link
-                      href="/profile"
-                      className="text-slate-600 hover:text-slate-900 transition-colors"
-                    >
-                      Profile
-                    </Link>
-                    <Link
-                      href="/analyze"
-                      className="text-slate-600 hover:text-slate-900 transition-colors"
-                    >
-                      Analyze Job
-                    </Link>
-                    <Link
-                      href="/tracker"
-                      className="text-slate-600 hover:text-slate-900 transition-colors"
-                    >
-                      Tracker
-                    </Link>
+                    <div className="hidden md:flex gap-6">
+                      <Link
+                        href="/dashboard"
+                        className="text-slate-600 hover:text-slate-900 transition-colors"
+                      >
+                        Dashboard
+                      </Link>
+                      <Link
+                        href="/profile"
+                        className="text-slate-600 hover:text-slate-900 transition-colors"
+                      >
+                        Profile
+                      </Link>
+                      <Link
+                        href="/analyze"
+                        className="text-slate-600 hover:text-slate-900 transition-colors"
+                      >
+                        Analyze Job
+                      </Link>
+                      <Link
+                        href="/tracker"
+                        className="text-slate-600 hover:text-slate-900 transition-colors"
+                      >
+                        Tracker
+                      </Link>
+                    </div>
                   </div>
                 </div>
               </div>
-            </div>
-          </nav>
+            </nav>
 
-          {/* Main Content */}
-          <main>{children}</main>
-        </FeatureFlagProvider>
+            {/* Main Content */}
+            <main>{children}</main>
+          </FeatureFlagProvider>
+        </TRPCProvider>
       </body>
     </html>
   );

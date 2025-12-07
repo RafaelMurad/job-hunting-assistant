@@ -9,7 +9,7 @@ A **learning-focused portfolio project** for AI-powered job hunting: CV analysis
 ## Tech Stack
 
 - **Frontend:** Next.js 16 (App Router), React 19, TypeScript, TailwindCSS 4, Shadcn/ui
-- **Backend:** Next.js API Routes (REST), Prisma ORM
+- **Backend:** tRPC v11 with React Query, Prisma ORM
 - **Database:** PostgreSQL (Neon) with connection pooling
 - **AI:** Multi-provider via `lib/ai.ts` — Gemini (free), OpenAI, Claude
 
@@ -21,22 +21,43 @@ app/page.tsx (landing) → app/profile/page.tsx (CV form)
                        → app/tracker/page.tsx (applications list)
                        → app/dashboard/page.tsx (stats overview)
 
-API Routes:
-  POST /api/analyze      → lib/ai.ts (analyzeJob) → AI provider
-  POST /api/cover-letter → lib/ai.ts (generateCoverLetter) → AI provider
-  GET|PUT /api/user      → prisma (User table)
-  GET|POST|PATCH|DELETE /api/applications → prisma (Application table)
+Custom Hooks (lib/hooks/):
+  useUser()        → user profile CRUD, CV upload
+  useAnalyze()     → job analysis, cover letter generation
+  useApplications() → applications CRUD, stats
+
+tRPC Routers (lib/trpc/routers/):
+  user.ts         → get, upsert, uploadCV
+  analyze.ts      → analyzeJob, generateCoverLetter
+  applications.ts → list, create, update, delete
+
+REST Endpoints (kept for specific use cases):
+  POST /api/cv/upload → FormData CV upload (fallback for larger files)
 ```
 
 ## Key Patterns
 
-### AI Provider Pattern (`lib/ai.ts`)
+### Custom Hooks Pattern (`lib/hooks/`)
 
-Switch providers via `AI_PROVIDER` env var. Each provider implements `analyzeJob()` and `generateCoverLetter()`:
+Pages consume abstracted hooks instead of inline tRPC calls:
 
 ```typescript
-// Provider selection at runtime
-const provider = process.env.AI_PROVIDER || "gemini"; // gemini | openai | claude
+// ✅ Use hooks for clean component code
+const { user, loading, save, fieldErrors } = useUser();
+const { analysis, analyze, analyzeState } = useAnalyze();
+const { applications, stats, updateStatus } = useApplications(userId);
+```
+
+### tRPC Router Pattern (`lib/trpc/routers/`)
+
+Type-safe API routes with Zod validation:
+
+```typescript
+// lib/trpc/routers/user.ts
+export const userRouter = router({
+  get: publicProcedure.query(async () => { ... }),
+  upsert: publicProcedure.input(userSchema).mutation(async ({ input }) => { ... }),
+});
 ```
 
 ### Validation Pattern (`lib/validations/user.ts`)
@@ -84,8 +105,9 @@ git branch-clean feat/x  # Create clean feature branch from main
 1. **FUTURE: comments** — Mark out-of-scope features: `// FUTURE: Add auth`
 2. **Server Components by default** — Only use `"use client"` for interactivity
 3. **Zod + TypeScript** — Runtime validation + compile-time types together
-4. **API route structure** — `app/api/{resource}/route.ts` for REST endpoints
-5. **Component location** — Shadcn components in `components/ui/`, feature components in `components/`
+4. **Hooks as service layer** — Pages use hooks (`lib/hooks/`), not inline tRPC
+5. **tRPC for API** — All API calls via tRPC (`lib/trpc/routers/`)
+6. **Component location** — Shadcn components in `components/ui/`, feature components in `components/`
 
 ## Code Quality Patterns
 
