@@ -22,7 +22,7 @@
  */
 
 import { useContext } from "react";
-import { FeatureFlagContext } from "./provider";
+import { FeatureFlagContext, type FeatureFlagContextValue } from "./provider";
 import type { FeatureFlagKey } from "./flags.config";
 
 /**
@@ -31,7 +31,7 @@ import type { FeatureFlagKey } from "./flags.config";
  *
  * @throws Error if used outside FeatureFlagProvider
  */
-export function useFeatureFlags() {
+export function useFeatureFlags(): FeatureFlagContextValue {
   const context = useContext(FeatureFlagContext);
 
   if (!context) {

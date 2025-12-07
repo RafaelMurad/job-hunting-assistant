@@ -21,32 +21,43 @@ import { Button } from "@/components/ui/button";
  */
 async function getDashboardData(): Promise<{
   user: Awaited<ReturnType<typeof prisma.user.findFirst>>;
-  applications: Awaited<ReturnType<typeof prisma.application.findMany>>;
+  recentApplications: Awaited<ReturnType<typeof prisma.application.findMany>>;
   stats: { total: number; saved: number; applied: number; interviewing: number };
 }> {
   const user = await prisma.user.findFirst();
 
-  // Get application stats (only if user exists)
-  const applications = user
-    ? await prisma.application.findMany({
-        where: { userId: user.id },
-        orderBy: { createdAt: "desc" },
-        take: 5,
-      })
-    : [];
+  if (!user) {
+    return {
+      user: null,
+      recentApplications: [],
+      stats: { total: 0, saved: 0, applied: 0, interviewing: 0 },
+    };
+  }
 
-  const stats = {
-    total: applications.length,
-    saved: applications.filter((a) => a.status === "saved").length,
-    applied: applications.filter((a) => a.status === "applied").length,
-    interviewing: applications.filter((a) => a.status === "interviewing").length,
+  // Run queries in parallel for efficiency
+  const [recentApplications, total, saved, applied, interviewing] = await Promise.all([
+    // Get recent applications for display
+    prisma.application.findMany({
+      where: { userId: user.id },
+      orderBy: { createdAt: "desc" },
+      take: 5,
+    }),
+    // Get accurate counts for stats (not limited to 5)
+    prisma.application.count({ where: { userId: user.id } }),
+    prisma.application.count({ where: { userId: user.id, status: "saved" } }),
+    prisma.application.count({ where: { userId: user.id, status: "applied" } }),
+    prisma.application.count({ where: { userId: user.id, status: "interviewing" } }),
+  ]);
+
+  return {
+    user,
+    recentApplications,
+    stats: { total, saved, applied, interviewing },
   };
-
-  return { user, applications, stats };
 }
 
 export default async function DashboardPage(): Promise<React.JSX.Element> {
-  const { user, applications, stats } = await getDashboardData();
+  const { user, recentApplications, stats } = await getDashboardData();
 
   // Check profile completion
   const isProfileComplete =
@@ -198,9 +209,9 @@ export default async function DashboardPage(): Promise<React.JSX.Element> {
               <CardDescription>Your latest job applications</CardDescription>
             </CardHeader>
             <CardContent>
-              {applications.length > 0 ? (
+              {recentApplications.length > 0 ? (
                 <div className="space-y-3">
-                  {applications.slice(0, 5).map((app) => (
+                  {recentApplications.map((app) => (
                     <div
                       key={app.id}
                       className="flex items-center justify-between p-3 bg-nordic-neutral-50 rounded-lg"

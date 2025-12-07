@@ -9,10 +9,15 @@
  * Note: In production, you may want to protect this route with authentication.
  */
 
+import Link from "next/link";
 import { useFeatureFlags, useFeatureFlagHydrated } from "@/lib/feature-flags/hooks";
-import { FEATURE_FLAGS, getFlagsByCategory, type FeatureFlag } from "@/lib/feature-flags/flags.config";
+import {
+  FEATURE_FLAGS,
+  getFlagsByCategory,
+  type FeatureFlag,
+} from "@/lib/feature-flags/flags.config";
 
-export default function FeatureFlagsAdminPage() {
+export default function FeatureFlagsAdminPage(): React.JSX.Element {
   const { flags, toggle, resetAll } = useFeatureFlags();
   const isHydrated = useFeatureFlagHydrated();
 
@@ -46,9 +51,7 @@ export default function FeatureFlagsAdminPage() {
         <div className="mb-8">
           <div className="flex items-center justify-between">
             <div>
-              <h1 className="text-3xl font-bold text-nordic-neutral-900">
-                Feature Flags
-              </h1>
+              <h1 className="text-3xl font-bold text-nordic-neutral-900">Feature Flags</h1>
               <p className="mt-1 text-nordic-neutral-600">
                 Toggle features on and off for development and testing
               </p>
@@ -84,12 +87,10 @@ export default function FeatureFlagsAdminPage() {
               />
             </svg>
             <div className="ml-3">
-              <h3 className="text-sm font-medium text-amber-800">
-                Development Only
-              </h3>
+              <h3 className="text-sm font-medium text-amber-800">Development Only</h3>
               <p className="mt-1 text-sm text-amber-700">
-                Flag states are stored in localStorage. Changes only affect this browser.
-                For production, use environment variables.
+                Flag states are stored in localStorage. Changes only affect this browser. For
+                production, use environment variables.
               </p>
             </div>
           </div>
@@ -128,7 +129,8 @@ export default function FeatureFlagsAdminPage() {
             Environment Variable Overrides
           </h3>
           <p className="mb-4 text-sm text-nordic-neutral-600">
-            Add these to your <code className="rounded bg-nordic-neutral-100 px-1">.env.local</code> to enable flags server-side:
+            Add these to your <code className="rounded bg-nordic-neutral-100 px-1">.env.local</code>{" "}
+            to enable flags server-side:
           </p>
           <pre className="overflow-x-auto rounded-lg bg-nordic-neutral-900 p-4 text-sm text-nordic-neutral-100">
             {FEATURE_FLAGS.map(
@@ -140,12 +142,9 @@ export default function FeatureFlagsAdminPage() {
 
         {/* Back Link */}
         <div className="mt-8">
-          <a
-            href="/"
-            className="text-fjord-600 hover:text-fjord-700 hover:underline"
-          >
+          <Link href="/" className="text-fjord-600 hover:text-fjord-700 hover:underline">
             &larr; Back to Application
-          </a>
+          </Link>
         </div>
       </div>
     </div>
@@ -159,7 +158,12 @@ interface FlagToggleProps {
   categoryColor: string;
 }
 
-function FlagToggle({ flag, isEnabled, onToggle, categoryColor }: FlagToggleProps) {
+function FlagToggle({
+  flag,
+  isEnabled,
+  onToggle,
+  categoryColor,
+}: FlagToggleProps): React.JSX.Element {
   return (
     <div
       className={`rounded-lg border ${categoryColor} p-4 transition-all ${
@@ -174,9 +178,7 @@ function FlagToggle({ flag, isEnabled, onToggle, categoryColor }: FlagToggleProp
               {flag.key}
             </code>
           </div>
-          <p className="mt-1 text-sm text-nordic-neutral-600">
-            {flag.description}
-          </p>
+          <p className="mt-1 text-sm text-nordic-neutral-600">{flag.description}</p>
         </div>
         <button
           onClick={onToggle}
