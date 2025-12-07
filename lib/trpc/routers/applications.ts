@@ -17,19 +17,17 @@ export const applicationsRouter = router({
    * List all applications for a user.
    */
   list: publicProcedure.input(applicationListSchema).query(async ({ ctx, input }) => {
-    const applications = await ctx.prisma.application.findMany({
+    return ctx.prisma.application.findMany({
       where: { userId: input.userId },
       orderBy: { createdAt: "desc" },
     });
-
-    return applications;
   }),
 
   /**
    * Create a new application.
    */
   create: publicProcedure.input(applicationCreateSchema).mutation(async ({ ctx, input }) => {
-    const application = await ctx.prisma.application.create({
+    return ctx.prisma.application.create({
       data: {
         userId: input.userId,
         company: input.company,
@@ -43,8 +41,6 @@ export const applicationsRouter = router({
         ...(input.status === "applied" && { appliedAt: new Date() }),
       },
     });
-
-    return application;
   }),
 
   /**
@@ -53,7 +49,7 @@ export const applicationsRouter = router({
   update: publicProcedure.input(applicationUpdateSchema).mutation(async ({ ctx, input }) => {
     const { id, status, notes } = input;
 
-    const application = await ctx.prisma.application.update({
+    return ctx.prisma.application.update({
       where: { id },
       data: {
         ...(status && { status }),
@@ -61,8 +57,6 @@ export const applicationsRouter = router({
         ...(status === "applied" && { appliedAt: new Date() }),
       },
     });
-
-    return application;
   }),
 
   /**
