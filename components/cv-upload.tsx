@@ -107,7 +107,7 @@ export function CVUpload({ onExtracted, onCancel }: CVUploadProps): JSX.Element 
 
       const file = e.dataTransfer.files[0];
       if (file) {
-        handleFile(file);
+        void handleFile(file);
       }
     },
     [handleFile]
@@ -127,7 +127,7 @@ export function CVUpload({ onExtracted, onCancel }: CVUploadProps): JSX.Element 
     (e: ChangeEvent<HTMLInputElement>) => {
       const file = e.target.files?.[0];
       if (file) {
-        handleFile(file);
+        void handleFile(file);
       }
     },
     [handleFile]
