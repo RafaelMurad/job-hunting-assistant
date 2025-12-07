@@ -19,6 +19,14 @@ interface JobAnalysisResult {
   keyPoints: string[];
 }
 
+// Button state types for inline feedback
+type ButtonState = "idle" | "loading" | "success" | "error";
+
+interface StatusMessage {
+  type: "error" | "info";
+  text: string;
+}
+
 export default function AnalyzePage(): React.JSX.Element {
   const router = useRouter();
   const [userId, setUserId] = useState<string>("");
@@ -29,21 +37,44 @@ export default function AnalyzePage(): React.JSX.Element {
   const [generatingCoverLetter, setGeneratingCoverLetter] = useState(false);
   const [saving, setSaving] = useState(false);
 
+  // Button states for inline feedback (replaces alerts)
+  const [analyzeState, setAnalyzeState] = useState<ButtonState>("idle");
+  const [coverLetterState, setCoverLetterState] = useState<ButtonState>("idle");
+  const [saveState, setSaveState] = useState<ButtonState>("idle");
+  const [copyState, setCopyState] = useState<ButtonState>("idle");
+
+  // Inline error messages
+  const [analyzeError, setAnalyzeError] = useState<StatusMessage | null>(null);
+  const [coverLetterError, setCoverLetterError] = useState<StatusMessage | null>(null);
+  const [saveError, setSaveError] = useState<StatusMessage | null>(null);
+
+  // Helper to reset button state after success
+  const resetButtonState = (
+    setter: React.Dispatch<React.SetStateAction<ButtonState>>,
+    delay = 2000
+  ): void => {
+    setTimeout(() => setter("idle"), delay);
+  };
+
   // Get user ID on mount
   useEffect(() => {
     fetch("/api/user")
       .then((res) => res.json())
-      .then((data) => setUserId(data.id))
+      .then((data) => setUserId(data.user?.id || ""))
       .catch(console.error);
   }, []);
 
   const handleAnalyze = async (): Promise<void> => {
+    // Clear previous errors
+    setAnalyzeError(null);
+
     if (!jobDescription.trim()) {
-      alert("Please enter a job description");
+      setAnalyzeError({ type: "info", text: "Please enter a job description" });
       return;
     }
 
     setAnalyzing(true);
+    setAnalyzeState("loading");
     setAnalysis(null);
     setCoverLetter("");
 
@@ -58,9 +89,16 @@ export default function AnalyzePage(): React.JSX.Element {
 
       const data = await res.json();
       setAnalysis(data);
+      setAnalyzeState("success");
+      resetButtonState(setAnalyzeState);
     } catch (error) {
       console.error("Error:", error);
-      alert("Failed to analyze job. Make sure you've filled in your profile first.");
+      setAnalyzeState("error");
+      setAnalyzeError({
+        type: "error",
+        text: "Failed to analyze job. Make sure you've filled in your profile first.",
+      });
+      resetButtonState(setAnalyzeState, 3000);
     } finally {
       setAnalyzing(false);
     }
@@ -69,7 +107,10 @@ export default function AnalyzePage(): React.JSX.Element {
   const handleGenerateCoverLetter = async (): Promise<void> => {
     if (!analysis) return;
 
+    setCoverLetterError(null);
     setGeneratingCoverLetter(true);
+    setCoverLetterState("loading");
+
     try {
       const res = await fetch("/api/cover-letter", {
         method: "POST",
@@ -81,9 +122,13 @@ export default function AnalyzePage(): React.JSX.Element {
 
       const data = await res.json();
       setCoverLetter(data.coverLetter);
+      setCoverLetterState("success");
+      resetButtonState(setCoverLetterState);
     } catch (error) {
       console.error("Error:", error);
-      alert("Failed to generate cover letter");
+      setCoverLetterState("error");
+      setCoverLetterError({ type: "error", text: "Failed to generate cover letter" });
+      resetButtonState(setCoverLetterState, 3000);
     } finally {
       setGeneratingCoverLetter(false);
     }
@@ -92,7 +137,10 @@ export default function AnalyzePage(): React.JSX.Element {
   const handleSaveApplication = async (): Promise<void> => {
     if (!analysis) return;
 
+    setSaveError(null);
     setSaving(true);
+    setSaveState("loading");
+
     try {
       const res = await fetch("/api/applications", {
         method: "POST",
@@ -111,14 +159,56 @@ export default function AnalyzePage(): React.JSX.Element {
 
       if (!res.ok) throw new Error("Save failed");
 
-      alert("Application saved to tracker!");
-      router.push("/tracker");
+      setSaveState("success");
+      // Redirect after brief success feedback
+      setTimeout(() => router.push("/tracker"), 1000);
     } catch (error) {
       console.error("Error:", error);
-      alert("Failed to save application");
+      setSaveState("error");
+      setSaveError({ type: "error", text: "Failed to save application" });
+      resetButtonState(setSaveState, 3000);
     } finally {
       setSaving(false);
     }
+  };
+
+  const handleCopyToClipboard = async (): Promise<void> => {
+    try {
+      await navigator.clipboard.writeText(coverLetter);
+      setCopyState("success");
+      resetButtonState(setCopyState);
+    } catch {
+      setCopyState("error");
+      resetButtonState(setCopyState, 3000);
+    }
+  };
+
+  // Button text and style helpers
+  const getButtonText = (
+    state: ButtonState,
+    idle: string,
+    loading: string,
+    success: string,
+    error: string
+  ): string => {
+    switch (state) {
+      case "loading":
+        return loading;
+      case "success":
+        return success;
+      case "error":
+        return error;
+      default:
+        return idle;
+    }
+  };
+
+  const getButtonVariant = (
+    state: ButtonState,
+    defaultVariant: "default" | "outline" = "default"
+  ): "default" | "outline" | "destructive" => {
+    if (state === "error") return "destructive";
+    return defaultVariant;
   };
 
   const getMatchColor = (score: number): string => {
@@ -152,7 +242,10 @@ export default function AnalyzePage(): React.JSX.Element {
               <CardContent>
                 <Textarea
                   value={jobDescription}
-                  onChange={(e) => setJobDescription(e.target.value)}
+                  onChange={(e) => {
+                    setJobDescription(e.target.value);
+                    setAnalyzeError(null); // Clear error when typing
+                  }}
                   placeholder="Paste job description here..."
                   rows={20}
                   className="mb-4"
@@ -160,10 +253,30 @@ export default function AnalyzePage(): React.JSX.Element {
                 <Button
                   onClick={handleAnalyze}
                   disabled={analyzing || !jobDescription.trim()}
-                  className="w-full"
+                  variant={getButtonVariant(analyzeState)}
+                  className={`w-full transition-colors ${
+                    analyzeState === "success" ? "bg-green-600 hover:bg-green-700" : ""
+                  }`}
                 >
-                  {analyzing ? "Analyzing..." : "Analyze with AI"}
+                  {getButtonText(
+                    analyzeState,
+                    "Analyze with AI",
+                    "Analyzing...",
+                    "✓ Analysis Complete",
+                    "Analysis Failed"
+                  )}
                 </Button>
+                {/* Inline error/info message */}
+                {analyzeError && (
+                  <p
+                    role={analyzeError.type === "error" ? "alert" : "status"}
+                    className={`mt-2 text-sm ${
+                      analyzeError.type === "error" ? "text-red-600" : "text-gray-600"
+                    }`}
+                  >
+                    {analyzeError.text}
+                  </p>
+                )}
               </CardContent>
             </Card>
           </div>
@@ -240,18 +353,47 @@ export default function AnalyzePage(): React.JSX.Element {
                       <Button
                         onClick={handleGenerateCoverLetter}
                         disabled={generatingCoverLetter}
-                        className="w-full"
+                        variant={getButtonVariant(coverLetterState)}
+                        className={`w-full transition-colors ${
+                          coverLetterState === "success" ? "bg-green-600 hover:bg-green-700" : ""
+                        }`}
                       >
-                        {generatingCoverLetter ? "Generating..." : "Generate Cover Letter"}
+                        {getButtonText(
+                          coverLetterState,
+                          "Generate Cover Letter",
+                          "Generating...",
+                          "✓ Generated!",
+                          "Generation Failed"
+                        )}
                       </Button>
+                      {coverLetterError && (
+                        <p role="alert" className="text-sm text-red-600">
+                          {coverLetterError.text}
+                        </p>
+                      )}
                       <Button
                         onClick={handleSaveApplication}
                         disabled={saving}
-                        variant="outline"
-                        className="w-full"
+                        variant={getButtonVariant(saveState, "outline")}
+                        className={`w-full transition-colors ${
+                          saveState === "success"
+                            ? "bg-green-600 hover:bg-green-700 text-white border-green-600"
+                            : ""
+                        }`}
                       >
-                        {saving ? "Saving..." : "Save to Tracker"}
+                        {getButtonText(
+                          saveState,
+                          "Save to Tracker",
+                          "Saving...",
+                          "✓ Saved! Redirecting...",
+                          "Save Failed"
+                        )}
                       </Button>
+                      {saveError && (
+                        <p role="alert" className="text-sm text-red-600">
+                          {saveError.text}
+                        </p>
+                      )}
                     </div>
                   </CardContent>
                 </Card>
@@ -271,14 +413,21 @@ export default function AnalyzePage(): React.JSX.Element {
                         className="mb-4"
                       />
                       <Button
-                        onClick={() => {
-                          navigator.clipboard.writeText(coverLetter);
-                          alert("Cover letter copied to clipboard!");
-                        }}
-                        variant="outline"
-                        className="w-full"
+                        onClick={handleCopyToClipboard}
+                        variant={getButtonVariant(copyState, "outline")}
+                        className={`w-full transition-colors ${
+                          copyState === "success"
+                            ? "bg-green-600 hover:bg-green-700 text-white border-green-600"
+                            : ""
+                        }`}
                       >
-                        Copy to Clipboard
+                        {getButtonText(
+                          copyState,
+                          "Copy to Clipboard",
+                          "Copying...",
+                          "✓ Copied!",
+                          "Copy Failed"
+                        )}
                       </Button>
                     </CardContent>
                   </Card>
