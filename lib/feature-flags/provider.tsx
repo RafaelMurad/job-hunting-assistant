@@ -25,22 +25,11 @@
  * ```
  */
 
-import {
-  createContext,
-  useCallback,
-  useEffect,
-  useState,
-  type ReactNode,
-} from "react";
-import {
-  type FlagState,
-  getInitialFlagState,
-  loadFlagState,
-  saveFlagState,
-} from "./index";
+import { createContext, useCallback, useEffect, useState, type ReactNode } from "react";
+import { type FlagState, getInitialFlagState, loadFlagState, saveFlagState } from "./index";
 import type { FeatureFlagKey } from "./flags.config";
 
-interface FeatureFlagContextValue {
+export interface FeatureFlagContextValue {
   /** Current state of all flags */
   flags: FlagState;
   /** Whether flags have been hydrated from storage */
@@ -55,9 +44,7 @@ interface FeatureFlagContextValue {
   resetAll: () => void;
 }
 
-export const FeatureFlagContext = createContext<FeatureFlagContextValue | null>(
-  null
-);
+export const FeatureFlagContext = createContext<FeatureFlagContextValue | null>(null);
 
 interface FeatureFlagProviderProps {
   children: ReactNode;
@@ -82,7 +69,7 @@ function mergeFlags(base: FlagState, overrides?: FlagState): FlagState {
 export function FeatureFlagProvider({
   children,
   initialOverrides,
-}: FeatureFlagProviderProps) {
+}: FeatureFlagProviderProps): React.JSX.Element {
   // Start with defaults for SSR
   const [flags, setFlags] = useState<FlagState>(() => {
     const initial = getInitialFlagState();
@@ -91,9 +78,12 @@ export function FeatureFlagProvider({
   const [isHydrated, setIsHydrated] = useState(false);
 
   // Hydrate from localStorage on mount
+  // This is intentional hydration that must happen in useEffect (client-side only)
   useEffect(() => {
     const stored = loadFlagState();
-    setFlags(mergeFlags(stored, initialOverrides));
+    const merged = mergeFlags(stored, initialOverrides);
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- Intentional hydration from localStorage
+    setFlags(merged);
     setIsHydrated(true);
   }, [initialOverrides]);
 
