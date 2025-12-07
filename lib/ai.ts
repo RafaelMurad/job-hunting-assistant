@@ -378,3 +378,179 @@ export async function generateCoverLetter(
       throw new Error(`Unsupported AI provider: ${AI_CONFIG.provider}`);
   }
 }
+
+// ============================================
+// LATEX CV FUNCTIONS
+// ============================================
+
+/**
+ * Prompt for extracting LaTeX from PDF CV
+ */
+const LATEX_EXTRACTION_PROMPT = `You are an expert LaTeX CV/Resume converter. Analyze this CV/Resume PDF and convert it to clean, compilable LaTeX code.
+
+Requirements:
+1. Use the \`article\` documentclass with reasonable margins
+2. Preserve the visual structure: sections, bullet points, dates, formatting
+3. Use standard LaTeX packages only (geometry, enumitem, titlesec, hyperref)
+4. Format dates consistently (e.g., "Jan 2020 - Present")
+5. Keep the same section order as the original
+6. Ensure the output compiles without errors
+
+Return ONLY the LaTeX code, starting with \\documentclass and ending with \\end{document}.
+Do NOT include any markdown code blocks or explanations.`;
+
+/**
+ * Prompt for modifying LaTeX based on user instructions
+ */
+const LATEX_MODIFY_PROMPT = (
+  currentLatex: string,
+  instruction: string
+): string => `You are a LaTeX CV editor. Modify the following LaTeX CV based on the user's instruction.
+
+Current LaTeX:
+${currentLatex}
+
+User's instruction:
+${instruction}
+
+Requirements:
+1. Make ONLY the changes requested by the user
+2. Preserve all other content and formatting
+3. Ensure the output compiles without errors
+4. Keep the same overall structure
+
+Return ONLY the modified LaTeX code, starting with \\documentclass and ending with \\end{document}.
+Do NOT include any markdown code blocks or explanations.`;
+
+/**
+ * ATS Compliance analysis result
+ */
+export interface ATSAnalysisResult {
+  score: number; // 0-100
+  issues: Array<{
+    severity: "error" | "warning" | "info";
+    message: string;
+    suggestion: string;
+  }>;
+  summary: string;
+}
+
+/**
+ * Prompt for ATS compliance analysis
+ */
+const ATS_ANALYSIS_PROMPT = (
+  latexContent: string
+): string => `You are an ATS (Applicant Tracking System) compliance expert. Analyze this LaTeX CV for ATS compatibility.
+
+LaTeX CV:
+${latexContent}
+
+Analyze for:
+1. **Parsing issues**: Complex layouts, tables, columns that ATS can't parse
+2. **Missing sections**: Contact info, work experience, education, skills
+3. **Formatting problems**: Unusual characters, images, graphics
+4. **Content issues**: Missing dates, unclear job titles, keyword optimization
+5. **Structure**: Clear section headers, consistent formatting
+
+Return a JSON object with this exact structure:
+{
+  "score": <0-100 integer>,
+  "issues": [
+    {
+      "severity": "error" | "warning" | "info",
+      "message": "Description of the issue",
+      "suggestion": "How to fix it"
+    }
+  ],
+  "summary": "Brief overall assessment"
+}
+
+Return ONLY the JSON object, no markdown code blocks.`;
+
+/**
+ * Extract LaTeX from PDF using AI vision
+ */
+export async function extractLatexFromPDF(pdfBuffer: Buffer): Promise<string> {
+  const { GoogleGenerativeAI } = await import("@google/generative-ai");
+
+  const genAI = new GoogleGenerativeAI(AI_CONFIG.apiKeys.gemini!);
+  const model = genAI.getGenerativeModel({
+    model: AI_CONFIG.models.gemini,
+  });
+
+  const base64Data = pdfBuffer.toString("base64");
+
+  const result = await model.generateContent([
+    {
+      inlineData: {
+        mimeType: "application/pdf",
+        data: base64Data,
+      },
+    },
+    LATEX_EXTRACTION_PROMPT,
+  ]);
+
+  let latex = result.response.text().trim();
+
+  // Remove any markdown code blocks if present
+  latex = latex.replace(/^```(?:latex|tex)?\n?/i, "").replace(/\n?```$/i, "");
+
+  // Validate it starts with \documentclass
+  if (!latex.includes("\\documentclass")) {
+    throw new Error("AI did not return valid LaTeX (missing \\documentclass)");
+  }
+
+  return latex;
+}
+
+/**
+ * Modify LaTeX CV based on user instructions using AI
+ */
+export async function modifyLatexWithAI(
+  currentLatex: string,
+  instruction: string
+): Promise<string> {
+  const { GoogleGenerativeAI } = await import("@google/generative-ai");
+
+  const genAI = new GoogleGenerativeAI(AI_CONFIG.apiKeys.gemini!);
+  const model = genAI.getGenerativeModel({
+    model: AI_CONFIG.models.gemini,
+  });
+
+  const result = await model.generateContent(LATEX_MODIFY_PROMPT(currentLatex, instruction));
+
+  let latex = result.response.text().trim();
+
+  // Remove any markdown code blocks if present
+  latex = latex.replace(/^```(?:latex|tex)?\n?/i, "").replace(/\n?```$/i, "");
+
+  // Validate it starts with \documentclass
+  if (!latex.includes("\\documentclass")) {
+    throw new Error("AI did not return valid LaTeX (missing \\documentclass)");
+  }
+
+  return latex;
+}
+
+/**
+ * Analyze LaTeX CV for ATS compliance
+ */
+export async function analyzeATSCompliance(latexContent: string): Promise<ATSAnalysisResult> {
+  const { GoogleGenerativeAI } = await import("@google/generative-ai");
+
+  const genAI = new GoogleGenerativeAI(AI_CONFIG.apiKeys.gemini!);
+  const model = genAI.getGenerativeModel({
+    model: AI_CONFIG.models.gemini,
+  });
+
+  const result = await model.generateContent(ATS_ANALYSIS_PROMPT(latexContent));
+  const text = result.response.text().trim();
+
+  // Parse JSON from response
+  const jsonMatch = text.match(/{[\s\S]*}/);
+  if (!jsonMatch) {
+    throw new Error("Could not parse ATS analysis response as JSON");
+  }
+
+  return JSON.parse(jsonMatch[0]) as ATSAnalysisResult;
+}

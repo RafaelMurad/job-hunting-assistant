@@ -20,6 +20,12 @@ model User {
   experience String   // Formatted text of work experience
   skills     String   // Comma-separated skills
 
+  // CV file storage (Vercel Blob)
+  cvPdfUrl     String?   // URL to original/compiled PDF in Blob
+  cvLatexUrl   String?   // URL to LaTeX source in Blob
+  cvFilename   String?   // Original filename for display
+  cvUploadedAt DateTime? // When CV was last uploaded/updated
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
