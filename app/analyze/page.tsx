@@ -1,189 +1,93 @@
 "use client";
 
-import { useState, useEffect, type JSX, type Dispatch, type SetStateAction } from "react";
+import { useState, type JSX } from "react";
 import { useRouter } from "next/navigation";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
-
-interface JobAnalysisResult {
-  company: string;
-  role: string;
-  matchScore: number;
-  topRequirements: string[];
-  skillsMatch: string[];
-  gaps: string[];
-  redFlags: string[];
-  keyPoints: string[];
-}
-
-// Button state types for inline feedback
-type ButtonState = "idle" | "loading" | "success" | "error";
-
-interface StatusMessage {
-  type: "error" | "info";
-  text: string;
-}
+import { useAnalyze, useApplications, type ButtonState } from "@/lib/hooks";
+import { trpc } from "@/lib/trpc/client";
 
 export default function AnalyzePage(): JSX.Element {
   const router = useRouter();
-  const [userId, setUserId] = useState<string>("");
   const [jobDescription, setJobDescription] = useState("");
-  const [analyzing, setAnalyzing] = useState(false);
-  const [analysis, setAnalysis] = useState<JobAnalysisResult | null>(null);
-  const [coverLetter, setCoverLetter] = useState("");
-  const [generatingCoverLetter, setGeneratingCoverLetter] = useState(false);
-  const [saving, setSaving] = useState(false);
+  const [inputError, setInputError] = useState<string | null>(null);
 
-  // Button states for inline feedback (replaces alerts)
-  const [analyzeState, setAnalyzeState] = useState<ButtonState>("idle");
-  const [coverLetterState, setCoverLetterState] = useState<ButtonState>("idle");
+  // Button states for save and copy (local to this page)
   const [saveState, setSaveState] = useState<ButtonState>("idle");
   const [copyState, setCopyState] = useState<ButtonState>("idle");
+  const [saveError, setSaveError] = useState<string | null>(null);
 
-  // Inline error messages
-  const [analyzeError, setAnalyzeError] = useState<StatusMessage | null>(null);
-  const [coverLetterError, setCoverLetterError] = useState<StatusMessage | null>(null);
-  const [saveError, setSaveError] = useState<StatusMessage | null>(null);
+  // Get user for userId
+  const userQuery = trpc.user.get.useQuery();
+  const userId = userQuery.data?.user?.id || "";
 
-  // Helper to reset button state after success
-  const resetButtonState = (setter: Dispatch<SetStateAction<ButtonState>>, delay = 2000): void => {
+  // Use abstracted hooks
+  const {
+    analysis,
+    coverLetter,
+    analyzeState,
+    coverLetterState,
+    analyzeError,
+    coverLetterError,
+    analyze,
+    generateCoverLetter,
+    setCoverLetter,
+  } = useAnalyze();
+
+  const { create: createApplication } = useApplications(userId);
+
+  // Helper to reset button state after delay
+  const resetButtonState = (
+    setter: React.Dispatch<React.SetStateAction<ButtonState>>,
+    delay = 2000
+  ): void => {
     setTimeout(() => setter("idle"), delay);
   };
 
-  // Get user ID on mount
-  useEffect(() => {
-    fetch("/api/user")
-      .then((res) => res.json())
-      .then((data) => setUserId(data.user?.id || ""))
-      .catch(console.error);
-  }, []);
-
-  const handleAnalyze = async (): Promise<void> => {
-    // Clear previous errors
-    setAnalyzeError(null);
+  const handleAnalyze = (): void => {
+    setInputError(null);
 
     if (!jobDescription.trim()) {
-      setAnalyzeError({ type: "info", text: "Please enter a job description" });
+      setInputError("Please enter a job description");
       return;
     }
 
-    setAnalyzing(true);
-    setAnalyzeState("loading");
-    setAnalysis(null);
-    setCoverLetter("");
-
-    try {
-      const res = await fetch("/api/analyze", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ jobDescription, userId }),
-      });
-
-      if (!res.ok) {
-        setAnalyzeState("error");
-        setAnalyzeError({
-          type: "error",
-          text: "Failed to analyze job. Make sure you've filled in your profile first.",
-        });
-        resetButtonState(setAnalyzeState, 3000);
-        return;
-      }
-
-      const data = await res.json();
-      setAnalysis(data);
-      setAnalyzeState("success");
-      resetButtonState(setAnalyzeState);
-    } catch (error) {
-      console.error("Error:", error);
-      setAnalyzeState("error");
-      setAnalyzeError({
-        type: "error",
-        text: "Network error. Please try again.",
-      });
-      resetButtonState(setAnalyzeState, 3000);
-    } finally {
-      setAnalyzing(false);
-    }
+    analyze(jobDescription, userId);
   };
 
-  const handleGenerateCoverLetter = async (): Promise<void> => {
+  const handleGenerateCoverLetter = (): void => {
     if (!analysis) return;
-
-    setCoverLetterError(null);
-    setGeneratingCoverLetter(true);
-    setCoverLetterState("loading");
-
-    try {
-      const res = await fetch("/api/cover-letter", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ jobDescription, userId, analysis }),
-      });
-
-      if (!res.ok) {
-        setCoverLetterState("error");
-        setCoverLetterError({ type: "error", text: "Failed to generate cover letter" });
-        resetButtonState(setCoverLetterState, 3000);
-        return;
-      }
-
-      const data = await res.json();
-      setCoverLetter(data.coverLetter);
-      setCoverLetterState("success");
-      resetButtonState(setCoverLetterState);
-    } catch (error) {
-      console.error("Error:", error);
-      setCoverLetterState("error");
-      setCoverLetterError({ type: "error", text: "Network error. Please try again." });
-      resetButtonState(setCoverLetterState, 3000);
-    } finally {
-      setGeneratingCoverLetter(false);
-    }
+    generateCoverLetter(jobDescription, userId, analysis);
   };
 
   const handleSaveApplication = async (): Promise<void> => {
     if (!analysis) return;
 
     setSaveError(null);
-    setSaving(true);
     setSaveState("loading");
 
-    try {
-      const res = await fetch("/api/applications", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          userId,
-          company: analysis.company,
-          role: analysis.role,
-          jobDescription,
-          matchScore: analysis.matchScore,
-          analysis: JSON.stringify(analysis),
-          coverLetter: coverLetter || "",
-          status: "saved",
-        }),
-      });
+    const success = await createApplication({
+      userId,
+      company: analysis.company,
+      role: analysis.role,
+      jobDescription,
+      matchScore: analysis.matchScore,
+      analysis: JSON.stringify(analysis),
+      coverLetter: coverLetter || "",
+      status: "saved",
+    });
 
-      if (!res.ok) {
-        setSaveState("error");
-        setSaveError({ type: "error", text: "Failed to save application" });
-        resetButtonState(setSaveState, 3000);
-        return;
-      }
-
+    if (success) {
       setSaveState("success");
       // Redirect after brief success feedback
       setTimeout(() => router.push("/tracker"), 1000);
-    } catch (error) {
-      console.error("Error:", error);
+    } else {
       setSaveState("error");
-      setSaveError({ type: "error", text: "Network error. Please try again." });
+      setSaveError("Failed to save application");
       resetButtonState(setSaveState, 3000);
-    } finally {
-      setSaving(false);
     }
   };
 
@@ -233,6 +137,9 @@ export default function AnalyzePage(): JSX.Element {
     return "bg-red-100 text-red-800";
   };
 
+  // Combined error display (input error or analyze error)
+  const displayError = inputError || analyzeError;
+
   return (
     <div className="min-h-screen bg-gray-50 py-12">
       <div className="max-w-6xl mx-auto px-4">
@@ -259,7 +166,7 @@ export default function AnalyzePage(): JSX.Element {
                   value={jobDescription}
                   onChange={(e) => {
                     setJobDescription(e.target.value);
-                    setAnalyzeError(null); // Clear error when typing
+                    setInputError(null); // Clear error when typing
                   }}
                   placeholder="Paste job description here..."
                   rows={20}
@@ -267,7 +174,7 @@ export default function AnalyzePage(): JSX.Element {
                 />
                 <Button
                   onClick={handleAnalyze}
-                  disabled={analyzing || !jobDescription.trim()}
+                  disabled={analyzeState === "loading" || !jobDescription.trim()}
                   variant={getButtonVariant(analyzeState)}
                   className={`w-full transition-colors ${
                     analyzeState === "success" ? "bg-green-600 hover:bg-green-700" : ""
@@ -282,14 +189,9 @@ export default function AnalyzePage(): JSX.Element {
                   )}
                 </Button>
                 {/* Inline error/info message */}
-                {analyzeError && (
-                  <p
-                    role={analyzeError.type === "error" ? "alert" : "status"}
-                    className={`mt-2 text-sm ${
-                      analyzeError.type === "error" ? "text-red-600" : "text-gray-600"
-                    }`}
-                  >
-                    {analyzeError.text}
+                {displayError && (
+                  <p role="alert" className="mt-2 text-sm text-red-600">
+                    {displayError}
                   </p>
                 )}
               </CardContent>
@@ -367,7 +269,7 @@ export default function AnalyzePage(): JSX.Element {
                     <div className="pt-4 space-y-2">
                       <Button
                         onClick={handleGenerateCoverLetter}
-                        disabled={generatingCoverLetter}
+                        disabled={coverLetterState === "loading"}
                         variant={getButtonVariant(coverLetterState)}
                         className={`w-full transition-colors ${
                           coverLetterState === "success" ? "bg-green-600 hover:bg-green-700" : ""
@@ -383,12 +285,12 @@ export default function AnalyzePage(): JSX.Element {
                       </Button>
                       {coverLetterError && (
                         <p role="alert" className="text-sm text-red-600">
-                          {coverLetterError.text}
+                          {coverLetterError}
                         </p>
                       )}
                       <Button
                         onClick={handleSaveApplication}
-                        disabled={saving}
+                        disabled={saveState === "loading"}
                         variant={getButtonVariant(saveState, "outline")}
                         className={`w-full transition-colors ${
                           saveState === "success"
@@ -406,7 +308,7 @@ export default function AnalyzePage(): JSX.Element {
                       </Button>
                       {saveError && (
                         <p role="alert" className="text-sm text-red-600">
-                          {saveError.text}
+                          {saveError}
                         </p>
                       )}
                     </div>

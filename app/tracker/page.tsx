@@ -1,21 +1,12 @@
 "use client";
 
-import { useState, useEffect, type JSX } from "react";
+import { useState, type JSX } from "react";
 import { useRouter } from "next/navigation";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { format } from "date-fns";
-
-interface Application {
-  id: string;
-  company: string;
-  role: string;
-  matchScore: number;
-  status: string;
-  appliedAt: string | null;
-  createdAt: string;
-  notes: string | null;
-}
+import { useApplications, type ApplicationStatus } from "@/lib/hooks";
+import { trpc } from "@/lib/trpc/client";
 
 const STATUS_OPTIONS = [
   { value: "saved", label: "Saved" },
@@ -29,8 +20,6 @@ const FILTER_OPTIONS = [{ value: "all", label: "All Statuses" }, ...STATUS_OPTIO
 
 export default function TrackerPage(): JSX.Element {
   const router = useRouter();
-  const [applications, setApplications] = useState<Application[]>([]);
-  const [loading, setLoading] = useState(true);
 
   // Track which application is being deleted (for inline confirmation)
   const [deletingId, setDeletingId] = useState<string | null>(null);
@@ -43,107 +32,46 @@ export default function TrackerPage(): JSX.Element {
   const [notesDraft, setNotesDraft] = useState<string>("");
   const [savingNotesId, setSavingNotesId] = useState<string | null>(null);
 
-  useEffect(() => {
-    // Get user first, then load applications
-    fetch("/api/user")
-      .then((res) => res.json())
-      .then((data) => {
-        // Then load applications
-        return fetch(`/api/applications?userId=${data.user?.id}`);
-      })
-      .then((res) => res.json())
-      .then((data) => {
-        setApplications(data);
-        setLoading(false);
-      })
-      .catch((err) => {
-        console.error("Error loading applications:", err);
-        setLoading(false);
-      });
-  }, []);
+  // ============================================
+  // tRPC & HOOKS
+  // ============================================
 
-  const handleStatusChange = async (appId: string, newStatus: string): Promise<void> => {
+  // Get user for userId
+  const userQuery = trpc.user.get.useQuery();
+  const userId = userQuery.data?.user?.id || "";
+
+  // Use abstracted hook for applications
+  const {
+    applications,
+    stats,
+    loading: applicationsLoading,
+    updateStatus,
+    updateNotes,
+    remove,
+  } = useApplications(userId);
+
+  const loading = userQuery.isLoading || applicationsLoading;
+
+  const handleStatusChange = (appId: string, newStatus: ApplicationStatus): void => {
     setUpdatingStatusId(appId);
-
-    try {
-      const res = await fetch(`/api/applications/${appId}`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          status: newStatus,
-          // Set appliedAt when status changes to "applied"
-          ...(newStatus === "applied" && { appliedAt: new Date().toISOString() }),
-        }),
-      });
-
-      if (!res.ok) {
-        console.error("Failed to update status");
-        return;
-      }
-
-      // Update local state
-      setApplications((prev) =>
-        prev.map((app) =>
-          app.id === appId
-            ? {
-                ...app,
-                status: newStatus,
-                appliedAt: newStatus === "applied" ? new Date().toISOString() : app.appliedAt,
-              }
-            : app
-        )
-      );
-    } catch (error) {
-      console.error("Error updating status:", error);
-    } finally {
-      setUpdatingStatusId(null);
-    }
+    updateStatus(appId, newStatus);
+    // Clear updating state after a short delay for visual feedback
+    setTimeout(() => setUpdatingStatusId(null), 500);
   };
 
-  const handleDelete = async (appId: string): Promise<void> => {
-    try {
-      const res = await fetch(`/api/applications/${appId}`, {
-        method: "DELETE",
-      });
-
-      if (!res.ok) {
-        console.error("Failed to delete application");
-        setDeletingId(null);
-        return;
-      }
-
-      // Remove from local state
-      setApplications((prev) => prev.filter((app) => app.id !== appId));
-      setDeletingId(null);
-    } catch (error) {
-      console.error("Error deleting application:", error);
-      setDeletingId(null);
-    }
+  const handleDelete = (appId: string): void => {
+    remove(appId);
+    setDeletingId(null);
   };
 
-  const handleSaveNotes = async (appId: string): Promise<void> => {
+  const handleSaveNotes = (appId: string): void => {
     setSavingNotesId(appId);
-    try {
-      const res = await fetch(`/api/applications/${appId}`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ notes: notesDraft }),
-      });
-
-      if (!res.ok) {
-        console.error("Failed to save notes");
-        return;
-      }
-
-      setApplications((prev) =>
-        prev.map((app) => (app.id === appId ? { ...app, notes: notesDraft } : app))
-      );
-      setEditingNotesId(null);
-    } catch (error) {
-      console.error("Error saving notes:", error);
-    } finally {
+    updateNotes(appId, notesDraft);
+    // Clear saving state after a short delay
+    setTimeout(() => {
       setSavingNotesId(null);
-    }
+      setEditingNotesId(null);
+    }, 500);
   };
 
   // Filter applications by status
@@ -168,17 +96,6 @@ export default function TrackerPage(): JSX.Element {
     if (score >= 60) return "text-fjord-600 font-semibold";
     if (score >= 40) return "text-clay-600 font-semibold";
     return "text-nordic-neutral-600 font-semibold";
-  };
-
-  const stats = {
-    total: applications.length,
-    applied: applications.filter((a) => a.status === "applied").length,
-    interviewing: applications.filter((a) => a.status === "interviewing").length,
-    offers: applications.filter((a) => a.status === "offer").length,
-    avgMatch:
-      applications.length > 0
-        ? Math.round(applications.reduce((sum, a) => sum + a.matchScore, 0) / applications.length)
-        : 0,
   };
 
   if (loading) {
@@ -234,7 +151,7 @@ export default function TrackerPage(): JSX.Element {
           <Card>
             <CardHeader className="pb-2">
               <CardDescription>Avg Match</CardDescription>
-              <CardTitle className="text-3xl">{stats.avgMatch}%</CardTitle>
+              <CardTitle className="text-3xl">{stats.avgMatchScore}%</CardTitle>
             </CardHeader>
           </Card>
         </div>
@@ -318,7 +235,17 @@ export default function TrackerPage(): JSX.Element {
                           {/* Status Dropdown */}
                           <select
                             value={app.status}
-                            onChange={(e) => handleStatusChange(app.id, e.target.value)}
+                            onChange={(e) =>
+                              handleStatusChange(
+                                app.id,
+                                e.target.value as
+                                  | "saved"
+                                  | "applied"
+                                  | "interviewing"
+                                  | "offer"
+                                  | "rejected"
+                              )
+                            }
                             disabled={updatingStatusId === app.id}
                             className={`px-3 py-1.5 text-sm rounded-md border transition-colors cursor-pointer
                               ${getStatusBadgeVariant(app.status)}
