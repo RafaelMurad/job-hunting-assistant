@@ -4,12 +4,13 @@ Job Hunt AI eliminates the friction from job hunting through AI-powered CV analy
 
 ---
 
-## 🎯 MVP Features (v0.1.0)
+## 🎯 MVP Features (v1.0)
 
 - **AI-Powered Job Analysis** - Analyze job descriptions against your CV with match scores (0-100%)
 - **Cover Letter Generation** - Automatically generate tailored cover letters (max 250 words)
 - **Application Tracking** - Track all job applications with status, dates, and notes
 - **Master CV System** - Maintain one source of truth for your professional profile
+- **CV Upload** - Import PDF/DOCX files with AI-powered data extraction
 - **Free AI Option** - Use Google Gemini (1,500 free analyses/day) or paid options (OpenAI, Claude)
 
 ---
@@ -37,9 +38,9 @@ Open http://localhost:3000
 ## 🚀 Tech Stack
 
 - **Frontend:** Next.js 16, TypeScript, TailwindCSS, Shadcn/ui
-- **Backend:** Next.js API Routes, Prisma ORM, SQLite (local)
+- **Backend:** Next.js API Routes, Prisma ORM, PostgreSQL (Neon)
 - **AI:** Multi-provider support
-  - Google Gemini 1.5 Flash (FREE - 1,500 requests/day) ⭐ Recommended
+  - Google Gemini 2.0 Flash (FREE - 1,500 requests/day) ⭐ Recommended
   - OpenAI GPT-4o-mini (Paid - ~$0.0005/analysis)
   - Claude Sonnet 4.5 (Paid - ~$0.002/analysis)
 
@@ -51,7 +52,7 @@ Open http://localhost:3000
 - **[DEPLOYMENT.md](./docs/DEPLOYMENT.md)** - Production deployment to Vercel 🚀
 - **[STRICT_RULES.md](./docs/STRICT_RULES.md)** - Code quality and validation rules
 - **[Implementation Plan](./docs/IMPLEMENTATION_PLAN.md)** - Technical implementation details
-- **[Product Specification](./docs/product-spec.md)** - Full product documentation
+- **[PRD](./docs/PRD.md)** - Product Requirements Document
 
 ---
 

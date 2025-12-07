@@ -73,12 +73,26 @@ Job hunting is fragmented, tedious, and hard to track:
 
 ### Completed Features
 
-| Feature                       | Status  | Sprint   |
-| ----------------------------- | ------- | -------- |
-| Nordic Design System          | ✅ Done | Sprint 1 |
-| Local SQLite Database         | ✅ Done | Sprint 1 |
-| Prisma ORM Setup              | ✅ Done | Sprint 1 |
-| Component Library (Shadcn/ui) | ✅ Done | Sprint 1 |
+| Feature                         | Status  | Sprint   |
+| ------------------------------- | ------- | -------- |
+| Nordic Design System            | ✅ Done | Sprint 1 |
+| Prisma ORM Setup                | ✅ Done | Sprint 1 |
+| Component Library (Shadcn/ui)   | ✅ Done | Sprint 1 |
+| Production PostgreSQL (Neon)    | ✅ Done | Sprint 2 |
+| Deploy to Vercel                | ✅ Done | Sprint 2 |
+| CI/CD Pipeline (GitHub Actions) | ✅ Done | Sprint 2 |
+| User Profile API (CRUD)         | ✅ Done | Sprint 3 |
+| CV Upload with AI Extraction    | ✅ Done | Sprint 3 |
+| Profile Page UI                 | ✅ Done | Sprint 3 |
+| Job Analysis API                | ✅ Done | Sprint 4 |
+| Match Score Algorithm           | ✅ Done | Sprint 4 |
+| Analysis Results UI             | ✅ Done | Sprint 4 |
+| Cover Letter Generation API     | ✅ Done | Sprint 5 |
+| Cover Letter UI                 | ✅ Done | Sprint 5 |
+| Application Tracker API         | ✅ Done | Sprint 6 |
+| Tracker List UI                 | ✅ Done | Sprint 6 |
+| Dashboard Overview              | ✅ Done | Sprint 6 |
+| **v1.0 MVP Launch**             | 🎉 Done | Dec 2024 |
 
 ### NOT in v1.0 (Planned for v1.1+)
 
@@ -99,44 +113,43 @@ Job hunting is fragmented, tedious, and hard to track:
 ```
 Sprint 1: Foundation ✅ (Complete)
 ├── ✅ Nordic Design System
-├── ✅ Local SQLite Database
 ├── ✅ Prisma Schema (User, Application models)
 └── ✅ Component Library Setup
 
-Sprint 2: Infrastructure (Week of Dec 9)
-├── 📋 Production PostgreSQL (Neon)
-├── 📋 Deploy to Vercel
-├── 📋 Environment Configuration
-└── 📋 CI/CD Pipeline Verification
+Sprint 2: Infrastructure ✅ (Complete)
+├── ✅ Production PostgreSQL (Neon)
+├── ✅ Deploy to Vercel
+├── ✅ Environment Configuration
+└── ✅ CI/CD Pipeline (GitHub Actions)
 
-Sprint 3: Profile & CV Import (Week of Dec 16)
-├── 📋 User Profile API (CRUD)
-├── 📋 CV Upload Endpoint
-├── 📋 PDF/DOCX Text Extraction
-├── 📋 AI Profile Data Extraction
-└── 📋 Profile Page UI (functional)
+Sprint 3: Profile & CV Import ✅ (Complete)
+├── ✅ User Profile API (CRUD)
+├── ✅ CV Upload Endpoint
+├── ✅ PDF/DOCX Text Extraction (Gemini Vision)
+├── ✅ AI Profile Data Extraction
+└── ✅ Profile Page UI (functional)
 
-Sprint 4: Job Analysis (Week of Dec 23)
-├── 📋 Job Analysis API
-├── 📋 Match Score Algorithm
-├── 📋 Skills Gap Analysis
-├── 📋 Analysis Results UI
-└── 📋 Job Description Parser
+Sprint 4: Job Analysis ✅ (Complete)
+├── ✅ Job Analysis API
+├── ✅ Match Score Algorithm
+├── ✅ Skills Gap Analysis
+├── ✅ Analysis Results UI
+└── ✅ Job Description Parser
 
-Sprint 5: Cover Letters (Week of Dec 30)
-├── 📋 Cover Letter Generation API
-├── 📋 Prompt Engineering for Quality
-├── 📋 Cover Letter UI
-├── 📋 Edit & Regenerate Flow
-└── 📋 Copy/Export Options
+Sprint 5: Cover Letters ✅ (Complete)
+├── ✅ Cover Letter Generation API
+├── ✅ Prompt Engineering for Quality
+├── ✅ Cover Letter UI
+├── ✅ Edit & Regenerate Flow
+└── ✅ Copy/Export Options
 
-Sprint 6: Tracker + Launch (Week of Jan 6)
-├── 📋 Application Tracker API
-├── 📋 Tracker List UI
-├── 📋 Status Management
-├── 📋 Dashboard Overview
-├── 📋 Final Polish
-└── 🎉 v1.0 Launch!
+Sprint 6: Tracker + Launch ✅ (Complete)
+├── ✅ Application Tracker API
+├── ✅ Tracker List UI
+├── ✅ Status Management
+├── ✅ Dashboard Overview
+├── ✅ Final Polish
+└── 🎉 v1.0 Launch! (December 2024)
 ```
 
 ---
@@ -305,6 +318,7 @@ When all sources are connected, the app can:
 | ----------- | ------- | ------------------------------------------------------------ |
 | Dec 6, 2025 | 0.1     | Initial draft                                                |
 | Dec 6, 2025 | 0.2     | Elevated GitHub/LinkedIn to v1.1, added Data Sources section |
+| Dec 7, 2025 | 1.0     | **MVP Complete** - All P0 features done, deployed to Vercel  |
 
 ---
 

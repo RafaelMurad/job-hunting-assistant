@@ -4,6 +4,8 @@
 
 A **learning-focused portfolio project** for AI-powered job hunting: CV analysis, cover letter generation, and application tracking. Single-user MVP using Next.js 16 App Router.
 
+**Status:** v1.0 MVP Complete - Deployed to Vercel with PostgreSQL (Neon)
+
 ## Tech Stack
 
 - **Frontend:** Next.js 16 (App Router), React 19, TypeScript, TailwindCSS 4, Shadcn/ui
