@@ -12,7 +12,7 @@ import {
   getAvailableModels,
   getModelInfo,
   getModelName,
-} from "@/lib/ai/config";
+} from "@/lib/ai";
 
 describe("AI Config", () => {
   describe("LATEX_MODELS", () => {

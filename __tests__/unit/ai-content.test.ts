@@ -5,7 +5,7 @@
  */
 
 import { describe, it, expect } from "vitest";
-import { parseExtractedContent, extractedCVContentSchema } from "@/lib/ai/extraction/content";
+import { parseExtractedContent, extractedCVContentSchema } from "@/lib/ai";
 
 describe("AI Content Extraction", () => {
   describe("extractedCVContentSchema", () => {
