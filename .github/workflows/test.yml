@@ -3,6 +3,8 @@ name: Tests
 on:
   push:
     branches: [main]
+  pull_request:
+    branches: [main]
 
 jobs:
   test:
@@ -30,8 +32,19 @@ jobs:
         uses: codecov/codecov-action@v4
         with:
           files: ./coverage/coverage-final.json
-          flags: main-branch
+          flags: unittests
           fail_ci_if_error: false
+
+      - name: Comment on PR with test results
+        if: failure() && github.event_name == 'pull_request'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: `## ❌ Tests Failed
 
 One or more tests are failing. Please fix them before merging.
 
