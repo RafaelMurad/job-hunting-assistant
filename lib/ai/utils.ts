@@ -70,3 +70,22 @@ export function extractJsonFromText(text: string): string | null {
   const match = text.match(/{[\s\S]*}/);
   return match ? match[0] : null;
 }
+
+/**
+ * Safely parse JSON string, returning null on parse failure.
+ * Use this instead of try/catch with JSON.parse for validation.
+ */
+export function safeParseJson<T = unknown>(jsonString: string): T | null {
+  try {
+    return JSON.parse(jsonString) as T;
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * Check if a string is valid JSON without throwing.
+ */
+export function isValidJson(jsonString: string): boolean {
+  return safeParseJson(jsonString) !== null;
+}

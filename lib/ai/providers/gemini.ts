@@ -16,7 +16,12 @@ import {
   LATEX_FROM_STYLE_PROMPT,
   CV_CONTENT_EXTRACTION_PROMPT,
 } from "../prompts";
-import { cleanAndValidateLatex, cleanJsonResponse, extractJsonFromText } from "../utils";
+import {
+  cleanAndValidateLatex,
+  cleanJsonResponse,
+  extractJsonFromText,
+  isValidJson,
+} from "../utils";
 
 // =============================================================================
 // JOB ANALYSIS
@@ -160,10 +165,8 @@ export async function extractLatexTwoPass(
   // Clean up JSON response
   styleJson = styleJson.replace(/^```(?:json)?\n?/gi, "").replace(/\n?```$/gi, "");
 
-  // Validate it's valid JSON
-  try {
-    JSON.parse(styleJson);
-  } catch {
+  // Validate it's valid JSON using utility to avoid exceptions for control flow
+  if (!isValidJson(styleJson)) {
     console.warn("[Two-Pass] Style JSON invalid, falling back to single-pass");
     throw new Error("Style analysis returned invalid JSON");
   }
