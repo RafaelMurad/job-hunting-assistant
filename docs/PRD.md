@@ -73,26 +73,30 @@ Job hunting is fragmented, tedious, and hard to track:
 
 ### Completed Features
 
-| Feature                         | Status  | Sprint   |
-| ------------------------------- | ------- | -------- |
-| Nordic Design System            | ✅ Done | Sprint 1 |
-| Prisma ORM Setup                | ✅ Done | Sprint 1 |
-| Component Library (Shadcn/ui)   | ✅ Done | Sprint 1 |
-| Production PostgreSQL (Neon)    | ✅ Done | Sprint 2 |
-| Deploy to Vercel                | ✅ Done | Sprint 2 |
-| CI/CD Pipeline (GitHub Actions) | ✅ Done | Sprint 2 |
-| User Profile API (CRUD)         | ✅ Done | Sprint 3 |
-| CV Upload with AI Extraction    | ✅ Done | Sprint 3 |
-| Profile Page UI                 | ✅ Done | Sprint 3 |
-| Job Analysis API                | ✅ Done | Sprint 4 |
-| Match Score Algorithm           | ✅ Done | Sprint 4 |
-| Analysis Results UI             | ✅ Done | Sprint 4 |
-| Cover Letter Generation API     | ✅ Done | Sprint 5 |
-| Cover Letter UI                 | ✅ Done | Sprint 5 |
-| Application Tracker API         | ✅ Done | Sprint 6 |
-| Tracker List UI                 | ✅ Done | Sprint 6 |
-| Dashboard Overview              | ✅ Done | Sprint 6 |
-| **v1.0 MVP Launch**             | 🎉 Done | Dec 2024 |
+| Feature                          | Status  | Sprint   |
+| -------------------------------- | ------- | -------- |
+| Nordic Design System             | ✅ Done | Sprint 1 |
+| Prisma ORM Setup                 | ✅ Done | Sprint 1 |
+| Component Library (Shadcn/ui)    | ✅ Done | Sprint 1 |
+| Production PostgreSQL (Neon)     | ✅ Done | Sprint 2 |
+| Deploy to Vercel                 | ✅ Done | Sprint 2 |
+| CI/CD Pipeline (GitHub Actions)  | ✅ Done | Sprint 2 |
+| User Profile API (CRUD)          | ✅ Done | Sprint 3 |
+| CV Upload with AI Extraction     | ✅ Done | Sprint 3 |
+| Profile Page UI                  | ✅ Done | Sprint 3 |
+| Job Analysis API                 | ✅ Done | Sprint 4 |
+| Match Score Algorithm            | ✅ Done | Sprint 4 |
+| Analysis Results UI              | ✅ Done | Sprint 4 |
+| Cover Letter Generation API      | ✅ Done | Sprint 5 |
+| Cover Letter UI                  | ✅ Done | Sprint 5 |
+| Application Tracker API          | ✅ Done | Sprint 6 |
+| Tracker List UI                  | ✅ Done | Sprint 6 |
+| Dashboard Overview               | ✅ Done | Sprint 6 |
+| **v1.0 MVP Launch**              | 🎉 Done | Dec 2024 |
+| CV LaTeX Editor                  | ✅ Done | Sprint 7 |
+| CV Template System (3 templates) | ✅ Done | Sprint 7 |
+| Multi-Model AI Selection         | ✅ Done | Sprint 7 |
+| Instant Template Switching       | ✅ Done | Sprint 7 |
 
 ### NOT in v1.0 (Planned for v1.1+)
 
@@ -150,6 +154,15 @@ Sprint 6: Tracker + Launch ✅ (Complete)
 ├── ✅ Dashboard Overview
 ├── ✅ Final Polish
 └── 🎉 v1.0 Launch! (December 2024)
+
+Sprint 7: CV Editor & Templates ✅ (Complete)
+├── ✅ CV LaTeX Editor with Live Preview
+├── ✅ 3 Professional Templates (Tech Minimalist, Modern Clean, Contemporary Professional)
+├── ✅ Multi-Model AI Selection (Gemini, OpenRouter free models, GPT-4o, Claude)
+├── ✅ JSON Content Extraction for Template Flexibility
+├── ✅ Instant Template Switching (no re-upload needed)
+├── ✅ PDF/DOCX/LaTeX File Support
+└── ✅ LaTeX Compilation to PDF
 ```
 
 ---
@@ -319,6 +332,7 @@ When all sources are connected, the app can:
 | Dec 6, 2025 | 0.1     | Initial draft                                                |
 | Dec 6, 2025 | 0.2     | Elevated GitHub/LinkedIn to v1.1, added Data Sources section |
 | Dec 7, 2025 | 1.0     | **MVP Complete** - All P0 features done, deployed to Vercel  |
+| Dec 8, 2025 | 1.1     | **CV Editor** - LaTeX editor, 3 templates, multi-model AI    |
 
 ---
 
