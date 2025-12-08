@@ -14,7 +14,7 @@ import { uploadCVPdf, uploadCVLatex } from "@/lib/storage";
 import { prisma } from "@/lib/db";
 
 // FUTURE: Get user from auth session
-const DEFAULT_USER_ID = "cm3m6n7z80000uy7k3xqvt8xy";
+const DEFAULT_USER_ID = "cmiw9gfmv0000uj7ska14xors";
 
 /**
  * POST /api/cv/compile

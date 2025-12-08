@@ -32,6 +32,7 @@ export async function uploadCVPdf(
   const blob = await put(path, pdfBuffer, {
     access: "public",
     addRandomSuffix: false,
+    allowOverwrite: true,
     contentType: "application/pdf",
   });
 
@@ -47,6 +48,7 @@ export async function uploadCVLatex(userId: string, latexContent: string): Promi
   const blob = await put(path, latexContent, {
     access: "public",
     addRandomSuffix: false,
+    allowOverwrite: true,
     contentType: "text/x-tex",
   });
 

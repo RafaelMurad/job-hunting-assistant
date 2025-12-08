@@ -16,11 +16,18 @@
 
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
-import { extractLatexFromPDF } from "@/lib/ai";
-import { uploadCVPdf, uploadCVLatex } from "@/lib/storage";
+import {
+  extractLatexWithModel,
+  extractWithTemplate,
+  type LatexExtractionModel,
+  AI_CONFIG,
+} from "@/lib/ai";
+import { type CVTemplateId } from "@/lib/cv-templates";
+import { uploadCVPdf, uploadCVLatex, deleteCVFiles } from "@/lib/storage";
+import { parseAIError } from "@/lib/utils";
 
 // FUTURE: Get user from auth session
-const DEFAULT_USER_ID = "cm3m6n7z80000uy7k3xqvt8xy";
+const DEFAULT_USER_ID = "cmiw9gfmv0000uj7ska14xors";
 
 /**
  * POST /api/cv/store
@@ -32,16 +39,33 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     const formData = await request.formData();
     const file = formData.get("file") as File | null;
     const userId = (formData.get("userId") as string) || DEFAULT_USER_ID;
+    const selectedModel =
+      (formData.get("model") as LatexExtractionModel) || AI_CONFIG.defaultLatexModel;
+    const selectedTemplate = formData.get("template") as CVTemplateId | null;
 
     // Validate file exists
     if (!file) {
       return NextResponse.json({ error: "No file uploaded" }, { status: 400 });
     }
 
-    // Validate file type - only PDF for LaTeX extraction
-    if (file.type !== "application/pdf") {
+    // Supported file types
+    const supportedTypes = [
+      "application/pdf",
+      "application/vnd.openxmlformats-officedocument.wordprocessingml.document", // .docx
+      "text/x-tex", // .tex
+      "application/x-tex", // .tex (alternative MIME)
+    ];
+    const fileName = file.name.toLowerCase();
+    const isTexFile = fileName.endsWith(".tex");
+    const isDocxFile =
+      file.type === "application/vnd.openxmlformats-officedocument.wordprocessingml.document";
+
+    // Validate file type - PDF, DOCX, or TEX
+    if (!supportedTypes.includes(file.type) && !isTexFile) {
       return NextResponse.json(
-        { error: "Only PDF files are supported for the CV editor." },
+        {
+          error: "Unsupported file type. Please upload a PDF, DOCX, or TEX file.",
+        },
         { status: 400 }
       );
     }
@@ -54,14 +78,56 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
 
     // Convert file to buffer
     const bytes = await file.arrayBuffer();
-    const pdfBuffer = Buffer.from(bytes);
+    const fileBuffer = Buffer.from(bytes);
 
     try {
-      // Step 1: Extract LaTeX from PDF using AI
-      const latexContent = await extractLatexFromPDF(pdfBuffer);
+      // Step 1: Extract or read LaTeX based on file type
+      let latexContent: string;
+      let modelUsed: LatexExtractionModel | null = null;
+      let fallbackUsed = false;
+      let extractedContent: unknown = null; // Store JSON content for template switching
 
-      // Step 2: Upload PDF to Blob
-      const pdfUrl = await uploadCVPdf(userId, pdfBuffer, file.name);
+      if (isTexFile) {
+        // .tex files: use content directly (no AI needed)
+        latexContent = fileBuffer.toString("utf-8");
+
+        // Validate it's valid LaTeX
+        if (!latexContent.includes("\\documentclass")) {
+          return NextResponse.json(
+            { error: "Invalid LaTeX file: missing \\documentclass" },
+            { status: 400 }
+          );
+        }
+      } else if (selectedTemplate) {
+        // Template-based extraction: extract content to JSON, then apply template
+        const mimeType = isDocxFile
+          ? "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+          : "application/pdf";
+
+        const result = await extractWithTemplate(
+          fileBuffer,
+          mimeType,
+          selectedTemplate,
+          selectedModel
+        );
+        latexContent = result.latex;
+        modelUsed = result.modelUsed;
+        fallbackUsed = result.fallbackUsed;
+        extractedContent = result.content; // Save for potential template switching
+      } else {
+        // Legacy mode: extract LaTeX directly with AI (preserves original styling)
+        const mimeType = isDocxFile
+          ? "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+          : "application/pdf";
+
+        const result = await extractLatexWithModel(fileBuffer, mimeType, selectedModel);
+        latexContent = result.latex;
+        modelUsed = result.modelUsed;
+        fallbackUsed = result.fallbackUsed;
+      }
+
+      // Step 2: Upload original file to Blob (for reference)
+      const pdfUrl = await uploadCVPdf(userId, fileBuffer, file.name);
 
       // Step 3: Upload LaTeX to Blob
       const latexUrl = await uploadCVLatex(userId, latexContent);
@@ -84,20 +150,20 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
           latexUrl,
           latexContent,
           filename: file.name,
+          modelUsed,
+          fallbackUsed,
+          templateId: selectedTemplate,
+          extractedContent, // Include JSON content for template switching
         },
         message: "CV uploaded and LaTeX extracted successfully.",
       });
     } catch (extractError) {
       console.error("[CV Store] Processing error:", extractError);
-      return NextResponse.json(
-        {
-          error:
-            extractError instanceof Error
-              ? extractError.message
-              : "Failed to process CV. Please try again.",
-        },
-        { status: 500 }
-      );
+
+      // Parse the error into a user-friendly message
+      const userMessage = parseAIError(extractError);
+
+      return NextResponse.json({ error: userMessage }, { status: 500 });
     }
   } catch (error) {
     console.error("[CV Store] Unexpected error:", error);
@@ -129,7 +195,17 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
     });
 
     if (!user || !user.cvPdfUrl) {
-      return NextResponse.json({ error: "No CV found for this user." }, { status: 404 });
+      // Return empty data instead of 404 for better UX
+      return NextResponse.json({
+        success: true,
+        data: {
+          pdfUrl: null,
+          latexUrl: null,
+          latexContent: null,
+          filename: null,
+          uploadedAt: null,
+        },
+      });
     }
 
     // Fetch LaTeX content if URL exists
@@ -158,5 +234,39 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
   } catch (error) {
     console.error("[CV Store] GET error:", error);
     return NextResponse.json({ error: "Failed to retrieve CV data." }, { status: 500 });
+  }
+}
+
+/**
+ * DELETE /api/cv/store
+ *
+ * Delete stored CV data for a user.
+ */
+export async function DELETE(request: NextRequest): Promise<NextResponse> {
+  try {
+    const { searchParams } = new URL(request.url);
+    const userId = searchParams.get("userId") || DEFAULT_USER_ID;
+
+    // Delete files from Blob storage
+    await deleteCVFiles(userId);
+
+    // Clear user record
+    await prisma.user.update({
+      where: { id: userId },
+      data: {
+        cvPdfUrl: null,
+        cvLatexUrl: null,
+        cvFilename: null,
+        cvUploadedAt: null,
+      },
+    });
+
+    return NextResponse.json({
+      success: true,
+      message: "CV deleted successfully.",
+    });
+  } catch (error) {
+    console.error("[CV Store] DELETE error:", error);
+    return NextResponse.json({ error: "Failed to delete CV." }, { status: 500 });
   }
 }

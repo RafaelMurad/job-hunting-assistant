@@ -21,13 +21,35 @@ import { useState, useEffect, useCallback } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
-import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 // ============================================
 // TYPES
 // ============================================
+
+interface ModelInfo {
+  id: string;
+  name: string;
+  provider: string;
+  cost: string;
+  description: string;
+  available: boolean;
+}
+
+interface TemplateInfo {
+  id: string;
+  name: string;
+  description: string;
+  usage: string;
+}
 
 interface CVData {
   pdfUrl: string | null;
@@ -35,6 +57,10 @@ interface CVData {
   latexContent: string | null;
   filename: string | null;
   uploadedAt: string | null;
+  modelUsed?: string | null;
+  fallbackUsed?: boolean;
+  templateId?: string | null;
+  extractedContent?: unknown; // JSON content for template switching
 }
 
 interface ATSIssue {
@@ -70,6 +96,17 @@ export default function CVEditorPage(): JSX.Element {
   const [aiInstruction, setAiInstruction] = useState<string>("");
   const [toast, setToast] = useState<Toast | null>(null);
 
+  // Model selection state
+  const [availableModels, setAvailableModels] = useState<ModelInfo[]>([]);
+  const [selectedModel, setSelectedModel] = useState<string>("gemini-2.5-flash");
+  const [modelUsed, setModelUsed] = useState<string | null>(null);
+  const [fallbackUsed, setFallbackUsed] = useState<boolean>(false);
+
+  // Template selection state
+  const [availableTemplates, setAvailableTemplates] = useState<TemplateInfo[]>([]);
+  const [selectedTemplate, setSelectedTemplate] = useState<string>("tech-minimalist");
+  const [extractedContent, setExtractedContent] = useState<unknown>(null);
+
   // Loading states
   const [loading, setLoading] = useState(true);
   const [uploading, setUploading] = useState(false);
@@ -84,6 +121,8 @@ export default function CVEditorPage(): JSX.Element {
   // Load existing CV data on mount
   useEffect(() => {
     void loadCVData();
+    void loadAvailableModels();
+    void loadAvailableTemplates();
   }, []);
 
   // ============================================
@@ -92,7 +131,42 @@ export default function CVEditorPage(): JSX.Element {
 
   const showToast = (type: Toast["type"], message: string): void => {
     setToast({ type, message });
-    setTimeout(() => setToast(null), 5000);
+    // Show errors longer (8s) than success/info (4s)
+    const duration = type === "error" ? 8000 : 4000;
+    setTimeout(() => setToast(null), duration);
+  };
+
+  const dismissToast = (): void => {
+    setToast(null);
+  };
+
+  const loadAvailableModels = async (): Promise<void> => {
+    try {
+      const response = await fetch("/api/cv/models");
+      if (response.ok) {
+        const result = await response.json();
+        setAvailableModels(result.data.models);
+        // Set default model to first available one
+        const firstAvailable = result.data.models.find((m: ModelInfo) => m.available);
+        if (firstAvailable) {
+          setSelectedModel(firstAvailable.id);
+        }
+      }
+    } catch (error) {
+      console.error("Failed to load available models:", error);
+    }
+  };
+
+  const loadAvailableTemplates = async (): Promise<void> => {
+    try {
+      const response = await fetch("/api/cv/template");
+      if (response.ok) {
+        const result = await response.json();
+        setAvailableTemplates(result.data);
+      }
+    } catch (error) {
+      console.error("Failed to load available templates:", error);
+    }
   };
 
   const loadCVData = async (): Promise<void> => {
@@ -117,44 +191,120 @@ export default function CVEditorPage(): JSX.Element {
   // HANDLERS
   // ============================================
 
-  const handleUpload = useCallback(async (e: ChangeEvent<HTMLInputElement>): Promise<void> => {
-    const file = e.target.files?.[0];
-    if (!file) return;
+  /**
+   * Handle template change - regenerates LaTeX from extracted content
+   * This is instant (no AI call) if we have extractedContent
+   */
+  const handleTemplateChange = useCallback(
+    async (newTemplateId: string): Promise<void> => {
+      setSelectedTemplate(newTemplateId);
 
-    if (file.type !== "application/pdf") {
-      showToast("error", "Only PDF files are supported.");
-      return;
-    }
+      // If we have extracted content, regenerate LaTeX with new template instantly
+      if (extractedContent) {
+        try {
+          const response = await fetch("/api/cv/template", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              content: extractedContent,
+              templateId: newTemplateId,
+            }),
+          });
 
-    try {
-      setUploading(true);
-      const formData = new FormData();
-      formData.append("file", file);
+          if (response.ok) {
+            const result = await response.json();
+            setLatexContent(result.data.latexContent);
+            showToast("success", `Switched to ${newTemplateId.replace("-", " ")} template`);
 
-      const response = await fetch("/api/cv/store", {
-        method: "POST",
-        body: formData,
-      });
+            // Clear preview to force recompile
+            setPreviewPdfUrl(null);
+          } else {
+            showToast("error", "Failed to switch template");
+          }
+        } catch (error) {
+          console.error("Template switch error:", error);
+          showToast("error", "Failed to switch template");
+        }
+      }
+      // If no extracted content yet, the template will be used on next upload
+    },
+    [extractedContent]
+  );
 
-      const result = await response.json();
+  const handleUpload = useCallback(
+    async (e: ChangeEvent<HTMLInputElement>): Promise<void> => {
+      const file = e.target.files?.[0];
+      if (!file) return;
 
-      if (!response.ok) {
-        showToast("error", result.error || "Upload failed");
+      // Validate file type - now supports PDF, DOCX, TEX
+      const validTypes = [
+        "application/pdf",
+        "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+      ];
+      const isTexFile = file.name.toLowerCase().endsWith(".tex");
+
+      if (!validTypes.includes(file.type) && !isTexFile) {
+        showToast("error", "Please upload a PDF, DOCX, or TEX file.");
         return;
       }
 
-      setCvData(result.data);
-      setLatexContent(result.data.latexContent || "");
-      setPreviewPdfUrl(result.data.pdfUrl);
-      setAtsAnalysis(null); // Clear old analysis
-      showToast("success", "CV uploaded and LaTeX extracted!");
-    } catch (error) {
-      console.error("Upload error:", error);
-      showToast("error", "Upload failed. Please try again.");
-    } finally {
-      setUploading(false);
-    }
-  }, []);
+      try {
+        setUploading(true);
+        const formData = new FormData();
+        formData.append("file", file);
+        formData.append("model", selectedModel);
+        formData.append("template", selectedTemplate);
+
+        const response = await fetch("/api/cv/store", {
+          method: "POST",
+          body: formData,
+        });
+
+        const result = await response.json();
+
+        if (!response.ok) {
+          showToast("error", result.error || "Upload failed");
+          return;
+        }
+
+        setCvData(result.data);
+        setLatexContent(result.data.latexContent || "");
+        setPreviewPdfUrl(result.data.pdfUrl);
+        setAtsAnalysis(null); // Clear old analysis
+
+        // Store extracted content for template switching
+        if (result.data.extractedContent) {
+          setExtractedContent(result.data.extractedContent);
+        }
+
+        // Track which model was used
+        if (result.data.modelUsed) {
+          setModelUsed(result.data.modelUsed);
+          setFallbackUsed(result.data.fallbackUsed || false);
+
+          if (result.data.fallbackUsed) {
+            showToast(
+              "info",
+              `CV uploaded! Used ${result.data.modelUsed} (fallback from ${selectedModel})`
+            );
+          } else {
+            showToast("success", `CV uploaded using ${result.data.modelUsed}!`);
+          }
+        } else {
+          // TEX file - no model used
+          setModelUsed(null);
+          setFallbackUsed(false);
+          showToast("success", "LaTeX file loaded!");
+        }
+      } catch (error) {
+        console.error("Upload error:", error);
+        showToast("error", "Upload failed. Please try again.");
+      } finally {
+        setUploading(false);
+      }
+    },
+    [selectedModel, selectedTemplate]
+  );
 
   const handleCompile = async (save: boolean): Promise<void> => {
     if (!latexContent.trim()) {
@@ -278,6 +428,55 @@ export default function CVEditorPage(): JSX.Element {
     link.click();
   };
 
+  const handleOpenInOverleaf = (): void => {
+    if (!latexContent.trim()) {
+      showToast("error", "No LaTeX content to open.");
+      return;
+    }
+
+    // Overleaf accepts URL-encoded LaTeX via snip parameter
+    const encoded = encodeURIComponent(latexContent);
+    const overleafUrl = `https://www.overleaf.com/docs?snip=${encoded}`;
+
+    // Open in new tab
+    window.open(overleafUrl, "_blank");
+    showToast("info", "Opening in Overleaf. You can compile and download the PDF there.");
+  };
+
+  const handleDelete = async (): Promise<void> => {
+    if (!cvData?.pdfUrl) {
+      showToast("error", "No CV to delete.");
+      return;
+    }
+
+    // Confirm deletion
+    if (!window.confirm("Are you sure you want to delete your CV? This cannot be undone.")) {
+      return;
+    }
+
+    try {
+      const response = await fetch("/api/cv/store", {
+        method: "DELETE",
+      });
+
+      if (!response.ok) {
+        const result = await response.json();
+        showToast("error", result.error || "Failed to delete CV.");
+        return;
+      }
+
+      // Clear local state
+      setCvData(null);
+      setLatexContent("");
+      setPreviewPdfUrl(null);
+      setAtsAnalysis(null);
+      showToast("success", "CV deleted successfully.");
+    } catch (error) {
+      console.error("Delete error:", error);
+      showToast("error", "Failed to delete CV. Please try again.");
+    }
+  };
+
   // ============================================
   // RENDER
   // ============================================
@@ -300,15 +499,79 @@ export default function CVEditorPage(): JSX.Element {
       {/* Toast notification */}
       {toast && (
         <div
-          className={`fixed top-4 right-4 z-50 p-4 rounded-lg shadow-lg ${
+          className={`fixed top-4 right-4 z-50 p-4 rounded-lg shadow-lg max-w-md flex items-start gap-3 ${
             toast.type === "success"
-              ? "bg-green-100 text-green-800 border border-green-200"
+              ? "bg-green-50 text-green-800 border border-green-200"
               : toast.type === "error"
-                ? "bg-red-100 text-red-800 border border-red-200"
-                : "bg-blue-100 text-blue-800 border border-blue-200"
+                ? "bg-red-50 text-red-800 border border-red-300"
+                : "bg-blue-50 text-blue-800 border border-blue-200"
           }`}
         >
-          {toast.message}
+          {/* Icon */}
+          <span className="shrink-0 mt-0.5">
+            {toast.type === "success" && (
+              <svg
+                className="w-5 h-5 text-green-600"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M5 13l4 4L19 7"
+                />
+              </svg>
+            )}
+            {toast.type === "error" && (
+              <svg
+                className="w-5 h-5 text-red-600"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                />
+              </svg>
+            )}
+            {toast.type === "info" && (
+              <svg
+                className="w-5 h-5 text-blue-600"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                />
+              </svg>
+            )}
+          </span>
+          {/* Message */}
+          <span className="flex-1 text-sm">{toast.message}</span>
+          {/* Dismiss button */}
+          <button
+            onClick={dismissToast}
+            className="shrink-0 ml-2 text-gray-400 hover:text-gray-600"
+            aria-label="Dismiss"
+          >
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M6 18L18 6M6 6l12 12"
+              />
+            </svg>
+          </button>
         </div>
       )}
 
@@ -324,23 +587,78 @@ export default function CVEditorPage(): JSX.Element {
       <Card className="mb-6">
         <CardContent className="py-4">
           <div className="flex flex-wrap items-center gap-4">
+            {/* Model Selector */}
+            <div className="flex items-center gap-2">
+              <span className="text-sm text-gray-500 whitespace-nowrap">AI Model:</span>
+              <Select value={selectedModel} onValueChange={setSelectedModel} disabled={uploading}>
+                <SelectTrigger className="w-[220px] h-9">
+                  <SelectValue placeholder="Select model" />
+                </SelectTrigger>
+                <SelectContent>
+                  {availableModels.map((model) => (
+                    <SelectItem key={model.id} value={model.id} disabled={!model.available}>
+                      {model.name} ({model.cost}){!model.available && " - no key"}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            {/* Template Selector */}
+            <div className="flex items-center gap-2">
+              <span className="text-sm text-gray-500 whitespace-nowrap">Template:</span>
+              <Select
+                value={selectedTemplate}
+                onValueChange={handleTemplateChange}
+                disabled={uploading}
+              >
+                <SelectTrigger className="w-[200px] h-9">
+                  <SelectValue placeholder="Select template" />
+                </SelectTrigger>
+                <SelectContent>
+                  {availableTemplates.map((template) => (
+                    <SelectItem key={template.id} value={template.id}>
+                      {template.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            {/* Upload Button */}
             <div className="flex-1 min-w-[200px]">
-              <Label htmlFor="cv-upload" className="cursor-pointer">
-                <div className="flex items-center gap-2">
-                  <Button variant="outline" disabled={uploading} asChild>
-                    <span>{uploading ? "Uploading..." : "Upload PDF"}</span>
-                  </Button>
-                  {cvData?.filename && (
-                    <span className="text-sm text-muted-foreground">
-                      Current: {cvData.filename}
-                    </span>
-                  )}
-                </div>
-              </Label>
+              <div className="flex items-center gap-2">
+                <Button
+                  variant="outline"
+                  disabled={uploading}
+                  onClick={() => document.getElementById("cv-upload")?.click()}
+                >
+                  {uploading ? "Extracting LaTeX..." : "Upload CV"}
+                </Button>
+                {cvData?.filename && (
+                  <>
+                    <span className="text-sm text-muted-foreground">{cvData.filename}</span>
+                    {modelUsed && (
+                      <Badge variant={fallbackUsed ? "secondary" : "default"} className="text-xs">
+                        {modelUsed}
+                        {fallbackUsed && " (fallback)"}
+                      </Badge>
+                    )}
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={handleDelete}
+                      className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                    >
+                      Delete
+                    </Button>
+                  </>
+                )}
+              </div>
               <Input
                 id="cv-upload"
                 type="file"
-                accept=".pdf"
+                accept=".pdf,.docx,.tex"
                 className="hidden"
                 onChange={handleUpload}
                 disabled={uploading}
@@ -429,6 +747,15 @@ export default function CVEditorPage(): JSX.Element {
                     disabled={compiling || !latexContent}
                   >
                     Save
+                  </Button>
+                  <Button
+                    variant="secondary"
+                    size="sm"
+                    onClick={handleOpenInOverleaf}
+                    disabled={!latexContent}
+                    title="Open in Overleaf to compile (fallback if compilation fails)"
+                  >
+                    Open in Overleaf
                   </Button>
                 </div>
               </div>
@@ -583,10 +910,9 @@ export default function CVEditorPage(): JSX.Element {
 
 function base64ToBlob(base64: string, contentType: string): Blob {
   const byteCharacters = atob(base64);
-  const byteNumbers = new Array(byteCharacters.length);
-  for (let i = 0; i < byteCharacters.length; i++) {
-    byteNumbers[i] = byteCharacters.charCodeAt(i);
-  }
+  const byteNumbers = Array.from({ length: byteCharacters.length }, (_, i) =>
+    byteCharacters.charCodeAt(i)
+  );
   const byteArray = new Uint8Array(byteNumbers);
   return new Blob([byteArray], { type: contentType });
 }
