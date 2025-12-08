@@ -41,36 +41,40 @@ jobs:
         uses: actions/github-script@v7
         with:
           script: |
+            const body = [
+              '## ❌ Strict Validation Failed',
+              '',
+              'Your code has issues that must be fixed before merging:',
+              '',
+              '**Run locally to fix:**',
+              '```bash',
+              '# Fix formatting',
+              'npm run format',
+              '',
+              '# Fix linting (auto-fix what is possible)',
+              'npm run lint:fix',
+              '',
+              '# Check types',
+              'npm run type-check',
+              '',
+              '# Run all checks',
+              'npm run validate',
+              '```',
+              '',
+              '**Rules enforced:**',
+              '- ✅ Code must be formatted (Prettier)',
+              '- ✅ Zero ESLint warnings/errors',
+              '- ✅ Zero TypeScript errors',
+              '- ✅ No unused variables/imports',
+              '- ✅ No console.log (use console.warn/error)',
+              '- ✅ No @ts-ignore (must fix issues)',
+              '',
+              'See the "Checks" tab above for details.'
+            ].join('\n');
+            
             github.rest.issues.createComment({
               issue_number: context.issue.number,
               owner: context.repo.owner,
               repo: context.repo.repo,
-              body: \`## ❌ Strict Validation Failed
-
-Your code has issues that must be fixed before merging:
-
-**Run locally to fix:**
-\\\`\\\`\\\`bash
-# Fix formatting
-npm run format
-
-# Fix linting (auto-fix what's possible)
-npm run lint:fix
-
-# Check types
-npm run type-check
-
-# Run all checks
-npm run validate
-\\\`\\\`\\\`
-
-**Rules enforced:**
-- ✅ Code must be formatted (Prettier)
-- ✅ Zero ESLint warnings/errors
-- ✅ Zero TypeScript errors
-- ✅ No unused variables/imports
-- ✅ No console.log (use console.warn/error)
-- ✅ No @ts-ignore (must fix issues)
-
-See the "Checks" tab above for details.\`
-            })
+              body: body
+            });
