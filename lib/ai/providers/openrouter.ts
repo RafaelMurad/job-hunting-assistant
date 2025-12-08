@@ -7,6 +7,7 @@
 import { AI_CONFIG } from "../config";
 import type { ExtractedCVContent } from "../../cv-templates";
 import { LATEX_EXTRACTION_PROMPT, CV_CONTENT_EXTRACTION_PROMPT } from "../prompts";
+import { cleanAndValidateLatex, cleanJsonResponse } from "../utils";
 
 // =============================================================================
 // TYPES
@@ -125,7 +126,7 @@ export async function extractLatexWithOpenRouter(
     throw new Error("No content in OpenRouter response");
   }
 
-  return cleanLatexResponse(responseContent);
+  return cleanAndValidateLatex(responseContent);
 }
 
 // =============================================================================
@@ -214,53 +215,5 @@ export async function extractContentWithOpenRouter(
     throw new Error("No content in OpenRouter response");
   }
 
-  // Clean up response - remove markdown code blocks if present
-  const jsonText = responseContent
-    .replace(/^```(?:json)?\n?/gi, "")
-    .replace(/\n?```$/gi, "")
-    .trim();
-
-  return JSON.parse(jsonText) as ExtractedCVContent;
-}
-
-// =============================================================================
-// HELPER FUNCTIONS
-// =============================================================================
-
-/**
- * Clean and validate LaTeX output
- */
-function cleanLatexResponse(rawLatex: string): string {
-  let latex = rawLatex.trim();
-
-  // Remove any markdown code blocks if present
-  latex = latex.replace(/^```(?:latex|tex)?\n?/gi, "").replace(/\n?```$/gi, "");
-
-  // Try to find the documentclass if it's not at the start
-  const docClassIndex = latex.indexOf("\\documentclass");
-  if (docClassIndex > 0) {
-    latex = latex.substring(docClassIndex);
-  }
-
-  // Try to find \end{document} and trim anything after
-  const endDocIndex = latex.indexOf("\\end{document}");
-  if (endDocIndex > 0) {
-    latex = latex.substring(0, endDocIndex + "\\end{document}".length);
-  }
-
-  // Validate it has required elements
-  if (!latex.includes("\\documentclass")) {
-    throw new Error(
-      "AI did not return valid LaTeX (missing \\documentclass). Please try uploading again."
-    );
-  }
-
-  if (!latex.includes("\\end{document}")) {
-    throw new Error(
-      "AI returned incomplete LaTeX (missing \\end{document}). " +
-        "Your document may be too long. Try a shorter version."
-    );
-  }
-
-  return latex;
+  return JSON.parse(cleanJsonResponse(responseContent)) as ExtractedCVContent;
 }

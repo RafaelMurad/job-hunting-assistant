@@ -5,7 +5,7 @@
  */
 
 import { describe, it, expect } from "vitest";
-import { cleanAndValidateLatex } from "@/lib/ai/extraction/latex";
+import { cleanAndValidateLatex } from "@/lib/ai/utils";
 
 describe("AI LaTeX Utilities", () => {
   describe("cleanAndValidateLatex", () => {

@@ -71,9 +71,11 @@ export { extractLatexWithOpenRouter, extractContentWithOpenRouter } from "./prov
 // EXTRACTION EXPORTS
 // =============================================================================
 
+// Shared utilities
+export { cleanAndValidateLatex, cleanJsonResponse, extractJsonFromText } from "./utils";
+
 // LaTeX extraction
 export {
-  cleanAndValidateLatex,
   extractLatexFromPDF,
   extractLatexFromDocx,
   extractLatexWithModel,

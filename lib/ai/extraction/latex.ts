@@ -11,48 +11,10 @@ import { extractLatexWithOpenAI } from "../providers/openai";
 import { extractLatexWithClaude } from "../providers/claude";
 import { extractLatexWithOpenRouter } from "../providers/openrouter";
 import { ATS_ANALYSIS_PROMPT, LATEX_MODIFY_PROMPT } from "../prompts";
+import { cleanAndValidateLatex, extractJsonFromText } from "../utils";
 
-// =============================================================================
-// SHARED LATEX UTILITIES
-// =============================================================================
-
-/**
- * Clean and validate LaTeX output from any model
- */
-export function cleanAndValidateLatex(rawLatex: string): string {
-  let latex = rawLatex.trim();
-
-  // Remove any markdown code blocks if present
-  latex = latex.replace(/^```(?:latex|tex)?\n?/gi, "").replace(/\n?```$/gi, "");
-
-  // Try to find the documentclass if it's not at the start
-  const docClassIndex = latex.indexOf("\\documentclass");
-  if (docClassIndex > 0) {
-    latex = latex.substring(docClassIndex);
-  }
-
-  // Try to find \end{document} and trim anything after
-  const endDocIndex = latex.indexOf("\\end{document}");
-  if (endDocIndex > 0) {
-    latex = latex.substring(0, endDocIndex + "\\end{document}".length);
-  }
-
-  // Validate it has required elements
-  if (!latex.includes("\\documentclass")) {
-    throw new Error(
-      "AI did not return valid LaTeX (missing \\documentclass). Please try uploading again."
-    );
-  }
-
-  if (!latex.includes("\\end{document}")) {
-    throw new Error(
-      "AI returned incomplete LaTeX (missing \\end{document}). " +
-        "Your document may be too long. Try a shorter version."
-    );
-  }
-
-  return latex;
-}
+// Re-export for backward compatibility
+export { cleanAndValidateLatex };
 
 // =============================================================================
 // LEGACY EXTRACTION FUNCTIONS (for backward compatibility)
@@ -189,17 +151,7 @@ export async function modifyLatexWithAI(
 
   const result = await model.generateContent(LATEX_MODIFY_PROMPT(currentLatex, instruction));
 
-  let latex = result.response.text().trim();
-
-  // Remove any markdown code blocks if present
-  latex = latex.replace(/^```(?:latex|tex)?\n?/i, "").replace(/\n?```$/i, "");
-
-  // Validate it starts with \documentclass
-  if (!latex.includes("\\documentclass")) {
-    throw new Error("AI did not return valid LaTeX (missing \\documentclass)");
-  }
-
-  return latex;
+  return cleanAndValidateLatex(result.response.text());
 }
 
 // =============================================================================
@@ -218,13 +170,10 @@ export async function analyzeATSCompliance(latexContent: string): Promise<ATSAna
   });
 
   const result = await model.generateContent(ATS_ANALYSIS_PROMPT(latexContent));
-  const text = result.response.text().trim();
-
-  // Parse JSON from response
-  const jsonMatch = text.match(/{[\s\S]*}/);
-  if (!jsonMatch) {
+  const jsonText = extractJsonFromText(result.response.text());
+  if (!jsonText) {
     throw new Error("Could not parse ATS analysis response as JSON");
   }
 
-  return JSON.parse(jsonMatch[0]) as ATSAnalysisResult;
+  return JSON.parse(jsonText) as ATSAnalysisResult;
 }

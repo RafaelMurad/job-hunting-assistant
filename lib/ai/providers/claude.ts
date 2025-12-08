@@ -7,6 +7,7 @@
 import { AI_CONFIG } from "../config";
 import type { JobAnalysisResult } from "../types";
 import { ANALYSIS_PROMPT, COVER_LETTER_PROMPT, LATEX_EXTRACTION_PROMPT } from "../prompts";
+import { cleanAndValidateLatex, cleanJsonResponse } from "../utils";
 
 // =============================================================================
 // JOB ANALYSIS
@@ -41,11 +42,7 @@ export async function analyzeWithClaude(
     throw new Error("Unexpected response type from Claude");
   }
 
-  const jsonText = content.text
-    .replace(/```json\n?/g, "")
-    .replace(/```\n?/g, "")
-    .trim();
-  return JSON.parse(jsonText) as JobAnalysisResult;
+  return JSON.parse(cleanJsonResponse(content.text)) as JobAnalysisResult;
 }
 
 // =============================================================================
@@ -134,47 +131,5 @@ export async function extractLatexWithClaude(
     throw new Error("No text response from Claude");
   }
 
-  return cleanLatexResponse(textContent.text);
-}
-
-// =============================================================================
-// HELPER FUNCTIONS
-// =============================================================================
-
-/**
- * Clean and validate LaTeX output
- */
-function cleanLatexResponse(rawLatex: string): string {
-  let latex = rawLatex.trim();
-
-  // Remove any markdown code blocks if present
-  latex = latex.replace(/^```(?:latex|tex)?\n?/gi, "").replace(/\n?```$/gi, "");
-
-  // Try to find the documentclass if it's not at the start
-  const docClassIndex = latex.indexOf("\\documentclass");
-  if (docClassIndex > 0) {
-    latex = latex.substring(docClassIndex);
-  }
-
-  // Try to find \end{document} and trim anything after
-  const endDocIndex = latex.indexOf("\\end{document}");
-  if (endDocIndex > 0) {
-    latex = latex.substring(0, endDocIndex + "\\end{document}".length);
-  }
-
-  // Validate it has required elements
-  if (!latex.includes("\\documentclass")) {
-    throw new Error(
-      "AI did not return valid LaTeX (missing \\documentclass). Please try uploading again."
-    );
-  }
-
-  if (!latex.includes("\\end{document}")) {
-    throw new Error(
-      "AI returned incomplete LaTeX (missing \\end{document}). " +
-        "Your document may be too long. Try a shorter version."
-    );
-  }
-
-  return latex;
+  return cleanAndValidateLatex(textContent.text);
 }

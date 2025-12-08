@@ -16,6 +16,7 @@ import {
   LATEX_FROM_STYLE_PROMPT,
   CV_CONTENT_EXTRACTION_PROMPT,
 } from "../prompts";
+import { cleanAndValidateLatex, cleanJsonResponse, extractJsonFromText } from "../utils";
 
 // =============================================================================
 // JOB ANALYSIS
@@ -90,15 +91,12 @@ export async function parseCVWithGeminiVision(pdfBuffer: Buffer): Promise<Parsed
     CV_EXTRACTION_PROMPT,
   ]);
 
-  const text = result.response.text();
-
-  // Parse JSON from response (remove any markdown code blocks if present)
-  const jsonMatch = text.match(/{[\s\S]*}/);
-  if (!jsonMatch) {
+  const jsonText = extractJsonFromText(result.response.text());
+  if (!jsonText) {
     throw new Error("Could not parse AI response as JSON");
   }
 
-  return JSON.parse(jsonMatch[0]) as ParsedCVData;
+  return JSON.parse(jsonText) as ParsedCVData;
 }
 
 /**
@@ -116,15 +114,12 @@ export async function parseCVWithGeminiText(cvText: string): Promise<ParsedCVDat
     `${CV_EXTRACTION_PROMPT}\n\nCV Text:\n${cvText.substring(0, 15000)}`
   );
 
-  const text = result.response.text();
-
-  // Parse JSON from response (remove any markdown code blocks if present)
-  const jsonMatch = text.match(/{[\s\S]*}/);
-  if (!jsonMatch) {
+  const jsonText = extractJsonFromText(result.response.text());
+  if (!jsonText) {
     throw new Error("Could not parse AI response as JSON");
   }
 
-  return JSON.parse(jsonMatch[0]) as ParsedCVData;
+  return JSON.parse(jsonText) as ParsedCVData;
 }
 
 // =============================================================================
@@ -194,9 +189,7 @@ export async function extractLatexTwoPass(
     LATEX_FROM_STYLE_PROMPT(styleJson),
   ]);
 
-  // Import and use cleanAndValidateLatex from extraction module
-  // For now, inline the validation
-  return cleanLatexResponse(latexResult.response.text());
+  return cleanAndValidateLatex(latexResult.response.text());
 }
 
 // =============================================================================
@@ -260,7 +253,7 @@ export async function extractLatexWithGemini(
     const wasTruncated = finishReason === "MAX_TOKENS";
 
     try {
-      return cleanLatexResponse(result.response.text());
+      return cleanAndValidateLatex(result.response.text());
     } catch (error) {
       // If truncated and we have more limits to try, continue
       if (wasTruncated && maxTokens < tokenLimits[tokenLimits.length - 1]!) {
@@ -306,56 +299,6 @@ export async function extractContentWithGemini(
     CV_CONTENT_EXTRACTION_PROMPT,
   ]);
 
-  const responseText = result.response.text().trim();
-
-  // Clean up response - remove markdown code blocks if present
-  const jsonText = responseText
-    .replace(/^```(?:json)?\n?/gi, "")
-    .replace(/\n?```$/gi, "")
-    .trim();
-
-  // Parse and validate (will be moved to shared validation)
+  const jsonText = cleanJsonResponse(result.response.text());
   return JSON.parse(jsonText) as ExtractedCVContent;
-}
-
-// =============================================================================
-// HELPER FUNCTIONS
-// =============================================================================
-
-/**
- * Clean and validate LaTeX output
- */
-function cleanLatexResponse(rawLatex: string): string {
-  let latex = rawLatex.trim();
-
-  // Remove any markdown code blocks if present
-  latex = latex.replace(/^```(?:latex|tex)?\n?/gi, "").replace(/\n?```$/gi, "");
-
-  // Try to find the documentclass if it's not at the start
-  const docClassIndex = latex.indexOf("\\documentclass");
-  if (docClassIndex > 0) {
-    latex = latex.substring(docClassIndex);
-  }
-
-  // Try to find \end{document} and trim anything after
-  const endDocIndex = latex.indexOf("\\end{document}");
-  if (endDocIndex > 0) {
-    latex = latex.substring(0, endDocIndex + "\\end{document}".length);
-  }
-
-  // Validate it has required elements
-  if (!latex.includes("\\documentclass")) {
-    throw new Error(
-      "AI did not return valid LaTeX (missing \\documentclass). Please try uploading again."
-    );
-  }
-
-  if (!latex.includes("\\end{document}")) {
-    throw new Error(
-      "AI returned incomplete LaTeX (missing \\end{document}). " +
-        "Your document may be too long. Try a shorter version."
-    );
-  }
-
-  return latex;
 }
