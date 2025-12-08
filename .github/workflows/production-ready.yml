@@ -38,12 +38,16 @@ jobs:
       
       - name: Validate Prisma schema
         run: npx prisma validate
+        env:
+          DATABASE_URL: "postgresql://user:pass@localhost:5432/test"
+          DATABASE_URL_UNPOOLED: "postgresql://user:pass@localhost:5432/test"
         continue-on-error: false
       
       - name: Test production build
         run: npm run build
         env:
           DATABASE_URL: "postgresql://user:pass@localhost:5432/test"
+          DATABASE_URL_UNPOOLED: "postgresql://user:pass@localhost:5432/test"
           AI_PROVIDER: "gemini"
           GEMINI_API_KEY: "test-key-for-build"
         continue-on-error: false
