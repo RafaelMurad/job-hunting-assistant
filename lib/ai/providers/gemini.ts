@@ -1,0 +1,361 @@
+/**
+ * Gemini AI Provider
+ *
+ * Google Gemini integration for job analysis, CV parsing, and LaTeX extraction.
+ */
+
+import { AI_CONFIG, getModelName } from "../config";
+import type { JobAnalysisResult, ParsedCVData, LatexExtractionModel } from "../types";
+import type { ExtractedCVContent } from "../../cv-templates";
+import {
+  ANALYSIS_PROMPT,
+  COVER_LETTER_PROMPT,
+  CV_EXTRACTION_PROMPT,
+  LATEX_EXTRACTION_PROMPT,
+  STYLE_ANALYSIS_PROMPT,
+  LATEX_FROM_STYLE_PROMPT,
+  CV_CONTENT_EXTRACTION_PROMPT,
+} from "../prompts";
+
+// =============================================================================
+// JOB ANALYSIS
+// =============================================================================
+
+export async function analyzeWithGemini(
+  jobDescription: string,
+  userCV: string
+): Promise<JobAnalysisResult> {
+  const { GoogleGenerativeAI } = await import("@google/generative-ai");
+
+  const genAI = new GoogleGenerativeAI(AI_CONFIG.apiKeys.gemini!);
+  const model = genAI.getGenerativeModel({
+    model: AI_CONFIG.models.gemini,
+  });
+
+  const result = await model.generateContent(ANALYSIS_PROMPT(jobDescription, userCV));
+  const text = result.response.text();
+
+  // Clean JSON from markdown code blocks if present
+  const jsonText = text
+    .replace(/```json\n?/g, "")
+    .replace(/```\n?/g, "")
+    .trim();
+  return JSON.parse(jsonText) as JobAnalysisResult;
+}
+
+// =============================================================================
+// COVER LETTER GENERATION
+// =============================================================================
+
+export async function generateCoverLetterWithGemini(
+  analysis: JobAnalysisResult,
+  userCV: string
+): Promise<string> {
+  const { GoogleGenerativeAI } = await import("@google/generative-ai");
+
+  const genAI = new GoogleGenerativeAI(AI_CONFIG.apiKeys.gemini!);
+  const model = genAI.getGenerativeModel({
+    model: AI_CONFIG.models.gemini,
+  });
+
+  const result = await model.generateContent(COVER_LETTER_PROMPT(analysis, userCV));
+  return result.response.text().trim();
+}
+
+// =============================================================================
+// CV PARSING
+// =============================================================================
+
+/**
+ * Parse CV using Gemini with native PDF vision.
+ * Sends the PDF directly to Gemini - no text extraction needed.
+ */
+export async function parseCVWithGeminiVision(pdfBuffer: Buffer): Promise<ParsedCVData> {
+  const { GoogleGenerativeAI } = await import("@google/generative-ai");
+
+  const genAI = new GoogleGenerativeAI(AI_CONFIG.apiKeys.gemini!);
+  const model = genAI.getGenerativeModel({
+    model: AI_CONFIG.models.gemini,
+  });
+
+  const base64Data = pdfBuffer.toString("base64");
+
+  const result = await model.generateContent([
+    {
+      inlineData: {
+        mimeType: "application/pdf",
+        data: base64Data,
+      },
+    },
+    CV_EXTRACTION_PROMPT,
+  ]);
+
+  const text = result.response.text();
+
+  // Parse JSON from response (remove any markdown code blocks if present)
+  const jsonMatch = text.match(/{[\s\S]*}/);
+  if (!jsonMatch) {
+    throw new Error("Could not parse AI response as JSON");
+  }
+
+  return JSON.parse(jsonMatch[0]) as ParsedCVData;
+}
+
+/**
+ * Parse CV using Gemini with extracted text (for DOCX files).
+ */
+export async function parseCVWithGeminiText(cvText: string): Promise<ParsedCVData> {
+  const { GoogleGenerativeAI } = await import("@google/generative-ai");
+
+  const genAI = new GoogleGenerativeAI(AI_CONFIG.apiKeys.gemini!);
+  const model = genAI.getGenerativeModel({
+    model: AI_CONFIG.models.gemini,
+  });
+
+  const result = await model.generateContent(
+    `${CV_EXTRACTION_PROMPT}\n\nCV Text:\n${cvText.substring(0, 15000)}`
+  );
+
+  const text = result.response.text();
+
+  // Parse JSON from response (remove any markdown code blocks if present)
+  const jsonMatch = text.match(/{[\s\S]*}/);
+  if (!jsonMatch) {
+    throw new Error("Could not parse AI response as JSON");
+  }
+
+  return JSON.parse(jsonMatch[0]) as ParsedCVData;
+}
+
+// =============================================================================
+// LATEX EXTRACTION - TWO PASS
+// =============================================================================
+
+/**
+ * Two-pass style extraction for Pro models
+ * Pass 1: Extract visual style as JSON
+ * Pass 2: Generate LaTeX using style + content
+ */
+export async function extractLatexTwoPass(
+  base64Data: string,
+  mimeType: string,
+  modelName: string,
+  genAI: InstanceType<typeof import("@google/generative-ai").GoogleGenerativeAI>
+): Promise<string> {
+  // Pass 1: Extract style as JSON
+  const styleModel = genAI.getGenerativeModel({
+    model: modelName,
+    generationConfig: {
+      maxOutputTokens: 4096,
+    },
+  });
+
+  const styleResult = await styleModel.generateContent([
+    {
+      inlineData: {
+        mimeType,
+        data: base64Data,
+      },
+    },
+    STYLE_ANALYSIS_PROMPT,
+  ]);
+
+  let styleJson = styleResult.response.text().trim();
+
+  // Clean up JSON response
+  styleJson = styleJson.replace(/^```(?:json)?\n?/gi, "").replace(/\n?```$/gi, "");
+
+  // Validate it's valid JSON
+  try {
+    JSON.parse(styleJson);
+  } catch {
+    console.warn("[Two-Pass] Style JSON invalid, falling back to single-pass");
+    throw new Error("Style analysis returned invalid JSON");
+  }
+
+  // Style analysis logging (use warn since log is disallowed)
+  console.warn("[Two-Pass] Style analysis complete:", styleJson.substring(0, 200) + "...");
+
+  // Pass 2: Generate LaTeX using style + viewing the document again
+  const latexModel = genAI.getGenerativeModel({
+    model: modelName,
+    generationConfig: {
+      maxOutputTokens: 32768,
+    },
+  });
+
+  const latexResult = await latexModel.generateContent([
+    {
+      inlineData: {
+        mimeType,
+        data: base64Data,
+      },
+    },
+    LATEX_FROM_STYLE_PROMPT(styleJson),
+  ]);
+
+  // Import and use cleanAndValidateLatex from extraction module
+  // For now, inline the validation
+  return cleanLatexResponse(latexResult.response.text());
+}
+
+// =============================================================================
+// LATEX EXTRACTION - SINGLE PASS
+// =============================================================================
+
+/**
+ * Extract LaTeX using Gemini models (2.5 Pro, 2.5 Flash, 3 Pro)
+ *
+ * For Pro models (2.5 Pro, 3 Pro), uses two-pass extraction for better style preservation:
+ * - Pass 1: Analyze visual style and extract as JSON
+ * - Pass 2: Generate LaTeX using style analysis + content
+ *
+ * For Flash models, uses single-pass for speed.
+ */
+export async function extractLatexWithGemini(
+  base64Data: string,
+  mimeType: string,
+  modelId: "gemini-2.5-pro" | "gemini-2.5-flash" | "gemini-3-pro-preview"
+): Promise<string> {
+  const { GoogleGenerativeAI } = await import("@google/generative-ai");
+
+  const genAI = new GoogleGenerativeAI(AI_CONFIG.apiKeys.gemini!);
+  const modelName = getModelName(modelId);
+
+  // Use two-pass extraction for Pro models (better style preservation)
+  const isProModel = modelId === "gemini-2.5-pro" || modelId === "gemini-3-pro-preview";
+
+  if (isProModel) {
+    try {
+      return await extractLatexTwoPass(base64Data, mimeType, modelName, genAI);
+    } catch (error) {
+      console.warn(`[${modelId}] Two-pass extraction failed, falling back to single-pass:`, error);
+      // Fall through to single-pass
+    }
+  }
+
+  // Single-pass extraction (for Flash or as fallback)
+  // Escalating token limits for long CVs
+  const tokenLimits = [16384, 32768];
+
+  for (const maxTokens of tokenLimits) {
+    const model = genAI.getGenerativeModel({
+      model: modelName,
+      generationConfig: {
+        maxOutputTokens: maxTokens,
+      },
+    });
+
+    const result = await model.generateContent([
+      {
+        inlineData: {
+          mimeType,
+          data: base64Data,
+        },
+      },
+      LATEX_EXTRACTION_PROMPT,
+    ]);
+
+    const finishReason = result.response.candidates?.[0]?.finishReason;
+    const wasTruncated = finishReason === "MAX_TOKENS";
+
+    try {
+      return cleanLatexResponse(result.response.text());
+    } catch (error) {
+      // If truncated and we have more limits to try, continue
+      if (wasTruncated && maxTokens < tokenLimits[tokenLimits.length - 1]!) {
+        console.warn(`[${modelId}] Response truncated at ${maxTokens} tokens, retrying...`);
+        continue;
+      }
+      throw error;
+    }
+  }
+
+  throw new Error("LaTeX extraction failed after all retry attempts.");
+}
+
+// =============================================================================
+// CV CONTENT EXTRACTION (for templates)
+// =============================================================================
+
+/**
+ * Extract CV content as JSON using Gemini
+ */
+export async function extractContentWithGemini(
+  base64Data: string,
+  mimeType: string,
+  modelName: LatexExtractionModel
+): Promise<ExtractedCVContent> {
+  const { GoogleGenerativeAI } = await import("@google/generative-ai");
+  const genAI = new GoogleGenerativeAI(AI_CONFIG.apiKeys.gemini!);
+
+  const model = genAI.getGenerativeModel({
+    model: modelName,
+    generationConfig: {
+      maxOutputTokens: 16384,
+    },
+  });
+
+  const result = await model.generateContent([
+    {
+      inlineData: {
+        mimeType,
+        data: base64Data,
+      },
+    },
+    CV_CONTENT_EXTRACTION_PROMPT,
+  ]);
+
+  const responseText = result.response.text().trim();
+
+  // Clean up response - remove markdown code blocks if present
+  const jsonText = responseText
+    .replace(/^```(?:json)?\n?/gi, "")
+    .replace(/\n?```$/gi, "")
+    .trim();
+
+  // Parse and validate (will be moved to shared validation)
+  return JSON.parse(jsonText) as ExtractedCVContent;
+}
+
+// =============================================================================
+// HELPER FUNCTIONS
+// =============================================================================
+
+/**
+ * Clean and validate LaTeX output
+ */
+function cleanLatexResponse(rawLatex: string): string {
+  let latex = rawLatex.trim();
+
+  // Remove any markdown code blocks if present
+  latex = latex.replace(/^```(?:latex|tex)?\n?/gi, "").replace(/\n?```$/gi, "");
+
+  // Try to find the documentclass if it's not at the start
+  const docClassIndex = latex.indexOf("\\documentclass");
+  if (docClassIndex > 0) {
+    latex = latex.substring(docClassIndex);
+  }
+
+  // Try to find \end{document} and trim anything after
+  const endDocIndex = latex.indexOf("\\end{document}");
+  if (endDocIndex > 0) {
+    latex = latex.substring(0, endDocIndex + "\\end{document}".length);
+  }
+
+  // Validate it has required elements
+  if (!latex.includes("\\documentclass")) {
+    throw new Error(
+      "AI did not return valid LaTeX (missing \\documentclass). Please try uploading again."
+    );
+  }
+
+  if (!latex.includes("\\end{document}")) {
+    throw new Error(
+      "AI returned incomplete LaTeX (missing \\end{document}). " +
+        "Your document may be too long. Try a shorter version."
+    );
+  }
+
+  return latex;
+}
