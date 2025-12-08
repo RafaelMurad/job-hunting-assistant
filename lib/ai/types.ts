@@ -115,5 +115,5 @@ export interface TemplateExtractionResult {
 // =============================================================================
 
 // Re-export from cv-templates for convenience
-import type { CVTemplateId, ExtractedCVContent } from "../cv-templates";
+import type { CVTemplateId, ExtractedCVContent } from "@/lib/cv-templates";
 export type { CVTemplateId, ExtractedCVContent };

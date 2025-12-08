@@ -6,7 +6,7 @@
 
 import { AI_CONFIG, getModelName } from "../config";
 import type { JobAnalysisResult, ParsedCVData, LatexExtractionModel } from "../types";
-import type { ExtractedCVContent } from "../../cv-templates";
+import type { ExtractedCVContent } from "@/lib/cv-templates";
 import {
   ANALYSIS_PROMPT,
   COVER_LETTER_PROMPT,

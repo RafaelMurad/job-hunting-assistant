@@ -5,7 +5,7 @@
  */
 
 import { AI_CONFIG } from "../config";
-import type { ExtractedCVContent } from "../../cv-templates";
+import type { ExtractedCVContent } from "@/lib/cv-templates";
 import { LATEX_EXTRACTION_PROMPT, CV_CONTENT_EXTRACTION_PROMPT } from "../prompts";
 import { cleanAndValidateLatex, cleanJsonResponse } from "../utils";
 

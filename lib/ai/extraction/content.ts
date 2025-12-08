@@ -10,7 +10,7 @@ import { AI_CONFIG, isModelAvailable, getModelInfo } from "../config";
 import type { LatexExtractionModel, TemplateExtractionResult, CVTemplateId } from "../types";
 import { extractContentWithGemini } from "../providers/gemini";
 import { extractContentWithOpenRouter } from "../providers/openrouter";
-import { type ExtractedCVContent, generateLatexFromContent } from "../../cv-templates";
+import { type ExtractedCVContent, generateLatexFromContent } from "@/lib/cv-templates";
 
 // =============================================================================
 // VALIDATION SCHEMAS (Zod - fixes "Unsound type guard check")
