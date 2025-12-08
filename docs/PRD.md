@@ -268,7 +268,143 @@ When all sources are connected, the app can:
 
 ---
 
-## 7. Future Ideas (Post v1.0)
+## 7. Cloud Infrastructure Roadmap
+
+### Current State (MVP)
+
+| Component           | Current Solution           | Status     | Risk Level |
+| ------------------- | -------------------------- | ---------- | ---------- |
+| **AI Extraction**   | Gemini Vision (AI Studio)  | ✅ Working | 🟢 Low     |
+| **PDF Compilation** | latexonline.cc (3rd party) | ✅ Working | 🟡 Medium  |
+| **File Storage**    | Vercel Blob                | ✅ Working | 🟢 Low     |
+| **Hosting**         | Vercel Serverless          | ✅ Working | 🟢 Low     |
+
+### Why This Matters
+
+**latexonline.cc Risk:**
+
+- No Data Processing Agreement (DPA)
+- Unknown logging/retention policies
+- Third-party dependency with no SLA
+- **GDPR concern:** User CV data sent to uncontrolled service
+
+**Current Decision:** Keep for development/testing. Replace before production launch with paying users.
+
+### Cloud Migration Plan (When Scaling)
+
+#### Phase 1: Self-Hosted LaTeX Compilation (Priority)
+
+**Problem:** `latexonline.cc` is a GDPR risk and has no SLA.
+
+**Solution:** Deploy `latex-online` Docker image to Google Cloud Run.
+
+**Why Cloud Run:**
+
+- Uses your £227 GCP credits (expires March 2026)
+- Scales to zero (pay only for usage)
+- Same API as latexonline.cc (drop-in replacement)
+- Full control over data processing
+- ~£5-10/month at moderate usage
+
+**Implementation:**
+
+```bash
+# 1. Deploy the Docker image
+gcloud run deploy latex-compiler \
+  --image aslushnikov/latex-online \
+  --platform managed \
+  --region europe-west2 \
+  --allow-unauthenticated \
+  --memory 2Gi \
+  --timeout 60
+
+# 2. Update environment variable
+LATEX_API_URL=https://latex-compiler-xxx.run.app
+```
+
+**Code Change Required:**
+
+```typescript
+// lib/latex-compiler.ts
+const LATEX_COMPILE_API = process.env.LATEX_API_URL || "https://latexonline.cc/compile";
+```
+
+#### Phase 2: Vertex AI (If Rate Limited)
+
+**Problem:** AI Studio free tier has 20 requests/day limit.
+
+**Solution:** Switch to Vertex AI (uses GCP credits, no daily limit).
+
+**When to migrate:**
+
+- If you consistently hit 20 requests/day
+- If you need higher rate limits for testing
+- Before launching to multiple users
+
+**Why Vertex AI over AI Studio:**
+
+- Same Gemini models
+- Pay-per-use (covered by credits)
+- No daily request limits
+- Enterprise SLA and support
+
+**Cost Estimate:** ~£10-20/month for moderate CV processing.
+
+#### Phase 3: Google Document AI (Optional)
+
+**Problem:** Text extraction from complex CV layouts.
+
+**Solution:** Document AI for structured text extraction.
+
+**When to consider:**
+
+- If Gemini Vision struggles with specific CV formats
+- If you need better table/column extraction
+- For enterprise-grade document processing
+
+**Why Document AI:**
+
+- Purpose-built for document understanding
+- Better structure preservation (tables, columns)
+- GDPR compliant (Google Cloud DPA)
+
+**Cost Estimate:** ~£0.001/page (covered by credits).
+
+### Decision Framework
+
+| Trigger                              | Action                           |
+| ------------------------------------ | -------------------------------- |
+| Ready to launch premium features     | Deploy Cloud Run LaTeX service   |
+| Hitting 20 requests/day on AI Studio | Switch to Vertex AI              |
+| Complex CV extraction issues         | Evaluate Document AI             |
+| AWS credits available                | Consider Textract as alternative |
+
+### Google Cloud Credits Usage Plan
+
+**Total Credits:** £227 (expires March 2026)
+
+| Service            | Monthly Estimate | Priority             |
+| ------------------ | ---------------- | -------------------- |
+| Cloud Run (LaTeX)  | £5-10            | 🔴 High (GDPR)       |
+| Vertex AI (Gemini) | £10-20           | 🟡 Medium            |
+| Document AI        | £5-10            | 🟢 Low               |
+| **Total**          | ~£20-40/month    | ~6-12 months covered |
+
+### Alternative: AWS Services
+
+If AWS credits become available:
+
+| Service          | Use Case                          | Free Tier         |
+| ---------------- | --------------------------------- | ----------------- |
+| **AWS Textract** | Document text extraction          | 1,000 pages/month |
+| **AWS Lambda**   | LaTeX compilation (via container) | 1M requests/month |
+| **S3**           | File storage                      | 5GB               |
+
+**Note:** AWS adds complexity (another cloud provider). Prefer GCP since credits are already available.
+
+---
+
+## 8. Future Ideas (Post v1.0)
 
 ### v1.1 — Core Integrations (Priority)
 
@@ -278,7 +414,7 @@ When all sources are connected, the app can:
 
 ### v1.2 — Enhancements
 
-- [ ] PDF CV Export
+- [ ] **Premium CV Editor** — Gate behind payment, use Cloud Run LaTeX
 - [ ] Email reminders for follow-ups
 - [ ] Calendar Integration — Interview scheduling
 
@@ -289,10 +425,11 @@ When all sources are connected, the app can:
 - [ ] **Multi-user + Teams** — Share with career coaches
 - [ ] **Browser Extension** — One-click save from job boards
 - [ ] **Auto-apply suggestions** — "Based on your profile, apply to these 5 jobs"
+- [ ] **Direct Style Replication** — Premium feature using Pro AI models
 
 ---
 
-## 8. Success Metrics
+## 9. Success Metrics
 
 ### v1.0 Launch Criteria
 
@@ -313,7 +450,7 @@ When all sources are connected, the app can:
 
 ---
 
-## 9. Open Questions
+## 10. Open Questions
 
 1. **CV parsing accuracy** — How do we handle poorly formatted CVs?
 2. **AI cost management** — Rate limiting for Gemini free tier?
@@ -327,12 +464,13 @@ When all sources are connected, the app can:
 
 ## Changelog
 
-| Date        | Version | Changes                                                      |
-| ----------- | ------- | ------------------------------------------------------------ |
-| Dec 6, 2025 | 0.1     | Initial draft                                                |
-| Dec 6, 2025 | 0.2     | Elevated GitHub/LinkedIn to v1.1, added Data Sources section |
-| Dec 7, 2025 | 1.0     | **MVP Complete** - All P0 features done, deployed to Vercel  |
-| Dec 8, 2025 | 1.1     | **CV Editor** - LaTeX editor, 3 templates, multi-model AI    |
+| Date        | Version | Changes                                                          |
+| ----------- | ------- | ---------------------------------------------------------------- |
+| Dec 6, 2025 | 0.1     | Initial draft                                                    |
+| Dec 6, 2025 | 0.2     | Elevated GitHub/LinkedIn to v1.1, added Data Sources section     |
+| Dec 7, 2025 | 1.0     | **MVP Complete** - All P0 features done, deployed to Vercel      |
+| Dec 8, 2025 | 1.1     | **CV Editor** - LaTeX editor, 3 templates, multi-model AI        |
+| Dec 8, 2025 | 1.2     | **Cloud Roadmap** - Added infrastructure roadmap for GCP/scaling |
 
 ---
 

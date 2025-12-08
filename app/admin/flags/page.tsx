@@ -49,6 +49,16 @@ export default function FeatureFlagsAdminPage(): JSX.Element {
   return (
     <div className="min-h-screen bg-nordic-neutral-50 p-8">
       <div className="mx-auto max-w-4xl">
+        {/* Admin Navigation */}
+        <div className="mb-4 flex gap-4 text-sm">
+          <Link href="/admin/flags" className="font-medium text-fjord-600">
+            Feature Flags
+          </Link>
+          <Link href="/admin/ux-planner" className="text-nordic-neutral-500 hover:text-fjord-600">
+            UX Planner
+          </Link>
+        </div>
+
         {/* Header */}
         <div className="mb-8">
           <div className="flex items-center justify-between">
