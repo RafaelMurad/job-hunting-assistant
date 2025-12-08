@@ -48,6 +48,12 @@ export default function RootLayout({
                         Profile
                       </Link>
                       <Link
+                        href="/cv"
+                        className="text-slate-600 hover:text-slate-900 transition-colors"
+                      >
+                        CV Editor
+                      </Link>
+                      <Link
                         href="/analyze"
                         className="text-slate-600 hover:text-slate-900 transition-colors"
                       >
