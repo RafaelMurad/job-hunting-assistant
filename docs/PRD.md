@@ -163,6 +163,19 @@ Sprint 7: CV Editor & Templates ✅ (Complete)
 ├── ✅ Instant Template Switching (no re-upload needed)
 ├── ✅ PDF/DOCX/LaTeX File Support
 └── ✅ LaTeX Compilation to PDF
+
+Sprint 8: UX Research & Planning ✅ (Complete)
+├── ✅ UX Documentation (/docs/ux/)
+│   ├── User Journeys (5 flows mapped)
+│   ├── Pain Points Analysis (9 issues prioritized)
+│   ├── Information Architecture
+│   └── Design Principles
+├── ✅ Interactive UX Planner (/admin/ux-planner)
+│   ├── Journey Visualization
+│   ├── Persona Exploration
+│   └── Priority Matrix
+├── ✅ Admin Navigation
+└── ✅ Cloud Infrastructure Roadmap (PRD)
 ```
 
 ---
@@ -471,6 +484,7 @@ If AWS credits become available:
 | Dec 7, 2025 | 1.0     | **MVP Complete** - All P0 features done, deployed to Vercel      |
 | Dec 8, 2025 | 1.1     | **CV Editor** - LaTeX editor, 3 templates, multi-model AI        |
 | Dec 8, 2025 | 1.2     | **Cloud Roadmap** - Added infrastructure roadmap for GCP/scaling |
+| Dec 8, 2025 | 1.3     | **UX Research** - Added /docs/ux/ and /admin/ux-planner          |
 
 ---
 
