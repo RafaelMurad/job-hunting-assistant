@@ -70,25 +70,19 @@ describe("userSchema", () => {
   it("rejects empty name", () => {
     const result = userSchema.safeParse({ ...validUser, name: "" });
     expect(result.success).toBe(false);
-    if (!result.success) {
-      expect(result.error.issues[0]?.message).toContain("Name is required");
-    }
+    expect(result.error?.issues[0]?.message).toContain("Name is required");
   });
 
   it("rejects invalid email format", () => {
     const result = userSchema.safeParse({ ...validUser, email: "not-an-email" });
     expect(result.success).toBe(false);
-    if (!result.success) {
-      expect(result.error.issues[0]?.message).toContain("valid email");
-    }
+    expect(result.error?.issues[0]?.message).toContain("valid email");
   });
 
   it("rejects name exceeding max length", () => {
     const result = userSchema.safeParse({ ...validUser, name: "A".repeat(101) });
     expect(result.success).toBe(false);
-    if (!result.success) {
-      expect(result.error.issues[0]?.message).toContain("less than 100");
-    }
+    expect(result.error?.issues[0]?.message).toContain("less than 100");
   });
 
   it("rejects summary exceeding max length", () => {
@@ -177,9 +171,7 @@ describe("cvUploadSchema", () => {
       mimeType: "application/pdf",
     });
     expect(result.success).toBe(false);
-    if (!result.success) {
-      expect(result.error.issues[0]?.message).toContain("too large");
-    }
+    expect(result.error?.issues[0]?.message).toContain("too large");
   });
 });
 
@@ -323,12 +315,11 @@ describe("applicationCreateSchema", () => {
 
   it("provides defaults for optional fields", () => {
     const result = applicationCreateSchema.safeParse(validApplication);
-    if (result.success) {
-      expect(result.data.matchScore).toBe(0);
-      expect(result.data.analysis).toBe("");
-      expect(result.data.coverLetter).toBe("");
-      expect(result.data.status).toBe("saved");
-    }
+    expect(result.success).toBe(true);
+    expect(result.data?.matchScore).toBe(0);
+    expect(result.data?.analysis).toBe("");
+    expect(result.data?.coverLetter).toBe("");
+    expect(result.data?.status).toBe("saved");
   });
 
   it("rejects invalid job URL", () => {

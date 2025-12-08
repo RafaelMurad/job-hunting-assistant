@@ -132,7 +132,8 @@ describe("parseAIError", () => {
     });
 
     it("detects incomplete LaTeX", () => {
-      const result = parseAIError(new Error("Missing \\end{document}"));
+      // Test for LaTeX command - the backslash is intentional to match the actual error message
+      const result = parseAIError(new Error(String.raw`Missing \end{document}`));
       expect(result).toContain("incomplete LaTeX");
     });
   });
