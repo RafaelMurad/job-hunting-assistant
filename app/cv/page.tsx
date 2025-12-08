@@ -583,15 +583,16 @@ export default function CVEditorPage(): JSX.Element {
         </p>
       </div>
 
-      {/* Upload / Status Bar */}
+      {/* Toolbar */}
       <Card className="mb-6">
-        <CardContent className="py-4">
+        <CardContent className="py-4 space-y-4">
+          {/* Row 1: Model, Template, Upload */}
           <div className="flex flex-wrap items-center gap-4">
             {/* Model Selector */}
             <div className="flex items-center gap-2">
-              <span className="text-sm text-gray-500 whitespace-nowrap">AI Model:</span>
+              <span className="text-sm text-muted-foreground whitespace-nowrap">Model:</span>
               <Select value={selectedModel} onValueChange={setSelectedModel} disabled={uploading}>
-                <SelectTrigger className="w-[220px] h-9">
+                <SelectTrigger className="w-[200px] h-9">
                   <SelectValue placeholder="Select model" />
                 </SelectTrigger>
                 <SelectContent>
@@ -606,13 +607,13 @@ export default function CVEditorPage(): JSX.Element {
 
             {/* Template Selector */}
             <div className="flex items-center gap-2">
-              <span className="text-sm text-gray-500 whitespace-nowrap">Template:</span>
+              <span className="text-sm text-muted-foreground whitespace-nowrap">Template:</span>
               <Select
                 value={selectedTemplate}
                 onValueChange={handleTemplateChange}
                 disabled={uploading}
               >
-                <SelectTrigger className="w-[200px] h-9">
+                <SelectTrigger className="w-[180px] h-9">
                   <SelectValue placeholder="Select template" />
                 </SelectTrigger>
                 <SelectContent>
@@ -626,69 +627,76 @@ export default function CVEditorPage(): JSX.Element {
             </div>
 
             {/* Upload Button */}
-            <div className="flex-1 min-w-[200px]">
-              <div className="flex items-center gap-2">
-                <Button
-                  variant="outline"
-                  disabled={uploading}
-                  onClick={() => document.getElementById("cv-upload")?.click()}
-                >
-                  {uploading ? "Extracting LaTeX..." : "Upload CV"}
-                </Button>
-                {cvData?.filename && (
-                  <>
-                    <span className="text-sm text-muted-foreground">{cvData.filename}</span>
-                    {modelUsed && (
-                      <Badge variant={fallbackUsed ? "secondary" : "default"} className="text-xs">
-                        {modelUsed}
-                        {fallbackUsed && " (fallback)"}
-                      </Badge>
-                    )}
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={handleDelete}
-                      className="text-red-600 hover:text-red-700 hover:bg-red-50"
-                    >
-                      Delete
-                    </Button>
-                  </>
-                )}
-              </div>
-              <Input
-                id="cv-upload"
-                type="file"
-                accept=".pdf,.docx,.tex"
-                className="hidden"
-                onChange={handleUpload}
-                disabled={uploading}
-              />
-            </div>
+            <Button
+              variant="default"
+              disabled={uploading}
+              onClick={() => document.getElementById("cv-upload")?.click()}
+            >
+              {uploading ? "Extracting..." : "Upload CV"}
+            </Button>
+            <Input
+              id="cv-upload"
+              type="file"
+              accept=".pdf,.docx,.tex"
+              className="hidden"
+              onChange={handleUpload}
+              disabled={uploading}
+            />
 
-            <div className="flex items-center gap-2">
+            {/* Spacer */}
+            <div className="flex-1" />
+
+            {/* View Mode Toggle */}
+            <div className="flex items-center gap-1 bg-muted rounded-lg p-1">
               <Button
-                variant={viewMode === "pdf" ? "default" : "outline"}
+                variant={viewMode === "pdf" ? "default" : "ghost"}
                 size="sm"
                 onClick={() => setViewMode("pdf")}
+                className="h-7 px-3"
               >
-                PDF Only
+                PDF
               </Button>
               <Button
-                variant={viewMode === "split" ? "default" : "outline"}
+                variant={viewMode === "split" ? "default" : "ghost"}
                 size="sm"
                 onClick={() => setViewMode("split")}
+                className="h-7 px-3"
               >
-                Split View
+                Split
               </Button>
               <Button
-                variant={viewMode === "latex" ? "default" : "outline"}
+                variant={viewMode === "latex" ? "default" : "ghost"}
                 size="sm"
                 onClick={() => setViewMode("latex")}
+                className="h-7 px-3"
               >
-                LaTeX Only
+                LaTeX
               </Button>
             </div>
           </div>
+
+          {/* Row 2: File info (only shows when file is loaded) */}
+          {cvData?.filename && (
+            <div className="flex items-center gap-3 pt-2 border-t">
+              <span className="text-sm font-medium">Current:</span>
+              <span className="text-sm text-muted-foreground">{cvData.filename}</span>
+              {modelUsed && (
+                <Badge variant={fallbackUsed ? "secondary" : "outline"} className="text-xs">
+                  {modelUsed}
+                  {fallbackUsed && " (fallback)"}
+                </Badge>
+              )}
+              <div className="flex-1" />
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={handleDelete}
+                className="text-red-600 hover:text-red-700 hover:bg-red-50 h-7"
+              >
+                Delete CV
+              </Button>
+            </div>
+          )}
         </CardContent>
       </Card>
 
