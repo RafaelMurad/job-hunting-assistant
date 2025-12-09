@@ -55,7 +55,7 @@ Pages consume abstracted hooks instead of inline tRPC calls:
 // ✅ Use hooks for clean component code
 const { user, loading, save, fieldErrors } = useUser();
 const { analysis, analyze, analyzeState } = useAnalyze();
-const { applications, stats, updateStatus } = useApplications(userId);
+const { applications, stats, updateStatus } = useApplications();
 ```
 
 ### tRPC Router Pattern (`lib/trpc/routers/`)
@@ -97,6 +97,46 @@ const token = await getToken({ req, secret: process.env.AUTH_SECRET ?? "" });
 ### Feature Flags (`lib/feature-flags/`)
 
 Custom client-side feature flag system with localStorage persistence and env var overrides.
+
+## MCP Tools (ALWAYS USE THESE)
+
+This project has Model Context Protocol (MCP) servers configured. **Always prefer MCP tools over alternatives:**
+
+### Git Operations → GitKraken MCP
+
+```
+mcp_gitkraken_git_status      # Instead of: run_in_terminal git status
+mcp_gitkraken_git_add_or_commit  # Instead of: run_in_terminal git add/commit
+mcp_gitkraken_git_branch      # Instead of: run_in_terminal git branch
+mcp_gitkraken_git_push        # Instead of: run_in_terminal git push
+mcp_gitkraken_git_log_or_diff # Instead of: run_in_terminal git log/diff
+```
+
+### GitHub Operations → GitKraken MCP
+
+```
+mcp_gitkraken_pull_request_create      # Instead of: gh pr create
+mcp_gitkraken_pull_request_get_detail  # Instead of: gh pr view
+mcp_gitkraken_issues_get_detail        # Instead of: gh issue view
+mcp_gitkraken_issues_add_comment       # Instead of: gh issue comment
+```
+
+### Database Queries → Postgres MCP (when available)
+
+- Use for direct SQL queries to inspect data
+- Useful for debugging, checking user records, application data
+
+### Deployments → Vercel MCP (when available)
+
+- Check deployment status
+- View preview URLs
+- Monitor build logs
+
+### Research → Brave Search MCP (when available)
+
+- Search documentation
+- Find solutions to errors
+- Research best practices
 
 ## Developer Commands
 

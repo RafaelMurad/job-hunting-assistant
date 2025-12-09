@@ -2,13 +2,33 @@
  * Analyze tRPC Router
  *
  * Handles job analysis and cover letter generation.
+ * All procedures require authentication.
  * Uses AI providers from lib/ai.ts.
  */
 
-import { router, publicProcedure } from "@/lib/trpc/init";
-import { analyzeJobSchema, generateCoverLetterSchema } from "@/lib/validations/analyze";
+import { router, protectedProcedure } from "@/lib/trpc/init";
+import { z } from "zod";
 import { analyzeJob, generateCoverLetter } from "@/lib/ai";
 import { TRPCError } from "@trpc/server";
+
+// Input schemas without userId (comes from session)
+const analyzeJobInputSchema = z.object({
+  jobDescription: z.string().min(1, "Job description is required"),
+});
+
+const generateCoverLetterInputSchema = z.object({
+  jobDescription: z.string().min(1),
+  analysis: z.object({
+    company: z.string(),
+    role: z.string(),
+    matchScore: z.number(),
+    topRequirements: z.array(z.string()),
+    skillsMatch: z.array(z.string()),
+    gaps: z.array(z.string()),
+    redFlags: z.array(z.string()),
+    keyPoints: z.array(z.string()),
+  }),
+});
 
 /**
  * Build CV string from user data for AI analysis.
@@ -42,10 +62,10 @@ export const analyzeRouter = router({
    * Analyze a job description against user's CV.
    * Returns match score, requirements, gaps, etc.
    */
-  analyzeJob: publicProcedure.input(analyzeJobSchema).mutation(async ({ ctx, input }) => {
-    // Get user's CV data
+  analyzeJob: protectedProcedure.input(analyzeJobInputSchema).mutation(async ({ ctx, input }) => {
+    // Get authenticated user's CV data
     const user = await ctx.prisma.user.findUnique({
-      where: { id: input.userId },
+      where: { id: ctx.user.id },
     });
 
     if (!user) {
@@ -64,12 +84,12 @@ export const analyzeRouter = router({
   /**
    * Generate a cover letter based on job analysis.
    */
-  generateCoverLetter: publicProcedure
-    .input(generateCoverLetterSchema)
+  generateCoverLetter: protectedProcedure
+    .input(generateCoverLetterInputSchema)
     .mutation(async ({ ctx, input }) => {
-      // Get user's CV data
+      // Get authenticated user's CV data
       const user = await ctx.prisma.user.findUnique({
-        where: { id: input.userId },
+        where: { id: ctx.user.id },
       });
 
       if (!user) {

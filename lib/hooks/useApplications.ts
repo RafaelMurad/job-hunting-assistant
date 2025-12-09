@@ -38,7 +38,6 @@ export interface Application {
  * Input for creating a new application.
  */
 export interface CreateApplicationInput {
-  userId: string;
   company: string;
   role: string;
   jobDescription: string;
@@ -89,21 +88,19 @@ export interface UseApplicationsReturn {
 /**
  * Hook for application management.
  *
- * @param userId - The user ID to fetch applications for
- *
  * @example
- * const { applications, loading, updateStatus, remove } = useApplications(userId);
+ * const { applications, loading, updateStatus, remove } = useApplications();
  *
  * const handleStatusChange = (id, status) => {
  *   updateStatus(id, status);
  * };
  */
-export function useApplications(userId: string): UseApplicationsReturn {
+export function useApplications(): UseApplicationsReturn {
   // Error state
   // const [error, setError] = useState<string | null>(null);
 
   // tRPC query for listing applications
-  const applicationsQuery = trpc.applications.list.useQuery({ userId }, { enabled: !!userId });
+  const applicationsQuery = trpc.applications.list.useQuery();
 
   // Transform dates to strings for UI consumption
   const applications: Application[] = useMemo(() => {

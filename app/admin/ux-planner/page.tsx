@@ -4,6 +4,7 @@ import { type JSX, useState, useCallback, useRef, useEffect } from "react";
 import Link from "next/link";
 import Markdown from "react-markdown";
 import { trpc } from "@/lib/trpc/client";
+import { AdminGuard } from "@/components/admin/AdminGuard";
 
 /**
  * UX Planner - AI-Powered UX Research Platform
@@ -12,6 +13,7 @@ import { trpc } from "@/lib/trpc/client";
  * with AI analysis and contextual chat support.
  *
  * Access at: /admin/ux-planner
+ * Requires admin access.
  */
 
 type Tab = "journeys" | "personas" | "pain-points" | "principles";
@@ -28,6 +30,14 @@ type UxAnalysisResult = {
 };
 
 export default function UXPlannerPage(): JSX.Element {
+  return (
+    <AdminGuard>
+      <UXPlannerContent />
+    </AdminGuard>
+  );
+}
+
+function UXPlannerContent(): JSX.Element {
   const [activeTab, setActiveTab] = useState<Tab>("journeys");
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [chatOpen, setChatOpen] = useState(false);

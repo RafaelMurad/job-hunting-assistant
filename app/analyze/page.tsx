@@ -8,7 +8,6 @@ import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { useAnalyze, useApplications, type ButtonState } from "@/lib/hooks";
-import { trpc } from "@/lib/trpc/client";
 
 export default function AnalyzePage(): JSX.Element {
   const router = useRouter();
@@ -20,11 +19,7 @@ export default function AnalyzePage(): JSX.Element {
   const [copyState, setCopyState] = useState<ButtonState>("idle");
   const [saveError, setSaveError] = useState<string | null>(null);
 
-  // Get user for userId
-  const userQuery = trpc.user.get.useQuery();
-  const userId = userQuery.data?.user?.id || "";
-
-  // Use abstracted hooks
+  // Use abstracted hooks (auth handled by tRPC middleware)
   const {
     analysis,
     coverLetter,
@@ -37,7 +32,7 @@ export default function AnalyzePage(): JSX.Element {
     setCoverLetter,
   } = useAnalyze();
 
-  const { create: createApplication } = useApplications(userId);
+  const { create: createApplication } = useApplications();
 
   // Helper to reset button state after delay
   const resetButtonState = (setter: Dispatch<SetStateAction<ButtonState>>, delay = 2000): void => {
@@ -52,12 +47,12 @@ export default function AnalyzePage(): JSX.Element {
       return;
     }
 
-    analyze(jobDescription, userId);
+    analyze(jobDescription);
   };
 
   const handleGenerateCoverLetter = (): void => {
     if (!analysis) return;
-    generateCoverLetter(jobDescription, userId, analysis);
+    generateCoverLetter(jobDescription, analysis);
   };
 
   const handleSaveApplication = async (): Promise<void> => {
@@ -67,7 +62,6 @@ export default function AnalyzePage(): JSX.Element {
     setSaveState("loading");
 
     const success = await createApplication({
-      userId,
       company: analysis.company,
       role: analysis.role,
       jobDescription,

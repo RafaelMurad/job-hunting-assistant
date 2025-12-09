@@ -111,16 +111,13 @@ function SettingsPageContent(): JSX.Element {
 
   // Get user
   const { data: userData, isLoading: userLoading } = trpc.user.get.useQuery();
-  const userId = userData?.user?.id || "";
 
   // Get configured providers
   const { data: configuredProviders } = trpc.social.getConfiguredProviders.useQuery();
 
-  // Get integrations status
-  const { data: integrations, refetch: refetchIntegrations } = trpc.social.getIntegrations.useQuery(
-    { userId },
-    { enabled: !!userId }
-  );
+  // Get integrations status (auth handled by tRPC middleware)
+  const { data: integrations, refetch: refetchIntegrations } =
+    trpc.social.getIntegrations.useQuery();
 
   // Mutations
   const disconnectMutation = trpc.social.disconnect.useMutation({
@@ -139,21 +136,18 @@ function SettingsPageContent(): JSX.Element {
   const [syncingProvider, setSyncingProvider] = useState<string | null>(null);
 
   const handleConnect = (provider: "github" | "linkedin"): void => {
-    if (!userId) return;
-    // Redirect to OAuth endpoint
-    window.location.href = `/api/auth/${provider}?userId=${userId}`;
+    // Redirect to OAuth endpoint (NextAuth handles user session)
+    window.location.href = `/api/auth/${provider}`;
   };
 
   const handleDisconnect = async (provider: "GITHUB" | "LINKEDIN"): Promise<void> => {
-    if (!userId) return;
-    await disconnectMutation.mutateAsync({ userId, provider });
+    await disconnectMutation.mutateAsync({ provider });
   };
 
   const handleSync = async (provider: "GITHUB" | "LINKEDIN"): Promise<void> => {
-    if (!userId) return;
     setSyncingProvider(provider);
     try {
-      await syncMutation.mutateAsync({ userId, provider });
+      await syncMutation.mutateAsync({ provider });
     } finally {
       setSyncingProvider(null);
     }

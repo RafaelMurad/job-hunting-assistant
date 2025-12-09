@@ -2,34 +2,52 @@
  * Applications tRPC Router
  *
  * Handles CRUD operations for job applications.
+ * All procedures require authentication.
  */
 
-import { router, publicProcedure } from "@/lib/trpc/init";
-import {
-  applicationCreateSchema,
-  applicationUpdateSchema,
-  applicationListSchema,
-  applicationDeleteSchema,
-} from "@/lib/validations/application";
+import { z } from "zod";
+import { router, protectedProcedure } from "@/lib/trpc/init";
+
+// Input schemas without userId (comes from session)
+const applicationCreateSchema = z.object({
+  company: z.string().min(1),
+  role: z.string().min(1),
+  jobDescription: z.string().min(1),
+  jobUrl: z.string().url().optional().nullable(),
+  matchScore: z.number().min(0).max(100).optional(),
+  analysis: z.string().optional(),
+  coverLetter: z.string().optional(),
+  status: z.enum(["saved", "applied", "interviewing", "offer", "rejected"]).optional(),
+});
+
+const applicationUpdateSchema = z.object({
+  id: z.string().min(1),
+  status: z.enum(["saved", "applied", "interviewing", "offer", "rejected"]).optional(),
+  notes: z.string().optional(),
+});
+
+const applicationDeleteSchema = z.object({
+  id: z.string().min(1),
+});
 
 export const applicationsRouter = router({
   /**
-   * List all applications for a user.
+   * List all applications for the authenticated user.
    */
-  list: publicProcedure.input(applicationListSchema).query(async ({ ctx, input }) => {
+  list: protectedProcedure.query(async ({ ctx }) => {
     return ctx.prisma.application.findMany({
-      where: { userId: input.userId },
+      where: { userId: ctx.user.id },
       orderBy: { createdAt: "desc" },
     });
   }),
 
   /**
-   * Create a new application.
+   * Create a new application for the authenticated user.
    */
-  create: publicProcedure.input(applicationCreateSchema).mutation(async ({ ctx, input }) => {
+  create: protectedProcedure.input(applicationCreateSchema).mutation(async ({ ctx, input }) => {
     return ctx.prisma.application.create({
       data: {
-        userId: input.userId,
+        userId: ctx.user.id,
         company: input.company,
         role: input.role,
         jobDescription: input.jobDescription,
@@ -45,9 +63,19 @@ export const applicationsRouter = router({
 
   /**
    * Update an application (status, notes).
+   * Verifies the application belongs to the authenticated user.
    */
-  update: publicProcedure.input(applicationUpdateSchema).mutation(async ({ ctx, input }) => {
+  update: protectedProcedure.input(applicationUpdateSchema).mutation(async ({ ctx, input }) => {
     const { id, status, notes } = input;
+
+    // Verify ownership
+    const application = await ctx.prisma.application.findFirst({
+      where: { id, userId: ctx.user.id },
+    });
+
+    if (!application) {
+      throw new Error("Application not found or access denied");
+    }
 
     return ctx.prisma.application.update({
       where: { id },
@@ -61,8 +89,18 @@ export const applicationsRouter = router({
 
   /**
    * Delete an application.
+   * Verifies the application belongs to the authenticated user.
    */
-  delete: publicProcedure.input(applicationDeleteSchema).mutation(async ({ ctx, input }) => {
+  delete: protectedProcedure.input(applicationDeleteSchema).mutation(async ({ ctx, input }) => {
+    // Verify ownership
+    const application = await ctx.prisma.application.findFirst({
+      where: { id: input.id, userId: ctx.user.id },
+    });
+
+    if (!application) {
+      throw new Error("Application not found or access denied");
+    }
+
     await ctx.prisma.application.delete({
       where: { id: input.id },
     });

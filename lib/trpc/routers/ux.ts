@@ -8,7 +8,7 @@
  * - AI analysis and chat
  */
 
-import { router, publicProcedure } from "@/lib/trpc/init";
+import { router, adminProcedure } from "@/lib/trpc/init";
 import { z } from "zod";
 import { TRPCError } from "@trpc/server";
 import { type UxSeverity, type UxEffort, type UxStatus } from "@prisma/client";
@@ -96,7 +96,7 @@ export const uxRouter = router({
   /**
    * Get all UX data for dashboard overview
    */
-  getAll: publicProcedure.query(async ({ ctx }) => {
+  getAll: adminProcedure.query(async ({ ctx }) => {
     const [personas, journeys, painPoints, principles] = await Promise.all([
       ctx.prisma.uxPersona.findMany({
         orderBy: { createdAt: "desc" },
@@ -140,7 +140,7 @@ export const uxRouter = router({
   /**
    * Get stats for UX research
    */
-  getStats: publicProcedure.query(async ({ ctx }) => {
+  getStats: adminProcedure.query(async ({ ctx }) => {
     const [
       personaCount,
       journeyCount,
@@ -171,7 +171,7 @@ export const uxRouter = router({
   // PERSONAS
   // ===========================================================================
 
-  getPersonas: publicProcedure.query(async ({ ctx }) => {
+  getPersonas: adminProcedure.query(async ({ ctx }) => {
     const personas = await ctx.prisma.uxPersona.findMany({
       include: { comments: true },
       orderBy: { createdAt: "desc" },
@@ -185,7 +185,7 @@ export const uxRouter = router({
     }));
   }),
 
-  getPersona: publicProcedure.input(z.object({ id: z.string() })).query(async ({ ctx, input }) => {
+  getPersona: adminProcedure.input(z.object({ id: z.string() })).query(async ({ ctx, input }) => {
     const persona = await ctx.prisma.uxPersona.findUnique({
       where: { id: input.id },
       include: {
@@ -207,7 +207,7 @@ export const uxRouter = router({
     };
   }),
 
-  createPersona: publicProcedure.input(personaInputSchema).mutation(async ({ ctx, input }) => {
+  createPersona: adminProcedure.input(personaInputSchema).mutation(async ({ ctx, input }) => {
     const persona = await ctx.prisma.uxPersona.create({
       data: {
         name: input.name,
@@ -235,7 +235,7 @@ export const uxRouter = router({
     return persona;
   }),
 
-  updatePersona: publicProcedure
+  updatePersona: adminProcedure
     .input(
       z.object({
         id: z.string(),
@@ -288,7 +288,7 @@ export const uxRouter = router({
       return persona;
     }),
 
-  deletePersona: publicProcedure
+  deletePersona: adminProcedure
     .input(z.object({ id: z.string() }))
     .mutation(async ({ ctx, input }) => {
       await ctx.prisma.uxPersona.delete({ where: { id: input.id } });
@@ -299,7 +299,7 @@ export const uxRouter = router({
   // JOURNEYS
   // ===========================================================================
 
-  getJourneys: publicProcedure.query(async ({ ctx }) => {
+  getJourneys: adminProcedure.query(async ({ ctx }) => {
     return ctx.prisma.uxJourney.findMany({
       include: {
         steps: { orderBy: { orderIndex: "asc" } },
@@ -310,7 +310,7 @@ export const uxRouter = router({
     });
   }),
 
-  getJourney: publicProcedure.input(z.object({ id: z.string() })).query(async ({ ctx, input }) => {
+  getJourney: adminProcedure.input(z.object({ id: z.string() })).query(async ({ ctx, input }) => {
     const journey = await ctx.prisma.uxJourney.findUnique({
       where: { id: input.id },
       include: {
@@ -328,7 +328,7 @@ export const uxRouter = router({
     return journey;
   }),
 
-  createJourney: publicProcedure.input(journeyInputSchema).mutation(async ({ ctx, input }) => {
+  createJourney: adminProcedure.input(journeyInputSchema).mutation(async ({ ctx, input }) => {
     const { steps, ...journeyData } = input;
 
     const journey = await ctx.prisma.uxJourney.create({
@@ -362,7 +362,7 @@ export const uxRouter = router({
     return journey;
   }),
 
-  updateJourney: publicProcedure
+  updateJourney: adminProcedure
     .input(
       z.object({
         id: z.string(),
@@ -435,7 +435,7 @@ export const uxRouter = router({
       return updatedJourney;
     }),
 
-  deleteJourney: publicProcedure
+  deleteJourney: adminProcedure
     .input(z.object({ id: z.string() }))
     .mutation(async ({ ctx, input }) => {
       await ctx.prisma.uxJourney.delete({ where: { id: input.id } });
@@ -446,32 +446,30 @@ export const uxRouter = router({
   // PAIN POINTS
   // ===========================================================================
 
-  getPainPoints: publicProcedure.query(async ({ ctx }) => {
+  getPainPoints: adminProcedure.query(async ({ ctx }) => {
     return ctx.prisma.uxPainPoint.findMany({
       include: { comments: true },
       orderBy: [{ severity: "desc" }, { createdAt: "desc" }],
     });
   }),
 
-  getPainPoint: publicProcedure
-    .input(z.object({ id: z.string() }))
-    .query(async ({ ctx, input }) => {
-      const painPoint = await ctx.prisma.uxPainPoint.findUnique({
-        where: { id: input.id },
-        include: {
-          comments: { orderBy: { createdAt: "desc" } },
-          versions: { orderBy: { version: "desc" }, take: 10 },
-        },
-      });
+  getPainPoint: adminProcedure.input(z.object({ id: z.string() })).query(async ({ ctx, input }) => {
+    const painPoint = await ctx.prisma.uxPainPoint.findUnique({
+      where: { id: input.id },
+      include: {
+        comments: { orderBy: { createdAt: "desc" } },
+        versions: { orderBy: { version: "desc" }, take: 10 },
+      },
+    });
 
-      if (!painPoint) {
-        throw new TRPCError({ code: "NOT_FOUND", message: "Pain point not found" });
-      }
+    if (!painPoint) {
+      throw new TRPCError({ code: "NOT_FOUND", message: "Pain point not found" });
+    }
 
-      return painPoint;
-    }),
+    return painPoint;
+  }),
 
-  createPainPoint: publicProcedure.input(painPointInputSchema).mutation(async ({ ctx, input }) => {
+  createPainPoint: adminProcedure.input(painPointInputSchema).mutation(async ({ ctx, input }) => {
     const painPoint = await ctx.prisma.uxPainPoint.create({
       data: {
         title: input.title,
@@ -500,7 +498,7 @@ export const uxRouter = router({
     return painPoint;
   }),
 
-  updatePainPoint: publicProcedure
+  updatePainPoint: adminProcedure
     .input(
       z.object({
         id: z.string(),
@@ -552,7 +550,7 @@ export const uxRouter = router({
       return painPoint;
     }),
 
-  deletePainPoint: publicProcedure
+  deletePainPoint: adminProcedure
     .input(z.object({ id: z.string() }))
     .mutation(async ({ ctx, input }) => {
       await ctx.prisma.uxPainPoint.delete({ where: { id: input.id } });
@@ -563,7 +561,7 @@ export const uxRouter = router({
   // PRINCIPLES
   // ===========================================================================
 
-  getPrinciples: publicProcedure.query(async ({ ctx }) => {
+  getPrinciples: adminProcedure.query(async ({ ctx }) => {
     const principles = await ctx.prisma.uxPrinciple.findMany({
       include: { comments: true },
       orderBy: { priority: "asc" },
@@ -575,28 +573,26 @@ export const uxRouter = router({
     }));
   }),
 
-  getPrinciple: publicProcedure
-    .input(z.object({ id: z.string() }))
-    .query(async ({ ctx, input }) => {
-      const principle = await ctx.prisma.uxPrinciple.findUnique({
-        where: { id: input.id },
-        include: {
-          comments: { orderBy: { createdAt: "desc" } },
-          versions: { orderBy: { version: "desc" }, take: 10 },
-        },
-      });
+  getPrinciple: adminProcedure.input(z.object({ id: z.string() })).query(async ({ ctx, input }) => {
+    const principle = await ctx.prisma.uxPrinciple.findUnique({
+      where: { id: input.id },
+      include: {
+        comments: { orderBy: { createdAt: "desc" } },
+        versions: { orderBy: { version: "desc" }, take: 10 },
+      },
+    });
 
-      if (!principle) {
-        throw new TRPCError({ code: "NOT_FOUND", message: "Principle not found" });
-      }
+    if (!principle) {
+      throw new TRPCError({ code: "NOT_FOUND", message: "Principle not found" });
+    }
 
-      return {
-        ...principle,
-        examples: JSON.parse(principle.examples) as { do: string[]; dont: string[] },
-      };
-    }),
+    return {
+      ...principle,
+      examples: JSON.parse(principle.examples) as { do: string[]; dont: string[] },
+    };
+  }),
 
-  createPrinciple: publicProcedure.input(principleInputSchema).mutation(async ({ ctx, input }) => {
+  createPrinciple: adminProcedure.input(principleInputSchema).mutation(async ({ ctx, input }) => {
     const principle = await ctx.prisma.uxPrinciple.create({
       data: {
         name: input.name,
@@ -623,7 +619,7 @@ export const uxRouter = router({
     return principle;
   }),
 
-  updatePrinciple: publicProcedure
+  updatePrinciple: adminProcedure
     .input(
       z.object({
         id: z.string(),
@@ -673,7 +669,7 @@ export const uxRouter = router({
       return principle;
     }),
 
-  deletePrinciple: publicProcedure
+  deletePrinciple: adminProcedure
     .input(z.object({ id: z.string() }))
     .mutation(async ({ ctx, input }) => {
       await ctx.prisma.uxPrinciple.delete({ where: { id: input.id } });
@@ -684,7 +680,7 @@ export const uxRouter = router({
   // COMMENTS
   // ===========================================================================
 
-  addComment: publicProcedure.input(commentInputSchema).mutation(async ({ ctx, input }) => {
+  addComment: adminProcedure.input(commentInputSchema).mutation(async ({ ctx, input }) => {
     // Build create data with proper typing
     const createData = {
       entityType: input.entityType,
@@ -700,7 +696,7 @@ export const uxRouter = router({
     return ctx.prisma.uxComment.create({ data: createData });
   }),
 
-  resolveComment: publicProcedure
+  resolveComment: adminProcedure
     .input(z.object({ id: z.string(), resolved: z.boolean() }))
     .mutation(async ({ ctx, input }) => {
       return ctx.prisma.uxComment.update({
@@ -709,7 +705,7 @@ export const uxRouter = router({
       });
     }),
 
-  deleteComment: publicProcedure
+  deleteComment: adminProcedure
     .input(z.object({ id: z.string() }))
     .mutation(async ({ ctx, input }) => {
       await ctx.prisma.uxComment.delete({ where: { id: input.id } });
@@ -720,7 +716,7 @@ export const uxRouter = router({
   // VERSION HISTORY
   // ===========================================================================
 
-  getVersions: publicProcedure
+  getVersions: adminProcedure
     .input(
       z.object({
         entityType: z.enum(["persona", "journey", "painpoint", "principle"]),
@@ -741,7 +737,7 @@ export const uxRouter = router({
   // CHAT
   // ===========================================================================
 
-  getChatHistory: publicProcedure
+  getChatHistory: adminProcedure
     .input(z.object({ sessionId: z.string() }))
     .query(async ({ ctx, input }) => {
       return ctx.prisma.uxChatMessage.findMany({
@@ -750,7 +746,7 @@ export const uxRouter = router({
       });
     }),
 
-  addChatMessage: publicProcedure.input(chatMessageSchema).mutation(async ({ ctx, input }) => {
+  addChatMessage: adminProcedure.input(chatMessageSchema).mutation(async ({ ctx, input }) => {
     return ctx.prisma.uxChatMessage.create({
       data: {
         sessionId: input.sessionId,
@@ -762,7 +758,7 @@ export const uxRouter = router({
   }),
 
   // AI analysis results are stored separately
-  saveAiAnalysis: publicProcedure
+  saveAiAnalysis: adminProcedure
     .input(
       z.object({
         entityType: z.string(),
@@ -788,7 +784,7 @@ export const uxRouter = router({
   // AI ANALYSIS
   // ===========================================================================
 
-  analyzeJourney: publicProcedure
+  analyzeJourney: adminProcedure
     .input(z.object({ journeyId: z.string() }))
     .mutation(async ({ ctx, input }) => {
       const { analyzeJourney } = await import("@/lib/ai/ux");
@@ -831,7 +827,7 @@ export const uxRouter = router({
       return result;
     }),
 
-  analyzePainPoints: publicProcedure.mutation(async ({ ctx }) => {
+  analyzePainPoints: adminProcedure.mutation(async ({ ctx }) => {
     const { analyzePainPoints } = await import("@/lib/ai/ux");
 
     const painPoints = await ctx.prisma.uxPainPoint.findMany();
@@ -866,7 +862,7 @@ export const uxRouter = router({
     return result;
   }),
 
-  analyzePersona: publicProcedure
+  analyzePersona: adminProcedure
     .input(z.object({ personaId: z.string() }))
     .mutation(async ({ ctx, input }) => {
       const { analyzePersona } = await import("@/lib/ai/ux");
@@ -911,7 +907,7 @@ export const uxRouter = router({
       return result;
     }),
 
-  chat: publicProcedure
+  chat: adminProcedure
     .input(
       z.object({
         sessionId: z.string(),

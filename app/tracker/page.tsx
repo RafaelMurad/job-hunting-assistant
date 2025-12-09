@@ -5,7 +5,6 @@ import { useRouter } from "next/navigation";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { useApplications, type ApplicationStatus } from "@/lib/hooks";
-import { trpc } from "@/lib/trpc/client";
 
 /**
  * Format a date using native Intl.DateTimeFormat
@@ -60,20 +59,8 @@ export default function TrackerPage(): JSX.Element {
   const [notesDraft, setNotesDraft] = useState<string>("");
   const [savingNotesId, setSavingNotesId] = useState<string | null>(null);
 
-  // Data fetching
-  const userQuery = trpc.user.get.useQuery();
-  const userId = userQuery.data?.user?.id || "";
-
-  const {
-    applications,
-    stats,
-    loading: applicationsLoading,
-    updateStatus,
-    updateNotes,
-    remove,
-  } = useApplications(userId);
-
-  const loading = userQuery.isLoading || applicationsLoading;
+  // Data fetching (auth handled by tRPC middleware)
+  const { applications, stats, loading, updateStatus, updateNotes, remove } = useApplications();
 
   // Filter and sort applications
   const filteredAndSortedApplications = useMemo(() => {

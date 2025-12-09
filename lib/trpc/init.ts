@@ -109,3 +109,37 @@ const enforceAdmin = t.middleware(async ({ ctx, next }) => {
  * Use this for admin-only endpoints.
  */
 export const adminProcedure = t.procedure.use(enforceAdmin);
+
+/**
+ * Middleware to enforce owner role.
+ * Only OWNER can access these endpoints.
+ */
+const enforceOwner = t.middleware(async ({ ctx, next }) => {
+  if (!ctx.session?.user) {
+    throw new TRPCError({
+      code: "UNAUTHORIZED",
+      message: "You must be signed in to access this resource",
+    });
+  }
+
+  if (ctx.session.user.role !== "OWNER") {
+    throw new TRPCError({
+      code: "FORBIDDEN",
+      message: "Only the owner can access this resource",
+    });
+  }
+
+  return next({
+    ctx: {
+      ...ctx,
+      session: ctx.session,
+      user: ctx.session.user,
+    },
+  });
+});
+
+/**
+ * Owner procedure - requires owner role.
+ * Use this for owner-only endpoints (e.g., managing trusted users).
+ */
+export const ownerProcedure = t.procedure.use(enforceOwner);
