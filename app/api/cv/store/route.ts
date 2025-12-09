@@ -26,7 +26,8 @@ import { type CVTemplateId } from "@/lib/cv-templates";
 import { uploadCVPdf, uploadCVLatex, deleteCVFiles } from "@/lib/storage";
 import { parseAIError } from "@/lib/utils";
 
-// FUTURE: Get user from auth session
+// TODO: Replace DEFAULT_USER_ID with auth session user
+// Auth is now available via: import { auth } from "@/lib/auth";
 const DEFAULT_USER_ID = "cmiw9gfmv0000uj7ska14xors";
 
 /**
