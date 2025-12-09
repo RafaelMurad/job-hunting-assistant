@@ -55,7 +55,7 @@ Pages consume abstracted hooks instead of inline tRPC calls:
 // ✅ Use hooks for clean component code
 const { user, loading, save, fieldErrors } = useUser();
 const { analysis, analyze, analyzeState } = useAnalyze();
-const { applications, stats, updateStatus } = useApplications(userId);
+const { applications, stats, updateStatus } = useApplications();
 ```
 
 ### tRPC Router Pattern (`lib/trpc/routers/`)

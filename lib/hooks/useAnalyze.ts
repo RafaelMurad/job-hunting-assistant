@@ -50,12 +50,8 @@ export interface UseAnalyzeReturn {
   coverLetterError: string | null;
 
   // Actions
-  analyze: (jobDescription: string, userId: string) => void;
-  generateCoverLetter: (
-    jobDescription: string,
-    userId: string,
-    analysis: JobAnalysisResult
-  ) => void;
+  analyze: (jobDescription: string) => void;
+  generateCoverLetter: (jobDescription: string, analysis: JobAnalysisResult) => void;
   setCoverLetter: (coverLetter: string) => void;
   reset: () => void;
 }
@@ -124,25 +120,21 @@ export function useAnalyze(): UseAnalyzeReturn {
   });
 
   // Analyze job description
-  const analyze = (jobDescription: string, userId: string): void => {
+  const analyze = (jobDescription: string): void => {
     setAnalyzeError(null);
     setAnalyzeState("loading");
     setAnalysis(null);
     setCoverLetter("");
 
-    analyzeMutation.mutate({ jobDescription, userId });
+    analyzeMutation.mutate({ jobDescription });
   };
 
   // Generate cover letter
-  const generateCoverLetter = (
-    jobDescription: string,
-    userId: string,
-    analysisData: JobAnalysisResult
-  ): void => {
+  const generateCoverLetter = (jobDescription: string, analysisData: JobAnalysisResult): void => {
     setCoverLetterError(null);
     setCoverLetterState("loading");
 
-    coverLetterMutation.mutate({ jobDescription, userId, analysis: analysisData });
+    coverLetterMutation.mutate({ jobDescription, analysis: analysisData });
   };
 
   // Reset all state

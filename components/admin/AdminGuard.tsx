@@ -4,7 +4,6 @@ import { type JSX, type ReactNode } from "react";
 import { trpc } from "@/lib/trpc/client";
 
 interface AdminGuardProps {
-  userId: string;
   children: ReactNode;
   fallback?: ReactNode;
   requireOwner?: boolean;
@@ -15,17 +14,14 @@ interface AdminGuardProps {
  *
  * Protects admin-only content by checking user authorization.
  * Shows fallback content if user doesn't have required access.
+ * Auth is handled by tRPC middleware - no need to pass userId.
  */
 export function AdminGuard({
-  userId,
   children,
   fallback,
   requireOwner = false,
 }: AdminGuardProps): JSX.Element {
-  const { data: access, isLoading } = trpc.admin.checkAccess.useQuery(
-    { userId },
-    { enabled: !!userId }
-  );
+  const { data: access, isLoading } = trpc.admin.checkAccess.useQuery();
 
   if (isLoading) {
     return (
@@ -105,14 +101,15 @@ export function AdminGuard({
 
 /**
  * Hook to check admin access
+ * Auth is handled by tRPC middleware - no need to pass userId.
  */
-export function useAdminAccess(userId: string): {
+export function useAdminAccess(): {
   hasAccess: boolean;
   role: string | null;
   isOwner: boolean;
   isLoading: boolean;
 } {
-  const { data, isLoading } = trpc.admin.checkAccess.useQuery({ userId }, { enabled: !!userId });
+  const { data, isLoading } = trpc.admin.checkAccess.useQuery();
 
   return {
     hasAccess: data?.hasAccess ?? false,

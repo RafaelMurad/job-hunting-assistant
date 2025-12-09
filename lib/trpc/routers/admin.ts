@@ -6,7 +6,7 @@
  */
 
 import { z } from "zod";
-import { router, publicProcedure } from "../init";
+import { router, publicProcedure, adminProcedure, ownerProcedure } from "../init";
 import { TRPCError } from "@trpc/server";
 
 // =============================================================================
@@ -27,16 +27,10 @@ const addTrustedEmailSchema = z.object({
   email: z.string().email(),
   role: z.enum(["USER", "ADMIN"]).default("ADMIN"),
   note: z.string().optional(),
-  addedByUserId: z.string().min(1),
 });
 
 const removeTrustedEmailSchema = z.object({
   email: z.string().email(),
-  removedByUserId: z.string().min(1),
-});
-
-const checkAccessSchema = z.object({
-  userId: z.string().min(1),
 });
 
 // =============================================================================
@@ -95,62 +89,40 @@ async function hasAdminAccess(
 export const adminRouter = router({
   /**
    * Check if current user has admin access
+   * Public because we need to check before showing admin UI
    */
-  checkAccess: publicProcedure.input(checkAccessSchema).query(async ({ ctx, input }) => {
-    return hasAdminAccess(ctx.prisma, input.userId);
+  checkAccess: publicProcedure.query(async ({ ctx }) => {
+    if (!ctx.session?.user) {
+      return { hasAccess: false, role: null, reason: "Not authenticated" };
+    }
+    return hasAdminAccess(ctx.prisma, ctx.session.user.id);
   }),
 
   /**
    * Get all trusted emails
    * Only accessible by admins
    */
-  getTrustedEmails: publicProcedure
-    .input(z.object({ requesterId: z.string().min(1) }))
-    .query(async ({ ctx, input }) => {
-      // Check if requester has admin access
-      const access = await hasAdminAccess(ctx.prisma, input.requesterId);
-      if (!access.hasAccess) {
-        throw new TRPCError({
-          code: "FORBIDDEN",
-          message: "Admin access required",
-        });
-      }
+  getTrustedEmails: adminProcedure.query(async ({ ctx }) => {
+    const trustedEmails = await ctx.prisma.trustedEmail.findMany({
+      orderBy: { createdAt: "desc" },
+    });
 
-      const trustedEmails = await ctx.prisma.trustedEmail.findMany({
-        orderBy: { createdAt: "desc" },
-      });
-
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      return trustedEmails.map((entry: any) => ({
-        id: entry.id,
-        email: entry.email,
-        role: entry.role,
-        note: entry.note,
-        addedBy: entry.addedBy,
-        createdAt: entry.createdAt,
-      }));
-    }),
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    return trustedEmails.map((entry: any) => ({
+      id: entry.id,
+      email: entry.email,
+      role: entry.role,
+      note: entry.note,
+      addedBy: entry.addedBy,
+      createdAt: entry.createdAt,
+    }));
+  }),
 
   /**
    * Add a trusted email
    * Only accessible by owners
    */
-  addTrustedEmail: publicProcedure.input(addTrustedEmailSchema).mutation(async ({ ctx, input }) => {
-    // Check if requester has owner access
-    const access = await hasAdminAccess(ctx.prisma, input.addedByUserId);
-    if (!access.hasAccess || access.role !== "OWNER") {
-      throw new TRPCError({
-        code: "FORBIDDEN",
-        message: "Only the owner can add trusted emails",
-      });
-    }
-
-    // Get requester info for audit
-    const requester = await ctx.prisma.user.findUnique({
-      where: { id: input.addedByUserId },
-      select: { email: true },
-    });
-
+  addTrustedEmail: ownerProcedure.input(addTrustedEmailSchema).mutation(async ({ ctx, input }) => {
     // Check if email already exists
     const existing = await ctx.prisma.trustedEmail.findUnique({
       where: { email: input.email },
@@ -163,13 +135,13 @@ export const adminRouter = router({
       });
     }
 
-    // Add trusted email
+    // Add trusted email (use session user's email as addedBy)
     const trustedEmail = await ctx.prisma.trustedEmail.create({
       data: {
         email: input.email,
         role: input.role,
         note: input.note ?? null,
-        addedBy: requester?.email || input.addedByUserId,
+        addedBy: ctx.user.email || ctx.user.id,
       },
     });
 
@@ -202,18 +174,9 @@ export const adminRouter = router({
    * Remove a trusted email
    * Only accessible by owners
    */
-  removeTrustedEmail: publicProcedure
+  removeTrustedEmail: ownerProcedure
     .input(removeTrustedEmailSchema)
     .mutation(async ({ ctx, input }) => {
-      // Check if requester has owner access
-      const access = await hasAdminAccess(ctx.prisma, input.removedByUserId);
-      if (!access.hasAccess || access.role !== "OWNER") {
-        throw new TRPCError({
-          code: "FORBIDDEN",
-          message: "Only the owner can remove trusted emails",
-        });
-      }
-
       // Don't allow removing owner email
       if (input.email === OWNER_EMAIL) {
         throw new TRPCError({
@@ -253,24 +216,14 @@ export const adminRouter = router({
    * Update user role
    * Only accessible by owners
    */
-  updateUserRole: publicProcedure
+  updateUserRole: ownerProcedure
     .input(
       z.object({
         userId: z.string().min(1),
         role: z.enum(["USER", "ADMIN"]),
-        requesterId: z.string().min(1),
       })
     )
     .mutation(async ({ ctx, input }) => {
-      // Check if requester has owner access
-      const access = await hasAdminAccess(ctx.prisma, input.requesterId);
-      if (!access.hasAccess || access.role !== "OWNER") {
-        throw new TRPCError({
-          code: "FORBIDDEN",
-          message: "Only the owner can update user roles",
-        });
-      }
-
       // Get the target user
       const targetUser = await ctx.prisma.user.findUnique({
         where: { id: input.userId },
@@ -303,37 +256,26 @@ export const adminRouter = router({
   /**
    * Get all users (admin only)
    */
-  getUsers: publicProcedure
-    .input(z.object({ requesterId: z.string().min(1) }))
-    .query(async ({ ctx, input }) => {
-      // Check if requester has admin access
-      const access = await hasAdminAccess(ctx.prisma, input.requesterId);
-      if (!access.hasAccess) {
-        throw new TRPCError({
-          code: "FORBIDDEN",
-          message: "Admin access required",
-        });
-      }
+  getUsers: adminProcedure.query(async ({ ctx }) => {
+    const users = await ctx.prisma.user.findMany({
+      select: {
+        id: true,
+        name: true,
+        email: true,
+        role: true,
+        isTrusted: true,
+        isVerified: true,
+        createdAt: true,
+      },
+      orderBy: { createdAt: "desc" },
+    });
 
-      const users = await ctx.prisma.user.findMany({
-        select: {
-          id: true,
-          name: true,
-          email: true,
-          role: true,
-          isTrusted: true,
-          isVerified: true,
-          createdAt: true,
-        },
-        orderBy: { createdAt: "desc" },
-      });
-
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      return users.map((user: any) => ({
-        ...user,
-        isOwner: user.email === OWNER_EMAIL,
-      }));
-    }),
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    return users.map((user: any) => ({
+      ...user,
+      isOwner: user.email === OWNER_EMAIL,
+    }));
+  }),
 
   /**
    * Get owner email (for display)

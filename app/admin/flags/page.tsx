@@ -18,17 +18,12 @@ import {
   type FeatureFlag,
 } from "@/lib/feature-flags/flags.config";
 import { AdminGuard } from "@/components/admin/AdminGuard";
-import { trpc } from "@/lib/trpc/client";
 
 export default function FeatureFlagsAdminPage(): JSX.Element {
   const { flags, toggle, resetAll } = useFeatureFlags();
   const isHydrated = useFeatureFlagHydrated();
 
-  // Get user for authorization
-  const { data: userData, isLoading: userLoading } = trpc.user.get.useQuery();
-  const userId = userData?.user?.id || "";
-
-  if (!isHydrated || userLoading) {
+  if (!isHydrated) {
     return (
       <div className="min-h-screen bg-nordic-neutral-50 p-8">
         <div className="mx-auto max-w-4xl">
@@ -42,7 +37,7 @@ export default function FeatureFlagsAdminPage(): JSX.Element {
   }
 
   return (
-    <AdminGuard userId={userId}>
+    <AdminGuard>
       <FeatureFlagsContent flags={flags} toggle={toggle} resetAll={resetAll} />
     </AdminGuard>
   );
