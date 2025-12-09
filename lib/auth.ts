@@ -13,6 +13,7 @@ import Google from "next-auth/providers/google";
 import LinkedIn from "next-auth/providers/linkedin";
 import { PrismaAdapter } from "@auth/prisma-adapter";
 import { prisma } from "@/lib/db";
+import { encryptToken } from "@/lib/social";
 import type { UserRole } from "@prisma/client";
 
 // Extend the built-in session types
@@ -118,6 +119,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
     /**
      * SignIn callback - validate user can sign in
      * Handles automatic account linking for same email
+     * Creates/updates SocialProfile for GitHub users to enable data sync
      */
     async signIn({ user, account, profile: _profile }) {
       // Reject if no email
@@ -131,7 +133,11 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
         include: { accounts: true },
       });
 
+      let targetUserId: string | undefined;
+
       if (existingUser) {
+        targetUserId = existingUser.id;
+
         // User exists - check if this OAuth provider is already linked
         const existingAccount = existingUser.accounts.find(
           (acc) => acc.provider === account?.provider
@@ -165,7 +171,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
       } else {
         // New user - create with required fields
         try {
-          await prisma.user.create({
+          const newUser = await prisma.user.create({
             data: {
               email: user.email,
               name: user.name ?? _profile?.name ?? "New User",
@@ -179,8 +185,97 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
               isVerified: true, // OAuth users are email-verified
             },
           });
+          targetUserId = newUser.id;
         } catch {
           // User might exist from race condition, that's OK
+          const raceUser = await prisma.user.findUnique({
+            where: { email: user.email },
+            select: { id: true },
+          });
+          targetUserId = raceUser?.id;
+        }
+      }
+
+      // Create/update SocialProfile for GitHub users
+      // This stores the access token and enables enhanced data sync
+      if (account?.provider === "github" && account.access_token && targetUserId) {
+        const githubProfile = _profile as unknown as {
+          id?: number;
+          login?: string;
+          name?: string;
+          avatar_url?: string;
+          html_url?: string;
+          bio?: string;
+          company?: string;
+          location?: string;
+          blog?: string;
+          hireable?: boolean;
+          public_repos?: number;
+          public_gists?: number;
+          followers?: number;
+          following?: number;
+          created_at?: string;
+        };
+
+        try {
+          await prisma.socialProfile.upsert({
+            where: {
+              userId_provider: {
+                userId: targetUserId,
+                provider: "GITHUB",
+              },
+            },
+            create: {
+              userId: targetUserId,
+              provider: "GITHUB",
+              providerId: String(githubProfile?.id ?? account.providerAccountId),
+              accessToken: encryptToken(account.access_token),
+              scope: account.scope ?? null,
+              username: githubProfile?.login ?? null,
+              displayName: githubProfile?.name ?? githubProfile?.login ?? null,
+              avatarUrl: githubProfile?.avatar_url ?? null,
+              profileUrl: githubProfile?.html_url ?? null,
+              bio: githubProfile?.bio ?? null,
+              company: githubProfile?.company ?? null,
+              location: githubProfile?.location ?? null,
+              blog: githubProfile?.blog ?? null,
+              hireable: githubProfile?.hireable ?? null,
+              publicRepos: githubProfile?.public_repos ?? null,
+              publicGists: githubProfile?.public_gists ?? null,
+              followers: githubProfile?.followers ?? null,
+              following: githubProfile?.following ?? null,
+              accountCreatedAt: githubProfile?.created_at
+                ? new Date(githubProfile.created_at)
+                : null,
+              lastSyncAt: new Date(),
+              syncStatus: "COMPLETED",
+            },
+            update: {
+              accessToken: encryptToken(account.access_token),
+              scope: account.scope ?? null,
+              username: githubProfile?.login ?? null,
+              displayName: githubProfile?.name ?? githubProfile?.login ?? null,
+              avatarUrl: githubProfile?.avatar_url ?? null,
+              profileUrl: githubProfile?.html_url ?? null,
+              bio: githubProfile?.bio ?? null,
+              company: githubProfile?.company ?? null,
+              location: githubProfile?.location ?? null,
+              blog: githubProfile?.blog ?? null,
+              hireable: githubProfile?.hireable ?? null,
+              publicRepos: githubProfile?.public_repos ?? null,
+              publicGists: githubProfile?.public_gists ?? null,
+              followers: githubProfile?.followers ?? null,
+              following: githubProfile?.following ?? null,
+              accountCreatedAt: githubProfile?.created_at
+                ? new Date(githubProfile.created_at)
+                : null,
+              lastSyncAt: new Date(),
+              syncStatus: "COMPLETED",
+            },
+          });
+        } catch (error) {
+          // Log but don't fail auth if social profile creation fails
+          console.warn("[Auth] Failed to create GitHub social profile:", error);
         }
       }
 

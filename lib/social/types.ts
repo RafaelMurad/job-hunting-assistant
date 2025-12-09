@@ -77,12 +77,15 @@ export interface GitHubRepo {
   homepage: string | null;
   private: boolean;
   fork: boolean;
+  archived: boolean;
   stargazers_count: number;
   watchers_count: number;
   forks_count: number;
   open_issues_count: number;
   language: string | null;
   topics: string[];
+  license: { spdx_id: string; name: string } | null;
+  default_branch: string;
   pushed_at: string;
   created_at: string;
   updated_at: string;
@@ -90,6 +93,56 @@ export interface GitHubRepo {
 
 export interface GitHubLanguages {
   [language: string]: number; // bytes of code
+}
+
+export interface GitHubOrganization {
+  id: number;
+  login: string;
+  name?: string | null;
+  description: string | null;
+  html_url: string;
+  avatar_url: string;
+}
+
+export interface GitHubReadmeResponse {
+  content: string; // Base64 encoded
+  encoding: string;
+  size: number;
+  name: string;
+  path: string;
+}
+
+/**
+ * Enhanced profile data for CV gap analysis
+ */
+export interface GitHubEnhancedProfile {
+  bio: string | null;
+  company: string | null;
+  location: string | null;
+  blog: string | null;
+  hireable: boolean | null;
+  followers: number;
+  following: number;
+  public_repos: number;
+  public_gists: number;
+  created_at: string;
+}
+
+/**
+ * Contribution stats fetched from GitHub
+ */
+export interface GitHubContributionData {
+  totalRepos: number;
+  ownedRepos: number;
+  forkedRepos: number;
+  openSourceRepos: number;
+  totalStars: number;
+  totalForks: number;
+  languageBytes: Record<string, number>;
+  topLanguages: string[];
+  oldestRepoDate: string | null;
+  newestRepoDate: string | null;
+  lastPushDate: string | null;
 }
 
 // =============================================================================

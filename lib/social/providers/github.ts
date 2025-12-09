@@ -8,6 +8,10 @@
 import { SOCIAL_CONFIG } from "../config";
 import { createNetworkError, createOAuthError, parseProviderError, toSocialError } from "../errors";
 import type {
+  GitHubContributionData,
+  GitHubEnhancedProfile,
+  GitHubOrganization,
+  GitHubReadmeResponse,
   GitHubRepo,
   GitHubUser,
   OAuthCallbackResult,
@@ -252,6 +256,154 @@ export class GitHubProvider implements SocialProvider {
       return response.ok;
     } catch {
       return false;
+    }
+  }
+
+  /**
+   * Fetch README content from a repository
+   * Returns the decoded README content or null if not found
+   */
+  async fetchReadmeContent(
+    accessToken: string,
+    owner: string,
+    repo: string
+  ): Promise<string | null> {
+    try {
+      const response = await this.apiRequest<GitHubReadmeResponse>(
+        `/repos/${owner}/${repo}/readme`,
+        accessToken
+      );
+
+      // Decode base64 content
+      const content = Buffer.from(response.content, "base64").toString("utf-8");
+      return content;
+    } catch {
+      return null;
+    }
+  }
+
+  /**
+   * Fetch user's GitHub organizations
+   */
+  async fetchOrganizations(accessToken: string): Promise<GitHubOrganization[]> {
+    try {
+      const orgs = await this.apiRequest<GitHubOrganization[]>("/user/orgs", accessToken);
+      return orgs;
+    } catch {
+      return [];
+    }
+  }
+
+  /**
+   * Fetch enhanced profile data with additional fields for CV analysis
+   */
+  async fetchEnhancedProfile(accessToken: string): Promise<GitHubEnhancedProfile> {
+    const user = await this.apiRequest<GitHubUser & GitHubEnhancedProfile>("/user", accessToken);
+
+    return {
+      bio: user.bio,
+      company: user.company,
+      location: user.location,
+      blog: user.blog,
+      hireable: user.hireable ?? null,
+      followers: user.followers,
+      following: user.following,
+      public_repos: user.public_repos,
+      public_gists: user.public_gists ?? 0,
+      created_at: user.created_at,
+    };
+  }
+
+  /**
+   * Calculate contribution statistics from repositories
+   * This aggregates data from repos rather than using GraphQL
+   */
+  async calculateContributionStats(
+    accessToken: string,
+    repos: GitHubRepo[]
+  ): Promise<GitHubContributionData> {
+    const ownedRepos = repos.filter((r) => !r.fork);
+    const forkedRepos = repos.filter((r) => r.fork);
+    const openSourceRepos = repos.filter((r) => r.license && !r.private);
+
+    // Calculate totals
+    const totalStars = repos.reduce((sum, r) => sum + r.stargazers_count, 0);
+    const totalForks = repos.reduce((sum, r) => sum + r.forks_count, 0);
+
+    // Get aggregated languages
+    const languageBytes = await this.fetchAggregatedLanguages(accessToken, repos);
+
+    // Sort languages by bytes and get top 10
+    const topLanguages = Object.entries(languageBytes)
+      .sort(([, a], [, b]) => b - a)
+      .slice(0, 10)
+      .map(([lang]) => lang);
+
+    // Find date ranges from repos
+    const repoDates = repos
+      .map((r) => new Date(r.created_at))
+      .filter((d) => !isNaN(d.getTime()))
+      .sort((a, b) => a.getTime() - b.getTime());
+
+    const pushDates = repos
+      .filter((r) => r.pushed_at)
+      .map((r) => new Date(r.pushed_at))
+      .filter((d) => !isNaN(d.getTime()))
+      .sort((a, b) => b.getTime() - a.getTime());
+
+    return {
+      totalRepos: repos.length,
+      ownedRepos: ownedRepos.length,
+      forkedRepos: forkedRepos.length,
+      openSourceRepos: openSourceRepos.length,
+      totalStars,
+      totalForks,
+      languageBytes,
+      topLanguages,
+      oldestRepoDate: repoDates[0]?.toISOString() ?? null,
+      newestRepoDate: repoDates[repoDates.length - 1]?.toISOString() ?? null,
+      lastPushDate: pushDates[0]?.toISOString() ?? null,
+    };
+  }
+
+  /**
+   * Fetch repository contributors count
+   * Returns the number of contributors or null if unavailable
+   */
+  async fetchContributorsCount(
+    accessToken: string,
+    owner: string,
+    repo: string
+  ): Promise<number | null> {
+    try {
+      // Use per_page=1 and check the Link header for total count
+      const response = await fetch(
+        `${this.config.apiUrl}/repos/${owner}/${repo}/contributors?per_page=1&anon=false`,
+        {
+          headers: {
+            Authorization: `Bearer ${accessToken}`,
+            Accept: "application/vnd.github+json",
+            "X-GitHub-Api-Version": "2022-11-28",
+          },
+        }
+      );
+
+      if (!response.ok) return null;
+
+      // Try to get count from Link header (last page number)
+      const linkHeader = response.headers.get("Link");
+      if (linkHeader) {
+        const lastMatch = linkHeader.match(/page=(\d+)>; rel="last"/);
+        if (lastMatch?.[1]) {
+          return parseInt(lastMatch[1], 10);
+        }
+      }
+
+      // If no Link header, count from response (small number of contributors)
+      const contributors = await response.json();
+      return Array.isArray(contributors) ? contributors.length : null;
+    } catch {
+      return null;
     }
   }
 

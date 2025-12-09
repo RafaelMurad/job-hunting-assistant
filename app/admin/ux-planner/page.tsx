@@ -392,7 +392,7 @@ export default function UXPlannerPage(): JSX.Element {
                             key={step.id}
                             className="flex items-start gap-3 rounded-lg border border-nordic-neutral-200 p-3"
                           >
-                            <div className="flex h-6 w-6 flex-shrink-0 items-center justify-center rounded-full bg-fjord-100 text-xs font-medium text-fjord-600">
+                            <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-fjord-100 text-xs font-medium text-fjord-600">
                               {i + 1}
                             </div>
                             <div className="flex-1">

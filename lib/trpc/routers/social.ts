@@ -291,7 +291,19 @@ export const socialRouter = router({
           const repos = await githubProvider.fetchRepositories(accessToken);
           itemsFound = repos.length;
 
-          // Store repositories
+          // Fetch enhanced profile data
+          const enhancedProfile = await githubProvider.fetchEnhancedProfile(accessToken);
+
+          // Fetch organizations
+          const organizations = await githubProvider.fetchOrganizations(accessToken);
+
+          // Calculate contribution stats
+          const contributionStats = await githubProvider.calculateContributionStats(
+            accessToken,
+            repos
+          );
+
+          // Store repositories with enhanced data
           for (const repo of repos) {
             await ctx.prisma.gitHubRepository.upsert({
               where: {
@@ -316,7 +328,11 @@ export const socialRouter = router({
                 topics: repo.topics?.join(","),
                 isPrivate: repo.private,
                 isFork: repo.fork,
+                isArchived: repo.archived ?? false,
+                license: repo.license?.spdx_id ?? null,
+                defaultBranch: repo.default_branch ?? null,
                 pushedAt: repo.pushed_at ? new Date(repo.pushed_at) : null,
+                repoCreatedAt: repo.created_at ? new Date(repo.created_at) : null,
               },
               update: {
                 name: repo.name,
@@ -332,19 +348,107 @@ export const socialRouter = router({
                 topics: repo.topics?.join(","),
                 isPrivate: repo.private,
                 isFork: repo.fork,
+                isArchived: repo.archived ?? false,
+                license: repo.license?.spdx_id ?? null,
+                defaultBranch: repo.default_branch ?? null,
                 pushedAt: repo.pushed_at ? new Date(repo.pushed_at) : null,
+                repoCreatedAt: repo.created_at ? new Date(repo.created_at) : null,
               },
             });
             itemsSynced++;
           }
 
+          // Store organizations
+          for (const org of organizations) {
+            await ctx.prisma.gitHubOrganization.upsert({
+              where: {
+                userId_orgId: {
+                  userId: input.userId,
+                  orgId: org.id,
+                },
+              },
+              create: {
+                userId: input.userId,
+                orgId: org.id,
+                login: org.login,
+                name: org.name ?? null,
+                description: org.description,
+                url: org.html_url,
+                avatarUrl: org.avatar_url,
+              },
+              update: {
+                login: org.login,
+                name: org.name ?? null,
+                description: org.description,
+                url: org.html_url,
+                avatarUrl: org.avatar_url,
+              },
+            });
+          }
+
+          // Update or create contribution stats
+          await ctx.prisma.gitHubContributionStats.upsert({
+            where: { userId: input.userId },
+            create: {
+              userId: input.userId,
+              totalRepos: contributionStats.totalRepos,
+              ownedRepos: contributionStats.ownedRepos,
+              forkedRepos: contributionStats.forkedRepos,
+              openSourceRepos: contributionStats.openSourceRepos,
+              languageBytes: JSON.stringify(contributionStats.languageBytes),
+              topLanguages: contributionStats.topLanguages.join(","),
+              oldestRepoDate: contributionStats.oldestRepoDate
+                ? new Date(contributionStats.oldestRepoDate)
+                : null,
+              newestRepoDate: contributionStats.newestRepoDate
+                ? new Date(contributionStats.newestRepoDate)
+                : null,
+              lastPushDate: contributionStats.lastPushDate
+                ? new Date(contributionStats.lastPushDate)
+                : null,
+              lastCalculated: new Date(),
+            },
+            update: {
+              totalRepos: contributionStats.totalRepos,
+              ownedRepos: contributionStats.ownedRepos,
+              forkedRepos: contributionStats.forkedRepos,
+              openSourceRepos: contributionStats.openSourceRepos,
+              languageBytes: JSON.stringify(contributionStats.languageBytes),
+              topLanguages: contributionStats.topLanguages.join(","),
+              oldestRepoDate: contributionStats.oldestRepoDate
+                ? new Date(contributionStats.oldestRepoDate)
+                : null,
+              newestRepoDate: contributionStats.newestRepoDate
+                ? new Date(contributionStats.newestRepoDate)
+                : null,
+              lastPushDate: contributionStats.lastPushDate
+                ? new Date(contributionStats.lastPushDate)
+                : null,
+              lastCalculated: new Date(),
+            },
+          });
+
           // Fetch aggregated languages
           const languages = await githubProvider.fetchAggregatedLanguages(accessToken, repos);
 
-          // Update profile with aggregated data
+          // Update profile with enhanced data
           await ctx.prisma.socialProfile.update({
             where: { id: profile.id },
             data: {
+              // Enhanced profile fields
+              bio: enhancedProfile.bio,
+              company: enhancedProfile.company,
+              location: enhancedProfile.location,
+              blog: enhancedProfile.blog,
+              hireable: enhancedProfile.hireable,
+              publicRepos: enhancedProfile.public_repos,
+              publicGists: enhancedProfile.public_gists,
+              followers: enhancedProfile.followers,
+              following: enhancedProfile.following,
+              accountCreatedAt: enhancedProfile.created_at
+                ? new Date(enhancedProfile.created_at)
+                : null,
+              // Aggregated data in profileData JSON
               profileData: JSON.stringify({
                 ...JSON.parse(profile.profileData || "{}"),
                 languages,
@@ -353,6 +457,8 @@ export const socialRouter = router({
                   .sort(([, a], [, b]) => b - a)
                   .slice(0, 5)
                   .map(([lang]) => lang),
+                organizationCount: organizations.length,
+                organizations: organizations.map((o) => o.login),
               }),
               lastSyncAt: new Date(),
               syncStatus: "COMPLETED",

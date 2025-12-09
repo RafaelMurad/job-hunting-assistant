@@ -416,7 +416,7 @@ export default function TrackerPage(): JSX.Element {
                         <div className="flex items-start gap-3">
                           {/* Match Score Badge */}
                           <div
-                            className={`flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-lg ${getMatchBgColor(app.matchScore)}`}
+                            className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-lg ${getMatchBgColor(app.matchScore)}`}
                           >
                             <span className={`text-sm font-bold ${getMatchColor(app.matchScore)}`}>
                               {app.matchScore}%

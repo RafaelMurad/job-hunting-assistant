@@ -107,7 +107,7 @@ function ErrorBanner({ error }: { error: string | null }): JSX.Element | null {
     <div className="mb-6 rounded-lg border border-red-300 bg-red-50 p-4">
       <div className="flex items-center gap-2">
         <svg
-          className="h-5 w-5 text-red-600 flex-shrink-0"
+          className="h-5 w-5 shrink-0 text-red-600"
           fill="none"
           viewBox="0 0 24 24"
           strokeWidth={1.5}

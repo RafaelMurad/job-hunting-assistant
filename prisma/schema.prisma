@@ -118,6 +118,18 @@ model SocialProfile {
   profileUrl   String?  // Link to external profile
   profileData  String?  @db.Text // Full JSON profile data
 
+  // GitHub-specific profile fields
+  bio          String?  @db.Text  // GitHub bio / professional summary
+  company      String?             // Current employer from GitHub
+  location     String?             // Geographic location
+  blog         String?             // Portfolio/blog URL
+  hireable     Boolean?            // Open to opportunities flag
+  publicRepos  Int?                // Total public repos count
+  publicGists  Int?                // Total public gists count
+  followers    Int?                // Follower count
+  following    Int?                // Following count
+  accountCreatedAt DateTime?       // GitHub account creation date (experience indicator)
+
   // Sync metadata
   lastSyncAt   DateTime?
   syncStatus   SyncStatus @default(PENDING)
@@ -195,14 +207,71 @@ model GitHubRepository {
   isPrivate     Boolean  @default(false)
   isFork        Boolean  @default(false)
   hasReadme     Boolean  @default(false)
+  isArchived    Boolean  @default(false)
+
+  // Enhanced data
+  license       String?            // License type (MIT, Apache-2.0, etc.)
+  readmeSummary String?  @db.Text  // AI-generated summary of README
+  contributors  Int?               // Number of contributors
+  defaultBranch String?            // main, master, etc.
 
   pushedAt      DateTime?
+  repoCreatedAt DateTime?          // When the repo was created on GitHub
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
 
   @@unique([userId, repoId])
   @@index([userId])
   @@index([language])
+}
+
+// GitHub contribution statistics
+model GitHubContributionStats {
+  id             String   @id @default(cuid())
+  userId         String   @unique
+
+  // Aggregate stats
+  totalCommits   Int      @default(0)
+  totalPRs       Int      @default(0)
+  totalIssues    Int      @default(0)
+  totalReviews   Int      @default(0)
+
+  // Derived metrics
+  totalRepos     Int      @default(0)
+  ownedRepos     Int      @default(0)  // Non-fork repos
+  forkedRepos    Int      @default(0)
+  openSourceRepos Int     @default(0)  // Repos with licenses
+
+  // Language breakdown (JSON: { "TypeScript": 50000, "Python": 20000 })
+  languageBytes  String?  @db.Text
+  topLanguages   String?  // Comma-separated top 10 languages
+
+  // Activity indicators
+  oldestRepoDate DateTime?  // First repo creation date
+  newestRepoDate DateTime?  // Most recent repo creation
+  lastPushDate   DateTime?  // Most recent push across all repos
+
+  lastCalculated DateTime  @default(now())
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+}
+
+// GitHub organizations
+model GitHubOrganization {
+  id          String   @id @default(cuid())
+  userId      String
+  orgId       Int      // GitHub org ID
+  login       String   // org username
+  name        String?  // Display name
+  description String?  @db.Text
+  url         String
+  avatarUrl   String?
+
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@unique([userId, orgId])
+  @@index([userId])
 }
 
 // LinkedIn-specific data models (for saved jobs)
