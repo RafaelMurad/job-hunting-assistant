@@ -76,11 +76,12 @@ export const socialRouter = router({
           displayName: githubProfile?.displayName ?? undefined,
           avatarUrl: githubProfile?.avatarUrl ?? undefined,
           lastSyncAt: githubProfile?.lastSyncAt ?? undefined,
-          syncStatus: (githubProfile?.syncStatus?.toLowerCase() as
-            | "pending"
-            | "in_progress"
-            | "completed"
-            | "failed") ?? undefined,
+          syncStatus:
+            (githubProfile?.syncStatus?.toLowerCase() as
+              | "pending"
+              | "in_progress"
+              | "completed"
+              | "failed") ?? undefined,
         });
       }
 
@@ -95,11 +96,12 @@ export const socialRouter = router({
           displayName: linkedInProfile?.displayName ?? undefined,
           avatarUrl: linkedInProfile?.avatarUrl ?? undefined,
           lastSyncAt: linkedInProfile?.lastSyncAt ?? undefined,
-          syncStatus: (linkedInProfile?.syncStatus?.toLowerCase() as
-            | "pending"
-            | "in_progress"
-            | "completed"
-            | "failed") ?? undefined,
+          syncStatus:
+            (linkedInProfile?.syncStatus?.toLowerCase() as
+              | "pending"
+              | "in_progress"
+              | "completed"
+              | "failed") ?? undefined,
         });
       }
 
@@ -205,197 +207,199 @@ export const socialRouter = router({
   /**
    * Sync data from a connected social provider
    */
-  sync: publicProcedure.input(syncInputSchema).mutation(async ({ ctx, input }): Promise<SyncResult> => {
-    const profile = await ctx.prisma.socialProfile.findUnique({
-      where: {
-        userId_provider: {
-          userId: input.userId,
-          provider: input.provider,
-        },
-      },
-    });
-
-    if (!profile) {
-      throw new TRPCError({
-        code: "NOT_FOUND",
-        message: "Social profile not connected",
-      });
-    }
-
-    // Decrypt access token
-    const accessToken = decryptToken(profile.accessToken);
-
-    // Check if token is expired
-    if (isTokenExpired(profile.tokenExpiry, 5 * 60 * 1000)) {
-      // For LinkedIn, try to refresh
-      if (input.provider === "LINKEDIN" && profile.refreshToken) {
-        try {
-          const refreshToken = decryptToken(profile.refreshToken);
-          const newTokens = await linkedInProvider.refreshToken(refreshToken);
-
-          await ctx.prisma.socialProfile.update({
-            where: { id: profile.id },
-            data: {
-              accessToken: encryptToken(newTokens.accessToken),
-              refreshToken: newTokens.refreshToken
-                ? encryptToken(newTokens.refreshToken)
-                : profile.refreshToken,
-              tokenExpiry: newTokens.expiresAt ?? null,
-            },
-          });
-        } catch {
-          throw new TRPCError({
-            code: "UNAUTHORIZED",
-            message: "Session expired. Please reconnect your LinkedIn account.",
-          });
-        }
-      } else if (input.provider === "GITHUB") {
-        // GitHub tokens don't expire but may be revoked
-        const isValid = await githubProvider.validateToken(accessToken);
-        if (!isValid) {
-          throw new TRPCError({
-            code: "UNAUTHORIZED",
-            message: "Session expired. Please reconnect your GitHub account.",
-          });
-        }
-      }
-    }
-
-    // Update sync status to in_progress
-    await ctx.prisma.socialProfile.update({
-      where: { id: profile.id },
-      data: { syncStatus: "IN_PROGRESS" },
-    });
-
-    // Create sync record
-    const syncRecord = await ctx.prisma.socialSync.create({
-      data: {
-        userId: input.userId,
-        provider: input.provider,
-        syncType: input.syncType || "profile",
-        status: "IN_PROGRESS",
-        startedAt: new Date(),
-      },
-    });
-
-    try {
-      let itemsFound = 0;
-      let itemsSynced = 0;
-
-      if (input.provider === "GITHUB") {
-        // Sync GitHub repositories
-        const repos = await githubProvider.fetchRepositories(accessToken);
-        itemsFound = repos.length;
-
-        // Store repositories
-        for (const repo of repos) {
-          await ctx.prisma.gitHubRepository.upsert({
-            where: {
-              userId_repoId: {
-                userId: input.userId,
-                repoId: repo.id,
-              },
-            },
-            create: {
-              userId: input.userId,
-              repoId: repo.id,
-              name: repo.name,
-              fullName: repo.full_name,
-              description: repo.description,
-              url: repo.html_url,
-              homepage: repo.homepage,
-              stars: repo.stargazers_count,
-              forks: repo.forks_count,
-              watchers: repo.watchers_count,
-              openIssues: repo.open_issues_count,
-              language: repo.language,
-              topics: repo.topics?.join(","),
-              isPrivate: repo.private,
-              isFork: repo.fork,
-              pushedAt: repo.pushed_at ? new Date(repo.pushed_at) : null,
-            },
-            update: {
-              name: repo.name,
-              fullName: repo.full_name,
-              description: repo.description,
-              url: repo.html_url,
-              homepage: repo.homepage,
-              stars: repo.stargazers_count,
-              forks: repo.forks_count,
-              watchers: repo.watchers_count,
-              openIssues: repo.open_issues_count,
-              language: repo.language,
-              topics: repo.topics?.join(","),
-              isPrivate: repo.private,
-              isFork: repo.fork,
-              pushedAt: repo.pushed_at ? new Date(repo.pushed_at) : null,
-            },
-          });
-          itemsSynced++;
-        }
-
-        // Fetch aggregated languages
-        const languages = await githubProvider.fetchAggregatedLanguages(accessToken, repos);
-
-        // Update profile with aggregated data
-        await ctx.prisma.socialProfile.update({
-          where: { id: profile.id },
-          data: {
-            profileData: JSON.stringify({
-              ...JSON.parse(profile.profileData || "{}"),
-              languages,
-              repoCount: repos.length,
-              topLanguages: Object.entries(languages)
-                .sort(([, a], [, b]) => b - a)
-                .slice(0, 5)
-                .map(([lang]) => lang),
-            }),
-            lastSyncAt: new Date(),
-            syncStatus: "COMPLETED",
+  sync: publicProcedure
+    .input(syncInputSchema)
+    .mutation(async ({ ctx, input }): Promise<SyncResult> => {
+      const profile = await ctx.prisma.socialProfile.findUnique({
+        where: {
+          userId_provider: {
+            userId: input.userId,
+            provider: input.provider,
           },
+        },
+      });
+
+      if (!profile) {
+        throw new TRPCError({
+          code: "NOT_FOUND",
+          message: "Social profile not connected",
         });
       }
 
-      // Update sync record
-      await ctx.prisma.socialSync.update({
-        where: { id: syncRecord.id },
-        data: {
-          status: "COMPLETED",
-          completedAt: new Date(),
-          itemsFound,
-          itemsSynced,
-        },
-      });
+      // Decrypt access token
+      const accessToken = decryptToken(profile.accessToken);
 
-      return {
-        success: true,
-        syncType: input.syncType || "profile",
-        itemsFound,
-        itemsSynced,
-      };
-    } catch (error) {
-      // Update sync record with error
-      await ctx.prisma.socialSync.update({
-        where: { id: syncRecord.id },
-        data: {
-          status: "FAILED",
-          completedAt: new Date(),
-          error: error instanceof Error ? error.message : String(error),
-        },
-      });
+      // Check if token is expired
+      if (isTokenExpired(profile.tokenExpiry, 5 * 60 * 1000)) {
+        // For LinkedIn, try to refresh
+        if (input.provider === "LINKEDIN" && profile.refreshToken) {
+          try {
+            const refreshToken = decryptToken(profile.refreshToken);
+            const newTokens = await linkedInProvider.refreshToken(refreshToken);
 
+            await ctx.prisma.socialProfile.update({
+              where: { id: profile.id },
+              data: {
+                accessToken: encryptToken(newTokens.accessToken),
+                refreshToken: newTokens.refreshToken
+                  ? encryptToken(newTokens.refreshToken)
+                  : profile.refreshToken,
+                tokenExpiry: newTokens.expiresAt ?? null,
+              },
+            });
+          } catch {
+            throw new TRPCError({
+              code: "UNAUTHORIZED",
+              message: "Session expired. Please reconnect your LinkedIn account.",
+            });
+          }
+        } else if (input.provider === "GITHUB") {
+          // GitHub tokens don't expire but may be revoked
+          const isValid = await githubProvider.validateToken(accessToken);
+          if (!isValid) {
+            throw new TRPCError({
+              code: "UNAUTHORIZED",
+              message: "Session expired. Please reconnect your GitHub account.",
+            });
+          }
+        }
+      }
+
+      // Update sync status to in_progress
       await ctx.prisma.socialProfile.update({
         where: { id: profile.id },
-        data: { syncStatus: "FAILED" },
+        data: { syncStatus: "IN_PROGRESS" },
       });
 
-      throw new TRPCError({
-        code: "INTERNAL_SERVER_ERROR",
-        message: "Sync failed",
-        cause: error,
+      // Create sync record
+      const syncRecord = await ctx.prisma.socialSync.create({
+        data: {
+          userId: input.userId,
+          provider: input.provider,
+          syncType: input.syncType || "profile",
+          status: "IN_PROGRESS",
+          startedAt: new Date(),
+        },
       });
-    }
-  }),
+
+      try {
+        let itemsFound = 0;
+        let itemsSynced = 0;
+
+        if (input.provider === "GITHUB") {
+          // Sync GitHub repositories
+          const repos = await githubProvider.fetchRepositories(accessToken);
+          itemsFound = repos.length;
+
+          // Store repositories
+          for (const repo of repos) {
+            await ctx.prisma.gitHubRepository.upsert({
+              where: {
+                userId_repoId: {
+                  userId: input.userId,
+                  repoId: repo.id,
+                },
+              },
+              create: {
+                userId: input.userId,
+                repoId: repo.id,
+                name: repo.name,
+                fullName: repo.full_name,
+                description: repo.description,
+                url: repo.html_url,
+                homepage: repo.homepage,
+                stars: repo.stargazers_count,
+                forks: repo.forks_count,
+                watchers: repo.watchers_count,
+                openIssues: repo.open_issues_count,
+                language: repo.language,
+                topics: repo.topics?.join(","),
+                isPrivate: repo.private,
+                isFork: repo.fork,
+                pushedAt: repo.pushed_at ? new Date(repo.pushed_at) : null,
+              },
+              update: {
+                name: repo.name,
+                fullName: repo.full_name,
+                description: repo.description,
+                url: repo.html_url,
+                homepage: repo.homepage,
+                stars: repo.stargazers_count,
+                forks: repo.forks_count,
+                watchers: repo.watchers_count,
+                openIssues: repo.open_issues_count,
+                language: repo.language,
+                topics: repo.topics?.join(","),
+                isPrivate: repo.private,
+                isFork: repo.fork,
+                pushedAt: repo.pushed_at ? new Date(repo.pushed_at) : null,
+              },
+            });
+            itemsSynced++;
+          }
+
+          // Fetch aggregated languages
+          const languages = await githubProvider.fetchAggregatedLanguages(accessToken, repos);
+
+          // Update profile with aggregated data
+          await ctx.prisma.socialProfile.update({
+            where: { id: profile.id },
+            data: {
+              profileData: JSON.stringify({
+                ...JSON.parse(profile.profileData || "{}"),
+                languages,
+                repoCount: repos.length,
+                topLanguages: Object.entries(languages)
+                  .sort(([, a], [, b]) => b - a)
+                  .slice(0, 5)
+                  .map(([lang]) => lang),
+              }),
+              lastSyncAt: new Date(),
+              syncStatus: "COMPLETED",
+            },
+          });
+        }
+
+        // Update sync record
+        await ctx.prisma.socialSync.update({
+          where: { id: syncRecord.id },
+          data: {
+            status: "COMPLETED",
+            completedAt: new Date(),
+            itemsFound,
+            itemsSynced,
+          },
+        });
+
+        return {
+          success: true,
+          syncType: input.syncType || "profile",
+          itemsFound,
+          itemsSynced,
+        };
+      } catch (error) {
+        // Update sync record with error
+        await ctx.prisma.socialSync.update({
+          where: { id: syncRecord.id },
+          data: {
+            status: "FAILED",
+            completedAt: new Date(),
+            error: error instanceof Error ? error.message : String(error),
+          },
+        });
+
+        await ctx.prisma.socialProfile.update({
+          where: { id: profile.id },
+          data: { syncStatus: "FAILED" },
+        });
+
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: "Sync failed",
+          cause: error,
+        });
+      }
+    }),
 
   /**
    * Get GitHub repositories for a user

@@ -25,10 +25,7 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
     // Get userId from query params (required)
     const userId = request.nextUrl.searchParams.get("userId");
     if (!userId) {
-      return NextResponse.json(
-        { error: "Missing userId parameter" },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: "Missing userId parameter" }, { status: 400 });
     }
 
     // Generate state parameter for CSRF protection
@@ -51,9 +48,6 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
     return NextResponse.redirect(authUrl);
   } catch (error) {
     console.error("[LinkedIn OAuth] Error initiating OAuth:", error);
-    return NextResponse.json(
-      { error: "Failed to initiate LinkedIn OAuth" },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: "Failed to initiate LinkedIn OAuth" }, { status: 500 });
   }
 }

@@ -6,12 +6,7 @@
  */
 
 import { SOCIAL_CONFIG } from "../config";
-import {
-  createNetworkError,
-  createOAuthError,
-  parseProviderError,
-  toSocialError,
-} from "../errors";
+import { createNetworkError, createOAuthError, parseProviderError, toSocialError } from "../errors";
 import { calculateTokenExpiry } from "../token-manager";
 import type {
   LinkedInEmail,
@@ -247,9 +242,7 @@ export class LinkedInProvider implements SocialProvider {
   async fetchSavedJobs(_accessToken: string): Promise<never[]> {
     // LinkedIn doesn't provide public API access to saved jobs
     // This would require special API access from LinkedIn
-    console.warn(
-      "[LinkedIn] Saved jobs API not available. Requires LinkedIn partner access."
-    );
+    console.warn("[LinkedIn] Saved jobs API not available. Requires LinkedIn partner access.");
     return [];
   }
 

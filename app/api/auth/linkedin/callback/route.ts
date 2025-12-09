@@ -28,10 +28,7 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
   // Handle OAuth errors from LinkedIn
   if (error) {
     console.error("[LinkedIn Callback] OAuth error:", error, errorDescription);
-    return redirectWithError(
-      request,
-      errorDescription || "LinkedIn authorization was denied"
-    );
+    return redirectWithError(request, errorDescription || "LinkedIn authorization was denied");
   }
 
   // Validate required parameters
@@ -48,7 +45,11 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
       return redirectWithError(request, "OAuth session expired. Please try again.");
     }
 
-    const { state: storedState, userId, provider } = JSON.parse(oauthStateCookie.value) as {
+    const {
+      state: storedState,
+      userId,
+      provider,
+    } = JSON.parse(oauthStateCookie.value) as {
       state: string;
       userId: string;
       provider: string;
@@ -65,10 +66,7 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
     const result = await linkedInProvider.exchangeCode(code);
 
     if (!result.success || !result.tokens || !result.profile) {
-      return redirectWithError(
-        request,
-        result.error || "Failed to connect to LinkedIn"
-      );
+      return redirectWithError(request, result.error || "Failed to connect to LinkedIn");
     }
 
     // Encrypt tokens for storage
@@ -133,9 +131,7 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
 
     // Redirect to settings page with success
     const baseUrl = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
-    return NextResponse.redirect(
-      `${baseUrl}/settings?connected=linkedin&success=true`
-    );
+    return NextResponse.redirect(`${baseUrl}/settings?connected=linkedin&success=true`);
   } catch (error) {
     console.error("[LinkedIn Callback] Error:", error);
     const socialError = toSocialError(error, "linkedin");
@@ -149,7 +145,5 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
 function redirectWithError(_request: NextRequest, message: string): NextResponse {
   const baseUrl = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
   const encodedMessage = encodeURIComponent(message);
-  return NextResponse.redirect(
-    `${baseUrl}/settings?error=${encodedMessage}&provider=linkedin`
-  );
+  return NextResponse.redirect(`${baseUrl}/settings?error=${encodedMessage}&provider=linkedin`);
 }

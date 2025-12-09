@@ -247,9 +247,7 @@ export function FileUpload({
             <p className="text-sm text-gray-500">{progress.progress}% complete</p>
 
             {/* Optional message */}
-            {progress.message && (
-              <p className="mt-2 text-xs text-gray-400">{progress.message}</p>
-            )}
+            {progress.message && <p className="mt-2 text-xs text-gray-400">{progress.message}</p>}
           </div>
         )}
 

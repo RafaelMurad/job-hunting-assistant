@@ -16,19 +16,13 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
   try {
     // Check if GitHub integration is configured
     if (!isProviderConfigured("github")) {
-      return NextResponse.json(
-        { error: "GitHub integration is not configured" },
-        { status: 503 }
-      );
+      return NextResponse.json({ error: "GitHub integration is not configured" }, { status: 503 });
     }
 
     // Get userId from query params (required)
     const userId = request.nextUrl.searchParams.get("userId");
     if (!userId) {
-      return NextResponse.json(
-        { error: "Missing userId parameter" },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: "Missing userId parameter" }, { status: 400 });
     }
 
     // Generate state parameter for CSRF protection
@@ -51,9 +45,6 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
     return NextResponse.redirect(authUrl);
   } catch (error) {
     console.error("[GitHub OAuth] Error initiating OAuth:", error);
-    return NextResponse.json(
-      { error: "Failed to initiate GitHub OAuth" },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: "Failed to initiate GitHub OAuth" }, { status: 500 });
   }
 }

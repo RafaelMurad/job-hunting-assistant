@@ -57,7 +57,6 @@ function FeatureFlagsContent({
   toggle: (key: string) => void;
   resetAll: () => void;
 }): JSX.Element {
-
   const categories: Array<{ key: FeatureFlag["category"]; label: string; color: string }> = [
     { key: "core", label: "Core Features", color: "bg-fjord-100 border-fjord-300" },
     { key: "experimental", label: "Experimental", color: "bg-forest-100 border-forest-300" },

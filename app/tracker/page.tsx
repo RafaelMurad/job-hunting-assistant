@@ -87,14 +87,10 @@ export default function TrackerPage(): JSX.Element {
     // Sort
     switch (sortBy) {
       case "newest":
-        result.sort(
-          (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
-        );
+        result.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
         break;
       case "oldest":
-        result.sort(
-          (a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()
-        );
+        result.sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime());
         break;
       case "company":
         result.sort((a, b) => a.company.localeCompare(b.company));
@@ -198,25 +194,37 @@ export default function TrackerPage(): JSX.Element {
 
         {/* Stats Cards */}
         <div className="mb-6 grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-5">
-          <Card className="cursor-pointer transition-shadow hover:shadow-md" onClick={() => setStatusFilter("all")}>
+          <Card
+            className="cursor-pointer transition-shadow hover:shadow-md"
+            onClick={() => setStatusFilter("all")}
+          >
             <CardHeader className="pb-2">
               <CardDescription>Total</CardDescription>
               <CardTitle className="text-3xl">{stats.total}</CardTitle>
             </CardHeader>
           </Card>
-          <Card className="cursor-pointer transition-shadow hover:shadow-md" onClick={() => setStatusFilter("applied")}>
+          <Card
+            className="cursor-pointer transition-shadow hover:shadow-md"
+            onClick={() => setStatusFilter("applied")}
+          >
             <CardHeader className="pb-2">
               <CardDescription>Applied</CardDescription>
               <CardTitle className="text-3xl text-blue-600">{stats.applied}</CardTitle>
             </CardHeader>
           </Card>
-          <Card className="cursor-pointer transition-shadow hover:shadow-md" onClick={() => setStatusFilter("interviewing")}>
+          <Card
+            className="cursor-pointer transition-shadow hover:shadow-md"
+            onClick={() => setStatusFilter("interviewing")}
+          >
             <CardHeader className="pb-2">
               <CardDescription>Interviewing</CardDescription>
               <CardTitle className="text-3xl text-purple-600">{stats.interviewing}</CardTitle>
             </CardHeader>
           </Card>
-          <Card className="cursor-pointer transition-shadow hover:shadow-md" onClick={() => setStatusFilter("offer")}>
+          <Card
+            className="cursor-pointer transition-shadow hover:shadow-md"
+            onClick={() => setStatusFilter("offer")}
+          >
             <CardHeader className="pb-2">
               <CardDescription>Offers</CardDescription>
               <CardTitle className="text-3xl text-green-600">{stats.offers}</CardTitle>
@@ -261,7 +269,12 @@ export default function TrackerPage(): JSX.Element {
                   className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
                 >
                   <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M6 18L18 6M6 6l12 12"
+                    />
                   </svg>
                 </button>
               )}
@@ -358,9 +371,7 @@ export default function TrackerPage(): JSX.Element {
                     <p className="mb-6 text-sm text-gray-400">
                       Start by analyzing a job to see how well you match
                     </p>
-                    <Button onClick={() => router.push("/analyze")}>
-                      Analyze Your First Job
-                    </Button>
+                    <Button onClick={() => router.push("/analyze")}>Analyze Your First Job</Button>
                   </>
                 ) : (
                   <>
@@ -378,9 +389,7 @@ export default function TrackerPage(): JSX.Element {
                       />
                     </svg>
                     <p className="mb-2 text-lg font-medium">No matching applications</p>
-                    <p className="text-sm text-gray-400">
-                      Try adjusting your search or filters
-                    </p>
+                    <p className="text-sm text-gray-400">Try adjusting your search or filters</p>
                   </>
                 )}
               </div>

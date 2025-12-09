@@ -224,11 +224,13 @@ export const adminRouter = router({
       }
 
       // Remove from trusted list
-      await ctx.prisma.trustedEmail.delete({
-        where: { email: input.email },
-      }).catch(() => {
-        // Ignore if not found
-      });
+      await ctx.prisma.trustedEmail
+        .delete({
+          where: { email: input.email },
+        })
+        .catch(() => {
+          // Ignore if not found
+        });
 
       // Update user if they exist
       const user = await ctx.prisma.user.findUnique({

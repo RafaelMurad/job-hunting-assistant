@@ -205,12 +205,10 @@ function SettingsPageContent(): JSX.Element {
                       <h3 className="font-semibold text-gray-900">GitHub</h3>
                       {githubStatus?.connected ? (
                         <p className="text-sm text-gray-600">
-                          Connected as{" "}
-                          <span className="font-medium">{githubStatus.username}</span>
+                          Connected as <span className="font-medium">{githubStatus.username}</span>
                           {githubStatus.lastSyncAt && (
                             <span className="ml-2 text-gray-400">
-                              Last synced:{" "}
-                              {new Date(githubStatus.lastSyncAt).toLocaleDateString()}
+                              Last synced: {new Date(githubStatus.lastSyncAt).toLocaleDateString()}
                             </span>
                           )}
                         </p>
@@ -272,9 +270,7 @@ function SettingsPageContent(): JSX.Element {
                           )}
                         </p>
                       ) : (
-                        <p className="text-sm text-gray-500">
-                          Import profile and sync saved jobs
-                        </p>
+                        <p className="text-sm text-gray-500">Import profile and sync saved jobs</p>
                       )}
                     </div>
                   </div>
@@ -324,9 +320,7 @@ function SettingsPageContent(): JSX.Element {
           <Card className="mb-6">
             <CardHeader>
               <CardTitle>Social Integrations</CardTitle>
-              <CardDescription>
-                This feature is currently disabled
-              </CardDescription>
+              <CardDescription>This feature is currently disabled</CardDescription>
             </CardHeader>
             <CardContent>
               <div className="rounded-lg border border-gray-200 bg-gray-50 p-6 text-center">

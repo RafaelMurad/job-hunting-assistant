@@ -5,8 +5,7 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 
 describe("Token Manager", () => {
-  const TEST_ENCRYPTION_KEY =
-    "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef";
+  const TEST_ENCRYPTION_KEY = "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef";
 
   beforeEach(() => {
     vi.resetModules();
@@ -20,9 +19,7 @@ describe("Token Manager", () => {
 
   describe("encryptToken and decryptToken", () => {
     it("should encrypt and decrypt a token correctly", async () => {
-      const { encryptToken, decryptToken } = await import(
-        "@/lib/social/token-manager"
-      );
+      const { encryptToken, decryptToken } = await import("@/lib/social/token-manager");
 
       const originalToken = "test-access-token-12345";
       const encrypted = encryptToken(originalToken);
@@ -45,9 +42,7 @@ describe("Token Manager", () => {
 
   describe("isEncryptedToken", () => {
     it("should return true for valid encrypted token", async () => {
-      const { encryptToken, isEncryptedToken } = await import(
-        "@/lib/social/token-manager"
-      );
+      const { encryptToken, isEncryptedToken } = await import("@/lib/social/token-manager");
       const encrypted = encryptToken("test-token");
       expect(isEncryptedToken(encrypted)).toBe(true);
     });
@@ -65,9 +60,7 @@ describe("Token Manager", () => {
 
   describe("safeDecryptToken", () => {
     it("should return decrypted token for valid input", async () => {
-      const { encryptToken, safeDecryptToken } = await import(
-        "@/lib/social/token-manager"
-      );
+      const { encryptToken, safeDecryptToken } = await import("@/lib/social/token-manager");
       const encrypted = encryptToken("test-token");
       expect(safeDecryptToken(encrypted)).toBe("test-token");
     });
@@ -111,9 +104,7 @@ describe("Token Manager", () => {
 
   describe("calculateTokenExpiry", () => {
     it("should calculate correct expiry date", async () => {
-      const { calculateTokenExpiry } = await import(
-        "@/lib/social/token-manager"
-      );
+      const { calculateTokenExpiry } = await import("@/lib/social/token-manager");
       const now = Date.now();
       const expiry = calculateTokenExpiry(3600); // 1 hour
 

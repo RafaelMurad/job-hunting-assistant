@@ -6,12 +6,7 @@
  */
 
 import { SOCIAL_CONFIG } from "../config";
-import {
-  createNetworkError,
-  createOAuthError,
-  parseProviderError,
-  toSocialError,
-} from "../errors";
+import { createNetworkError, createOAuthError, parseProviderError, toSocialError } from "../errors";
 import type {
   GitHubRepo,
   GitHubUser,
@@ -142,9 +137,9 @@ export class GitHubProvider implements SocialProvider {
   async revokeToken(accessToken: string): Promise<boolean> {
     try {
       // GitHub requires Basic auth with client credentials to revoke
-      const auth = Buffer.from(
-        `${this.config.clientId}:${this.config.clientSecret}`
-      ).toString("base64");
+      const auth = Buffer.from(`${this.config.clientId}:${this.config.clientSecret}`).toString(
+        "base64"
+      );
 
       const response = await fetch(
         `https://api.github.com/applications/${this.config.clientId}/token`,

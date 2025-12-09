@@ -155,11 +155,10 @@ export function parseProviderError(
 
   // Forbidden (scope issues)
   if (status === 403) {
-    return new SocialIntegrationError(
-      "SCOPE_INSUFFICIENT",
-      ERROR_MESSAGES.SCOPE_INSUFFICIENT,
-      { provider, details: body }
-    );
+    return new SocialIntegrationError("SCOPE_INSUFFICIENT", ERROR_MESSAGES.SCOPE_INSUFFICIENT, {
+      provider,
+      details: body,
+    });
   }
 
   // Generic provider error
