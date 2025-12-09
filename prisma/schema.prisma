@@ -26,10 +26,174 @@ model User {
   cvFilename   String?   // Original filename for display
   cvUploadedAt DateTime? // When CV was last uploaded/updated
 
+  // Authorization & Trust
+  role        UserRole  @default(USER)
+  isTrusted   Boolean   @default(false)  // Manually approved by admin
+  isVerified  Boolean   @default(false)  // Email verified
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  applications Application[]
+  applications    Application[]
+  socialProfiles  SocialProfile[]
+  socialSyncs     SocialSync[]
+}
+
+enum UserRole {
+  USER
+  ADMIN
+  OWNER  // Rafael - full access
+}
+
+// ============================================
+// Social Integration Models
+// ============================================
+
+model SocialProfile {
+  id           String   @id @default(cuid())
+  userId       String
+  provider     SocialProvider
+  providerId   String   // External ID from provider (GitHub user ID, LinkedIn member ID)
+
+  // OAuth tokens (should be encrypted in production)
+  accessToken  String   @db.Text
+  refreshToken String?  @db.Text
+  tokenExpiry  DateTime?
+  scope        String?  // Granted OAuth scopes
+
+  // Profile data synced from provider
+  username     String?  // GitHub username, LinkedIn vanity URL
+  displayName  String?  // Full name from provider
+  avatarUrl    String?  // Profile picture URL
+  profileUrl   String?  // Link to external profile
+  profileData  String?  @db.Text // Full JSON profile data
+
+  // Sync metadata
+  lastSyncAt   DateTime?
+  syncStatus   SyncStatus @default(PENDING)
+
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerId])
+  @@unique([userId, provider])  // One profile per provider per user
+  @@index([userId])
+}
+
+model SocialSync {
+  id          String       @id @default(cuid())
+  userId      String
+  provider    SocialProvider
+  syncType    String       // "profile", "repos", "jobs", "connections"
+
+  status      SyncStatus   @default(PENDING)
+  startedAt   DateTime?
+  completedAt DateTime?
+  error       String?      @db.Text
+
+  // Sync results
+  itemsFound  Int?
+  itemsSynced Int?
+  dataJson    String?      @db.Text // Synced data snapshot
+
+  createdAt   DateTime     @default(now())
+
+  user        User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, provider])
+  @@index([createdAt])
+}
+
+enum SocialProvider {
+  GITHUB
+  LINKEDIN
+}
+
+enum SyncStatus {
+  PENDING
+  IN_PROGRESS
+  COMPLETED
+  FAILED
+}
+
+// GitHub-specific data models
+model GitHubRepository {
+  id            String   @id @default(cuid())
+  userId        String
+  repoId        Int      // GitHub repo ID
+
+  name          String
+  fullName      String   // owner/repo
+  description   String?  @db.Text
+  url           String
+  homepage      String?
+
+  // Repository stats
+  stars         Int      @default(0)
+  forks         Int      @default(0)
+  watchers      Int      @default(0)
+  openIssues    Int      @default(0)
+
+  // Languages and topics
+  language      String?  // Primary language
+  languages     String?  @db.Text // JSON: { "TypeScript": 5000, "JavaScript": 2000 }
+  topics        String?  // Comma-separated topics
+
+  // Activity
+  isPrivate     Boolean  @default(false)
+  isFork        Boolean  @default(false)
+  hasReadme     Boolean  @default(false)
+
+  pushedAt      DateTime?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  @@unique([userId, repoId])
+  @@index([userId])
+  @@index([language])
+}
+
+// LinkedIn-specific data models (for saved jobs)
+model LinkedInSavedJob {
+  id            String   @id @default(cuid())
+  userId        String
+  linkedInJobId String   // LinkedIn job ID
+
+  title         String
+  company       String
+  location      String?
+  description   String?  @db.Text
+  jobUrl        String
+
+  // Job metadata
+  postedAt      DateTime?
+  expiresAt     DateTime?
+  isRemote      Boolean  @default(false)
+  employmentType String? // Full-time, Part-time, Contract
+
+  // Import status
+  importedToTracker Boolean @default(false)
+  applicationId     String? // Link to our Application if imported
+
+  savedAt       DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  @@unique([userId, linkedInJobId])
+  @@index([userId])
+}
+
+// Trusted Users Configuration (for admin access control)
+model TrustedEmail {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  role      UserRole @default(ADMIN)
+  addedBy   String?  // Who added this email
+  note      String?  // Why they're trusted
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
 
 model Application {

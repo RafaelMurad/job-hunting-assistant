@@ -66,7 +66,13 @@ export default function RootLayout({
                         Tracker
                       </Link>
                       <Link
-                        href="/admin/ux-planner"
+                        href="/settings"
+                        className="text-slate-600 hover:text-slate-900 transition-colors"
+                      >
+                        Settings
+                      </Link>
+                      <Link
+                        href="/admin/flags"
                         className="text-slate-400 hover:text-slate-600 transition-colors text-sm"
                       >
                         Admin

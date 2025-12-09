@@ -5,10 +5,9 @@ import { type JSX } from "react";
 /**
  * Feature Flags Admin Panel
  *
- * Hidden admin page for toggling feature flags during development.
+ * Protected admin page for toggling feature flags during development.
  * Access at: /admin/flags
- *
- * Note: In production, you may want to protect this route with authentication.
+ * Requires admin or owner access.
  */
 
 import Link from "next/link";
@@ -18,12 +17,18 @@ import {
   getFlagsByCategory,
   type FeatureFlag,
 } from "@/lib/feature-flags/flags.config";
+import { AdminGuard } from "@/components/admin/AdminGuard";
+import { trpc } from "@/lib/trpc/client";
 
 export default function FeatureFlagsAdminPage(): JSX.Element {
   const { flags, toggle, resetAll } = useFeatureFlags();
   const isHydrated = useFeatureFlagHydrated();
 
-  if (!isHydrated) {
+  // Get user for authorization
+  const { data: userData, isLoading: userLoading } = trpc.user.get.useQuery();
+  const userId = userData?.user?.id || "";
+
+  if (!isHydrated || userLoading) {
     return (
       <div className="min-h-screen bg-nordic-neutral-50 p-8">
         <div className="mx-auto max-w-4xl">
@@ -35,6 +40,23 @@ export default function FeatureFlagsAdminPage(): JSX.Element {
       </div>
     );
   }
+
+  return (
+    <AdminGuard userId={userId}>
+      <FeatureFlagsContent flags={flags} toggle={toggle} resetAll={resetAll} />
+    </AdminGuard>
+  );
+}
+
+function FeatureFlagsContent({
+  flags,
+  toggle,
+  resetAll,
+}: {
+  flags: Record<string, boolean>;
+  toggle: (key: string) => void;
+  resetAll: () => void;
+}): JSX.Element {
 
   const categories: Array<{ key: FeatureFlag["category"]; label: string; color: string }> = [
     { key: "core", label: "Core Features", color: "bg-fjord-100 border-fjord-300" },
