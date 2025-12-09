@@ -2,13 +2,18 @@
  * Next.js Middleware for Route Protection
  *
  * Protects sensitive routes and redirects unauthenticated users to login.
- * Uses NextAuth.js auth() helper for server-side session validation.
+ * Uses getToken() from next-auth/jwt for edge-compatible auth checks.
+ *
+ * NOTE: We use getToken() instead of auth() to avoid importing Prisma,
+ * which would exceed Vercel's Edge Function size limit (1 MB).
  *
  * @see https://nextjs.org/docs/app/building-your-application/routing/middleware
+ * @see https://authjs.dev/getting-started/session-management/protecting#nextjs-middleware
  */
 
-import { auth } from "@/lib/auth";
+import { getToken } from "next-auth/jwt";
 import { NextResponse } from "next/server";
+import type { NextRequest } from "next/server";
 
 /**
  * Protected route patterns
@@ -32,13 +37,22 @@ const protectedRoutes = [
  */
 const publicRoutes = ["/", "/login", "/api/auth"];
 
-export default auth((req) => {
+export default async function middleware(req: NextRequest): Promise<NextResponse> {
   const { pathname } = req.nextUrl;
+
+  // Get JWT token (edge-compatible, doesn't require Prisma)
+  // Note: AUTH_SECRET is required for production
+  const token = await getToken({
+    req,
+    secret: process.env.AUTH_SECRET ?? "",
+  });
+
+  const isAuthenticated = !!token;
 
   // Allow public routes
   if (publicRoutes.some((route) => pathname === route || pathname.startsWith(route))) {
     // If user is logged in and trying to access login page, redirect to dashboard
-    if (pathname === "/login" && req.auth) {
+    if (pathname === "/login" && isAuthenticated) {
       return NextResponse.redirect(new URL("/dashboard", req.url));
     }
     return NextResponse.next();
@@ -55,7 +69,7 @@ export default auth((req) => {
   });
 
   // Redirect unauthenticated users to login
-  if (isProtectedRoute && !req.auth) {
+  if (isProtectedRoute && !isAuthenticated) {
     const loginUrl = new URL("/login", req.url);
     loginUrl.searchParams.set("callbackUrl", pathname);
     return NextResponse.redirect(loginUrl);
@@ -63,7 +77,7 @@ export default auth((req) => {
 
   // Check admin routes for admin role
   if (pathname.startsWith("/admin")) {
-    const userRole = req.auth?.user?.role;
+    const userRole = token?.role as string | undefined;
     if (userRole !== "ADMIN" && userRole !== "OWNER") {
       // Redirect non-admins to dashboard with error
       return NextResponse.redirect(new URL("/dashboard?error=unauthorized", req.url));
@@ -71,7 +85,7 @@ export default auth((req) => {
   }
 
   return NextResponse.next();
-});
+}
 
 /**
  * Middleware configuration
