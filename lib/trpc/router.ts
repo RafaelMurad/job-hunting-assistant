@@ -9,6 +9,7 @@ import { router } from "@/lib/trpc/init";
 import { userRouter } from "./routers/user";
 import { analyzeRouter } from "./routers/analyze";
 import { applicationsRouter } from "./routers/applications";
+import { uxRouter } from "./routers/ux";
 
 /**
  * Main application router.
@@ -18,6 +19,7 @@ export const appRouter = router({
   user: userRouter,
   analyze: analyzeRouter,
   applications: applicationsRouter,
+  ux: uxRouter,
 });
 
 /**

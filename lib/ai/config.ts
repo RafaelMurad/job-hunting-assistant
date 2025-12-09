@@ -93,6 +93,7 @@ export const AI_CONFIG = {
 
   apiKeys: {
     gemini: process.env.GEMINI_API_KEY,
+    geminiGcp: process.env.GEMINI_GCP_API_KEY, // GCP billed (uses cloud credits)
     openai: process.env.OPENAI_API_KEY,
     claude: process.env.ANTHROPIC_API_KEY,
     openrouter: process.env.OPENROUTER_API_KEY,

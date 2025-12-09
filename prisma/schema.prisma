@@ -60,3 +60,194 @@ model Application {
   @@index([userId, status])
   @@index([userId, createdAt])
 }
+
+// ============================================
+// UX Research Platform Models
+// ============================================
+
+enum UxSeverity {
+  LOW
+  MEDIUM
+  HIGH
+  CRITICAL
+}
+
+enum UxEffort {
+  LOW
+  MEDIUM
+  HIGH
+}
+
+enum UxStatus {
+  DRAFT
+  IN_REVIEW
+  VALIDATED
+  ARCHIVED
+}
+
+model UxPersona {
+  id          String   @id @default(cuid())
+  name        String   // e.g., "Alex the Active Seeker"
+  type        String   // e.g., "primary", "secondary"
+  description String   @db.Text
+  goals       String   @db.Text // JSON array of goals
+  frustrations String  @db.Text // JSON array of frustrations
+  behaviors   String   @db.Text // JSON array of behaviors
+  status      UxStatus @default(DRAFT)
+  
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  journeys    UxJourney[]
+  comments    UxComment[]
+  versions    UxVersion[]
+}
+
+model UxJourney {
+  id          String   @id @default(cuid())
+  name        String   // e.g., "First-Time CV Upload"
+  description String   @db.Text
+  personaId   String?
+  status      UxStatus @default(DRAFT)
+  
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  persona     UxPersona? @relation(fields: [personaId], references: [id], onDelete: SetNull)
+  steps       UxJourneyStep[]
+  comments    UxComment[]
+  versions    UxVersion[]
+  
+  @@index([personaId])
+}
+
+model UxJourneyStep {
+  id           String   @id @default(cuid())
+  journeyId    String
+  orderIndex   Int
+  stage        String   // e.g., "Awareness", "Consideration", "Action"
+  action       String   @db.Text // What user does
+  thinking     String   @db.Text // What user thinks
+  feeling      String   // Emotion keyword
+  touchpoint   String   // Where it happens
+  opportunity  String?  @db.Text // Improvement opportunity
+  
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+  
+  journey      UxJourney @relation(fields: [journeyId], references: [id], onDelete: Cascade)
+  
+  @@index([journeyId, orderIndex])
+}
+
+model UxPainPoint {
+  id          String     @id @default(cuid())
+  title       String
+  description String     @db.Text
+  category    String     // e.g., "navigation", "feedback", "comprehension"
+  severity    UxSeverity
+  effort      UxEffort
+  userQuote   String?    @db.Text // Example user feedback
+  solution    String?    @db.Text // Proposed solution
+  status      UxStatus   @default(DRAFT)
+  
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+  
+  comments    UxComment[]
+  versions    UxVersion[]
+}
+
+model UxPrinciple {
+  id          String   @id @default(cuid())
+  name        String   // e.g., "Clarity First"
+  description String   @db.Text
+  rationale   String   @db.Text // Why this principle
+  examples    String   @db.Text // JSON array of do/don't examples
+  priority    Int      @default(0) // For ordering
+  status      UxStatus @default(DRAFT)
+  
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  comments    UxComment[]
+  versions    UxVersion[]
+}
+
+model UxVersion {
+  id          String   @id @default(cuid())
+  entityType  String   // "persona", "journey", "painpoint", "principle"
+  entityId    String
+  version     Int
+  data        String   @db.Text // JSON snapshot of entity at this version
+  changeNote  String?  @db.Text // What changed
+  changedBy   String?  // User identifier (FUTURE: link to auth)
+  
+  createdAt   DateTime @default(now())
+  
+  // Optional relations to entities
+  personaId   String?
+  journeyId   String?
+  painPointId String?
+  principleId String?
+  
+  persona     UxPersona?  @relation(fields: [personaId], references: [id], onDelete: SetNull)
+  journey     UxJourney?  @relation(fields: [journeyId], references: [id], onDelete: SetNull)
+  painPoint   UxPainPoint? @relation(fields: [painPointId], references: [id], onDelete: SetNull)
+  principle   UxPrinciple? @relation(fields: [principleId], references: [id], onDelete: SetNull)
+  
+  @@index([entityType, entityId])
+  @@index([createdAt])
+}
+
+model UxComment {
+  id          String   @id @default(cuid())
+  entityType  String   // "persona", "journey", "painpoint", "principle"
+  entityId    String
+  content     String   @db.Text
+  author      String?  // User identifier (FUTURE: link to auth)
+  resolved    Boolean  @default(false)
+  
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  // Optional relations to entities
+  personaId   String?
+  journeyId   String?
+  painPointId String?
+  principleId String?
+  
+  persona     UxPersona?  @relation(fields: [personaId], references: [id], onDelete: SetNull)
+  journey     UxJourney?  @relation(fields: [journeyId], references: [id], onDelete: SetNull)
+  painPoint   UxPainPoint? @relation(fields: [painPointId], references: [id], onDelete: SetNull)
+  principle   UxPrinciple? @relation(fields: [principleId], references: [id], onDelete: SetNull)
+  
+  @@index([entityType, entityId])
+}
+
+model UxAiAnalysis {
+  id          String   @id @default(cuid())
+  entityType  String   // "persona", "journey", "painpoint", "principle", "general"
+  entityId    String?  // Null for general analyses
+  prompt      String   @db.Text
+  response    String   @db.Text
+  model       String   // e.g., "gemini-2.5-pro"
+  applied     Boolean  @default(false) // Was suggestion applied?
+  
+  createdAt   DateTime @default(now())
+  
+  @@index([entityType, entityId])
+  @@index([createdAt])
+}
+
+model UxChatMessage {
+  id          String   @id @default(cuid())
+  sessionId   String   // Group messages by session
+  role        String   // "user" or "assistant"
+  content     String   @db.Text
+  context     String?  @db.Text // What UX entities were in context
+  
+  createdAt   DateTime @default(now())
+  
+  @@index([sessionId, createdAt])
+}
