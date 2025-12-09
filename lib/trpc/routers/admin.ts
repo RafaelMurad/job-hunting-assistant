@@ -169,7 +169,7 @@ export const adminRouter = router({
       data: {
         email: input.email,
         role: input.role,
-        note: input.note,
+        note: input.note ?? null,
         addedBy: requester?.email || input.addedByUserId,
       },
     });
