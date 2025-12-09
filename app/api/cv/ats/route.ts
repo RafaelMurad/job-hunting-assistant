@@ -8,7 +8,7 @@
  * HOW: Uses lib/ai.ts analyzeATSCompliance function.
  */
 
-import { NextRequest, NextResponse } from "next/server";
+import { type NextRequest, NextResponse } from "next/server";
 import { analyzeATSCompliance } from "@/lib/ai";
 
 /**

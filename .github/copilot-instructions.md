@@ -109,6 +109,15 @@ npm run db:studio        # Open Prisma Studio GUI
 git branch-clean feat/x  # Create clean feature branch from main
 ```
 
+## Pre-PR Checklist (ALWAYS follow before creating PRs)
+
+1. **Run validation:** `npm run validate` — Must pass lint, type-check, format, tests
+2. **Check for unused variables:** Prefix with `_` if intentionally unused
+3. **Check for missing awaits:** Use `void` or `.catch()` for intentional fire-and-forget
+4. **Use type imports:** `import type { X }` for type-only imports
+5. **No namespace imports:** Use `import { useState }` not `import * as React`
+6. **No control-flow exceptions:** Use early returns or Result patterns
+
 ## Git Workflow
 
 - **Branch naming:** `feat/`, `fix/`, `docs/`, `refactor/`, `chore/`
@@ -125,9 +134,11 @@ git branch-clean feat/x  # Create clean feature branch from main
 5. **tRPC for API** — All API calls via tRPC (`lib/trpc/routers/`)
 6. **Component location** — Shadcn components in `components/ui/`, feature components in `components/`
 
-## Code Quality Patterns
+## Code Quality Patterns (Qodana-Compliant)
 
-### React Imports (Qodana-compliant)
+**IMPORTANT:** All code must pass Qodana static analysis. Follow these patterns to avoid introducing warnings.
+
+### React Imports
 
 ```typescript
 // ✅ Use named imports, not namespace imports
@@ -146,10 +157,68 @@ useEffect(() => {
   void loadData();
 }, []);
 
+// ✅ Or use .catch() for error handling
+somePromise.catch(console.error);
+
 // ❌ Avoid - Qodana warns about ignored promises
 useEffect(() => {
   loadData();
 }, []);
+```
+
+### Unused Variables
+
+```typescript
+// ✅ Prefix unused parameters with underscore
+export async function GET(_request: NextRequest): Promise<NextResponse> {}
+
+// ✅ Destructure only what you need
+const { data: _unused, error } = result;
+
+// ❌ Avoid - unused variables trigger warnings
+export async function GET(request: NextRequest): Promise<NextResponse> {}
+```
+
+### Import Optimization
+
+```typescript
+// ✅ Use type imports for type-only imports
+import type { User } from "@prisma/client";
+import { prisma } from "@/lib/db";
+
+// ✅ Combine type and value imports
+import { prisma, type PrismaClient } from "@/lib/db";
+
+// ❌ Avoid - importing types as values
+import { User } from "@prisma/client"; // if only used as type
+```
+
+### Error Handling (No Exceptions for Control Flow)
+
+```typescript
+// ✅ Use Result pattern or early returns
+function parseValue(input: string): number | null {
+  const num = parseInt(input, 10);
+  return isNaN(num) ? null : num;
+}
+
+// ❌ Avoid - using try/catch for expected cases
+function parseValue(input: string): number {
+  try {
+    return parseInt(input, 10);
+  } catch {
+    return 0;
+  }
+}
+```
+
+### Avoid Code Duplication
+
+```typescript
+// ✅ Extract common patterns to shared utilities
+const formatDate = (date: Date) => new Intl.DateTimeFormat("en-GB").format(date);
+
+// ❌ Avoid - duplicating logic across files
 ```
 
 ### Dynamic Pages with Prisma

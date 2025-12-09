@@ -17,7 +17,7 @@
  * NOTE: Uses centralized AI config from lib/ai.ts for model version management.
  */
 
-import { NextRequest, NextResponse } from "next/server";
+import { type NextRequest, NextResponse } from "next/server";
 import mammoth from "mammoth";
 import { parseCVWithGeminiVision, parseCVWithGeminiText } from "@/lib/ai";
 

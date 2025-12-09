@@ -275,8 +275,7 @@ export class GitHubProvider implements SocialProvider {
       );
 
       // Decode base64 content
-      const content = Buffer.from(response.content, "base64").toString("utf-8");
-      return content;
+      return Buffer.from(response.content, "base64").toString("utf-8");
     } catch {
       return null;
     }
@@ -287,8 +286,7 @@ export class GitHubProvider implements SocialProvider {
    */
   async fetchOrganizations(accessToken: string): Promise<GitHubOrganization[]> {
     try {
-      const orgs = await this.apiRequest<GitHubOrganization[]>("/user/orgs", accessToken);
-      return orgs;
+      return this.apiRequest<GitHubOrganization[]>("/user/orgs", accessToken);
     } catch {
       return [];
     }

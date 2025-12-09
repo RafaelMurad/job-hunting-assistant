@@ -10,8 +10,7 @@
 
 "use client";
 
-import type { Dispatch, SetStateAction } from "react";
-import { useState } from "react";
+import { useState, type Dispatch, type SetStateAction } from "react";
 import { trpc } from "@/lib/trpc/client";
 import { getErrorMessage } from "@/lib/trpc/errors";
 

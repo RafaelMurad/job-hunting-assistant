@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, type JSX } from "react";
+import { useState, type Dispatch, type JSX, type SetStateAction } from "react";
 import { useRouter } from "next/navigation";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/textarea";
@@ -40,10 +40,7 @@ export default function AnalyzePage(): JSX.Element {
   const { create: createApplication } = useApplications(userId);
 
   // Helper to reset button state after delay
-  const resetButtonState = (
-    setter: React.Dispatch<React.SetStateAction<ButtonState>>,
-    delay = 2000
-  ): void => {
+  const resetButtonState = (setter: Dispatch<SetStateAction<ButtonState>>, delay = 2000): void => {
     setTimeout(() => setter("idle"), delay);
   };
 

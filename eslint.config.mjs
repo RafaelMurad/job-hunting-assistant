@@ -49,6 +49,25 @@ const eslintConfig = defineConfig([
           "ts-nocheck": true,
         },
       ],
+      // =================================================================
+      // QODANA COMPLIANCE RULES
+      // Catch issues that Qodana static analysis flags
+      // =================================================================
+      // Enforce consistent type imports (combine import/import type)
+      "@typescript-eslint/consistent-type-imports": [
+        "error",
+        {
+          prefer: "type-imports",
+          fixStyle: "inline-type-imports",
+          disallowTypeAnnotations: false,
+        },
+      ],
+      // Disallow returning value when only returning immediately
+      "no-useless-return": "error",
+      // Prefer arrow functions for callbacks (cleaner, no redundant vars)
+      "prefer-arrow-callback": "error",
+      // No unnecessary variables for immediate return
+      "no-else-return": ["error", { allowElseIf: false }],
     },
   },
   {

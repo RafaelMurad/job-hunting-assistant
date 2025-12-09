@@ -7,7 +7,7 @@
  * WHAT: Receive extracted content JSON + new template ID → Generate LaTeX
  */
 
-import { NextRequest, NextResponse } from "next/server";
+import { type NextRequest, NextResponse } from "next/server";
 import { regenerateWithTemplate } from "@/lib/ai";
 import { type CVTemplateId, type ExtractedCVContent, CV_TEMPLATES } from "@/lib/cv-templates";
 

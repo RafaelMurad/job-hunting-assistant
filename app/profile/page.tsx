@@ -7,16 +7,15 @@
 
 "use client";
 
-import type { JSX, FormEvent } from "react";
-import { useState } from "react";
-import { useRouter } from "next/navigation";
+import { CVUpload, type ExtractedCVData } from "@/components/cv-upload";
+import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
-import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
-import { CVUpload, type ExtractedCVData } from "@/components/cv-upload";
+import { Textarea } from "@/components/ui/textarea";
 import { useUser, type User } from "@/lib/hooks";
+import { useRouter } from "next/navigation";
+import { useState, type FormEvent, type JSX } from "react";
 
 /**
  * Toast notification state.
