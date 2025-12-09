@@ -1,7 +1,7 @@
 /**
  * NextAuth.js Configuration
  *
- * Provides authentication via OAuth providers (GitHub, Google).
+ * Provides authentication via OAuth providers (GitHub, Google, LinkedIn).
  * Uses Prisma adapter for database-backed sessions.
  *
  * @see https://authjs.dev/getting-started/installation
@@ -10,6 +10,7 @@
 import NextAuth from "next-auth";
 import GitHub from "next-auth/providers/github";
 import Google from "next-auth/providers/google";
+import LinkedIn from "next-auth/providers/linkedin";
 import { PrismaAdapter } from "@auth/prisma-adapter";
 import { prisma } from "@/lib/db";
 import type { UserRole } from "@prisma/client";
@@ -37,6 +38,12 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
   adapter: PrismaAdapter(prisma),
 
   providers: [
+    LinkedIn({
+      clientId: process.env.AUTH_LINKEDIN_ID!,
+      clientSecret: process.env.AUTH_LINKEDIN_SECRET!,
+      // Allow linking LinkedIn to existing account with same email
+      allowDangerousEmailAccountLinking: true,
+    }),
     GitHub({
       clientId: process.env.AUTH_GITHUB_ID!,
       clientSecret: process.env.AUTH_GITHUB_SECRET!,
@@ -46,10 +53,14 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
           scope: "read:user user:email",
         },
       },
+      // Allow linking GitHub to existing account with same email
+      allowDangerousEmailAccountLinking: true,
     }),
     Google({
       clientId: process.env.AUTH_GOOGLE_ID!,
       clientSecret: process.env.AUTH_GOOGLE_SECRET!,
+      // Allow linking Google to existing account with same email
+      allowDangerousEmailAccountLinking: true,
     }),
   ],
 
@@ -106,32 +117,60 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
 
     /**
      * SignIn callback - validate user can sign in
-     * Creates user profile fields if needed
+     * Handles automatic account linking for same email
      */
-    async signIn({ user, profile: _profile }) {
-      // Allow sign in
+    async signIn({ user, account, profile: _profile }) {
+      // Reject if no email
       if (!user.email) {
-        return false; // Reject if no email
+        return false;
       }
 
-      // Check if user exists - if so, ensure they have required fields
-      // For new users, NextAuth's Prisma adapter creates them automatically
-      // but our schema requires name/location/summary/experience/skills
+      // Check if user exists with this email
       const existingUser = await prisma.user.findUnique({
         where: { email: user.email },
+        include: { accounts: true },
       });
 
-      if (!existingUser) {
-        // New user - we need to create with required fields
-        // The adapter will try to create, but we need defaults
-        // We'll handle this by creating the user ourselves
+      if (existingUser) {
+        // User exists - check if this OAuth provider is already linked
+        const existingAccount = existingUser.accounts.find(
+          (acc) => acc.provider === account?.provider
+        );
+
+        if (!existingAccount && account) {
+          // Auto-link this new OAuth provider to existing user
+          // This allows signing in with GitHub OR Google to same account
+          await prisma.account.create({
+            data: {
+              userId: existingUser.id,
+              type: account.type,
+              provider: account.provider,
+              providerAccountId: account.providerAccountId,
+              access_token: account.access_token ?? null,
+              token_type: account.token_type ?? null,
+              scope: account.scope ?? null,
+              id_token: account.id_token ?? null,
+              expires_at: account.expires_at ?? null,
+            },
+          });
+        }
+
+        // Update user image if they don't have one
+        if (!existingUser.image && user.image) {
+          await prisma.user.update({
+            where: { id: existingUser.id },
+            data: { image: user.image },
+          });
+        }
+      } else {
+        // New user - create with required fields
         try {
           await prisma.user.create({
             data: {
               email: user.email,
               name: user.name ?? _profile?.name ?? "New User",
               image: user.image ?? null,
-              location: "", // Required field - user should complete profile
+              location: "", // User should complete profile
               summary: "",
               experience: "",
               skills: "",
@@ -141,7 +180,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
             },
           });
         } catch {
-          // User might already exist from race condition, that's OK
+          // User might exist from race condition, that's OK
         }
       }
 

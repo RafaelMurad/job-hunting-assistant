@@ -4,9 +4,20 @@ import { useState, useMemo, type JSX } from "react";
 import { useRouter } from "next/navigation";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { format } from "date-fns";
 import { useApplications, type ApplicationStatus } from "@/lib/hooks";
 import { trpc } from "@/lib/trpc/client";
+
+/**
+ * Format a date using native Intl.DateTimeFormat
+ * Replaces date-fns format() to save 38MB in node_modules
+ */
+function formatDate(date: Date): string {
+  return new Intl.DateTimeFormat("en-US", {
+    month: "short",
+    day: "numeric",
+    year: "numeric",
+  }).format(date);
+}
 
 /**
  * Application Tracker Page
@@ -444,8 +455,8 @@ export default function TrackerPage(): JSX.Element {
                       <div className="flex flex-col items-end gap-2">
                         <p className="text-sm text-gray-500">
                           {app.appliedAt
-                            ? `Applied ${format(new Date(app.appliedAt), "MMM d, yyyy")}`
-                            : `Saved ${format(new Date(app.createdAt), "MMM d, yyyy")}`}
+                            ? `Applied ${formatDate(new Date(app.appliedAt))}`
+                            : `Saved ${formatDate(new Date(app.createdAt))}`}
                         </p>
 
                         {/* Delete button */}
