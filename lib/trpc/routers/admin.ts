@@ -97,8 +97,7 @@ export const adminRouter = router({
    * Check if current user has admin access
    */
   checkAccess: publicProcedure.input(checkAccessSchema).query(async ({ ctx, input }) => {
-    const result = await hasAdminAccess(ctx.prisma, input.userId);
-    return result;
+    return hasAdminAccess(ctx.prisma, input.userId);
   }),
 
   /**

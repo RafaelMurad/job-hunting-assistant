@@ -117,11 +117,10 @@ function SettingsPageContent(): JSX.Element {
   const { data: configuredProviders } = trpc.social.getConfiguredProviders.useQuery();
 
   // Get integrations status
-  const {
-    data: integrations,
-    isLoading: _integrationsLoading,
-    refetch: refetchIntegrations,
-  } = trpc.social.getIntegrations.useQuery({ userId }, { enabled: !!userId });
+  const { data: integrations, refetch: refetchIntegrations } = trpc.social.getIntegrations.useQuery(
+    { userId },
+    { enabled: !!userId }
+  );
 
   // Mutations
   const disconnectMutation = trpc.social.disconnect.useMutation({
