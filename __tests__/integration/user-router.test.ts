@@ -31,6 +31,10 @@ const mockUser: User = {
   cvLatexUrl: null,
   cvFilename: null,
   cvUploadedAt: null,
+  role: "USER",
+  isTrusted: false,
+  isVerified: false,
+  image: null,
   createdAt: new Date("2024-01-01"),
   updatedAt: new Date("2024-01-01"),
 };

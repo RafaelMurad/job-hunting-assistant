@@ -88,7 +88,21 @@ export const FEATURE_FLAGS: FeatureFlag[] = [
   {
     key: "integrations",
     name: "Integration Hub",
-    description: "OAuth connections to LinkedIn, Indeed, etc.",
+    description: "Master toggle for all OAuth social integrations",
+    defaultEnabled: false,
+    category: "experimental",
+  },
+  {
+    key: "github_integration",
+    name: "GitHub Integration",
+    description: "Connect GitHub to import repositories, languages, and contributions",
+    defaultEnabled: false,
+    category: "experimental",
+  },
+  {
+    key: "linkedin_integration",
+    name: "LinkedIn Integration",
+    description: "Connect LinkedIn to import profile and sync saved jobs",
     defaultEnabled: false,
     category: "experimental",
   },

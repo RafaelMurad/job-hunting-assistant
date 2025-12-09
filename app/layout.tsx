@@ -5,6 +5,8 @@ import "./globals.css";
 import Link from "next/link";
 import { FeatureFlagProvider } from "@/lib/feature-flags/provider";
 import { TRPCProvider } from "@/lib/trpc/provider";
+import { AuthProvider } from "@/components/auth-provider";
+import { UserMenu } from "@/components/user-menu";
 
 const inter = Inter({
   subsets: ["latin"],
@@ -24,63 +26,73 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className={`${inter.variable} font-sans antialiased bg-slate-50`}>
-        <TRPCProvider>
-          <FeatureFlagProvider>
-            {/* Navigation */}
-            <nav className="bg-white border-b border-slate-200">
-              <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                <div className="flex justify-between h-16 items-center">
-                  <div className="flex items-center gap-8">
-                    <Link href="/" className="text-xl font-bold text-slate-900">
-                      Job Hunt AI
-                    </Link>
-                    <div className="hidden md:flex gap-6">
-                      <Link
-                        href="/dashboard"
-                        className="text-slate-600 hover:text-slate-900 transition-colors"
-                      >
-                        Dashboard
+        <AuthProvider>
+          <TRPCProvider>
+            <FeatureFlagProvider>
+              {/* Navigation */}
+              <nav className="bg-white border-b border-slate-200">
+                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                  <div className="flex justify-between h-16 items-center">
+                    <div className="flex items-center gap-8">
+                      <Link href="/" className="text-xl font-bold text-slate-900">
+                        Job Hunt AI
                       </Link>
-                      <Link
-                        href="/profile"
-                        className="text-slate-600 hover:text-slate-900 transition-colors"
-                      >
-                        Profile
-                      </Link>
-                      <Link
-                        href="/cv"
-                        className="text-slate-600 hover:text-slate-900 transition-colors"
-                      >
-                        CV Editor
-                      </Link>
-                      <Link
-                        href="/analyze"
-                        className="text-slate-600 hover:text-slate-900 transition-colors"
-                      >
-                        Analyze Job
-                      </Link>
-                      <Link
-                        href="/tracker"
-                        className="text-slate-600 hover:text-slate-900 transition-colors"
-                      >
-                        Tracker
-                      </Link>
-                      <Link
-                        href="/admin/ux-planner"
-                        className="text-slate-400 hover:text-slate-600 transition-colors text-sm"
-                      >
-                        Admin
-                      </Link>
+                      <div className="hidden md:flex gap-6">
+                        <Link
+                          href="/dashboard"
+                          className="text-slate-600 hover:text-slate-900 transition-colors"
+                        >
+                          Dashboard
+                        </Link>
+                        <Link
+                          href="/profile"
+                          className="text-slate-600 hover:text-slate-900 transition-colors"
+                        >
+                          Profile
+                        </Link>
+                        <Link
+                          href="/cv"
+                          className="text-slate-600 hover:text-slate-900 transition-colors"
+                        >
+                          CV Editor
+                        </Link>
+                        <Link
+                          href="/analyze"
+                          className="text-slate-600 hover:text-slate-900 transition-colors"
+                        >
+                          Analyze Job
+                        </Link>
+                        <Link
+                          href="/tracker"
+                          className="text-slate-600 hover:text-slate-900 transition-colors"
+                        >
+                          Tracker
+                        </Link>
+                        <Link
+                          href="/settings"
+                          className="text-slate-600 hover:text-slate-900 transition-colors"
+                        >
+                          Settings
+                        </Link>
+                        <Link
+                          href="/admin/flags"
+                          className="text-slate-400 hover:text-slate-600 transition-colors text-sm"
+                        >
+                          Admin
+                        </Link>
+                      </div>
                     </div>
+                    {/* User Menu */}
+                    <UserMenu />
                   </div>
                 </div>
-              </div>
-            </nav>
+              </nav>
 
-            {/* Main Content */}
-            <main>{children}</main>
-          </FeatureFlagProvider>
-        </TRPCProvider>
+              {/* Main Content */}
+              <main>{children}</main>
+            </FeatureFlagProvider>
+          </TRPCProvider>
+        </AuthProvider>
       </body>
     </html>
   );
