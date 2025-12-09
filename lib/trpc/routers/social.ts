@@ -240,7 +240,7 @@ export const socialRouter = router({
               refreshToken: newTokens.refreshToken
                 ? encryptToken(newTokens.refreshToken)
                 : profile.refreshToken,
-              tokenExpiry: newTokens.expiresAt,
+              tokenExpiry: newTokens.expiresAt ?? null,
             },
           });
         } catch {
