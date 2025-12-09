@@ -2,37 +2,47 @@
 
 ## Project Overview
 
-A **learning-focused portfolio project** for AI-powered job hunting: CV analysis, cover letter generation, and application tracking. Single-user MVP using Next.js 16 App Router.
+A **learning-focused portfolio project** for AI-powered job hunting: CV analysis, cover letter generation, and application tracking. Built with Next.js 16 App Router.
 
-**Status:** v1.0 MVP Complete - Deployed to Vercel with PostgreSQL (Neon)
+**Status:** v1.1 Complete - Auth & Social Integrations deployed to Vercel
 
 ## Tech Stack
 
 - **Frontend:** Next.js 16 (App Router), React 19, TypeScript, TailwindCSS 4, Shadcn/ui
 - **Backend:** tRPC v11 with React Query, Prisma ORM
 - **Database:** PostgreSQL (Neon) with connection pooling
-- **AI:** Multi-provider via `lib/ai.ts` — Gemini (free), OpenAI, Claude
+- **Auth:** NextAuth.js v5 (beta) with GitHub, Google, LinkedIn OAuth
+- **AI:** Multi-provider via `lib/ai/` — Gemini (free), OpenAI, Claude
 
 ## Architecture & Data Flow
 
 ```
-app/page.tsx (landing) → app/profile/page.tsx (CV form)
-                       → app/analyze/page.tsx (job analysis)
-                       → app/tracker/page.tsx (applications list)
+app/page.tsx (landing) → app/login/page.tsx (OAuth sign-in)
                        → app/dashboard/page.tsx (stats overview)
+                       → app/profile/page.tsx (CV form)
+                       → app/analyze/page.tsx (job analysis)
+                       → app/cv/page.tsx (LaTeX editor)
+                       → app/tracker/page.tsx (applications list)
+                       → app/settings/page.tsx (integrations)
+                       → app/admin/* (feature flags, UX planner)
 
 Custom Hooks (lib/hooks/):
-  useUser()        → user profile CRUD, CV upload
-  useAnalyze()     → job analysis, cover letter generation
+  useUser()         → user profile CRUD, CV upload
+  useAnalyze()      → job analysis, cover letter generation
   useApplications() → applications CRUD, stats
 
 tRPC Routers (lib/trpc/routers/):
   user.ts         → get, upsert, uploadCV
   analyze.ts      → analyzeJob, generateCoverLetter
   applications.ts → list, create, update, delete
+  social.ts       → OAuth integrations, profile sync
+  admin.ts        → trusted user management
+  ux.ts           → UX research platform
 
-REST Endpoints (kept for specific use cases):
-  POST /api/cv/upload → FormData CV upload (fallback for larger files)
+Social Integration (lib/social/):
+  providers/github.ts   → GitHub OAuth + API (repos, contributions)
+  providers/linkedin.ts → LinkedIn OAuth + API
+  token-manager.ts      → AES-256-GCM token encryption
 ```
 
 ## Key Patterns
@@ -69,13 +79,19 @@ export const userSchema = z.object({ ... });
 export type UserInput = z.infer<typeof userSchema>;
 ```
 
-### Single-User Mode
+### Authentication Pattern
 
-MVP assumes one user. Hardcoded user ID pattern throughout:
+NextAuth.js v5 with JWT strategy. Use `auth()` in Server Components, `getToken()` in Edge middleware:
 
 ```typescript
-// FUTURE: Get user from auth session
-const userId = "cm3m6n7z80000uy7k3xqvt8xy";
+// Server Component - use auth()
+import { auth } from "@/lib/auth";
+const session = await auth();
+if (!session) redirect("/login");
+
+// Middleware - use getToken() (edge-compatible, no Prisma)
+import { getToken } from "next-auth/jwt";
+const token = await getToken({ req, secret: process.env.AUTH_SECRET ?? "" });
 ```
 
 ### Feature Flags (`lib/feature-flags/`)
@@ -147,14 +163,30 @@ import { prisma } from "@/lib/db";
 ## Environment Variables
 
 ```bash
+# Database
 DATABASE_URL=           # Neon PostgreSQL pooled connection
 DATABASE_URL_UNPOOLED=  # Direct connection for migrations
+
+# AI Providers
 AI_PROVIDER=gemini      # gemini | openai | claude
 GEMINI_API_KEY=         # Free tier: 1500 req/day
 OPENAI_API_KEY=         # Optional paid
 ANTHROPIC_API_KEY=      # Optional paid
+
+# Authentication (NextAuth.js v5)
+AUTH_SECRET=            # Random string for JWT signing
+AUTH_GITHUB_ID=         # GitHub OAuth App ID
+AUTH_GITHUB_SECRET=     # GitHub OAuth App Secret
+AUTH_GOOGLE_ID=         # Google OAuth Client ID
+AUTH_GOOGLE_SECRET=     # Google OAuth Client Secret
+AUTH_LINKEDIN_ID=       # LinkedIn OAuth App ID
+AUTH_LINKEDIN_SECRET=   # LinkedIn OAuth App Secret
+
+# Social Integration (optional, for enhanced data sync)
+SOCIAL_ENCRYPTION_KEY=  # 32-byte hex key for token encryption
+OWNER_EMAIL=            # Email for OWNER role assignment
 ```
 
-## Out of Scope (MVP)
+## Out of Scope (v1.1)
 
-Mark with `FUTURE:` — Multi-user auth, PDF export, email integration, job board scraping, mobile app
+Mark with `FUTURE:` — PDF CV export, email integration, job board scraping, mobile app, interview AI helper

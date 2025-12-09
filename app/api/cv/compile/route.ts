@@ -13,7 +13,8 @@ import { compileLatexToPdf, validateLatexSource, LaTeXCompilationError } from "@
 import { uploadCVPdf, uploadCVLatex } from "@/lib/storage";
 import { prisma } from "@/lib/db";
 
-// FUTURE: Get user from auth session
+// TODO: Replace DEFAULT_USER_ID with auth session user
+// Auth is now available via: import { auth } from "@/lib/auth";
 const DEFAULT_USER_ID = "cmiw9gfmv0000uj7ska14xors";
 
 /**

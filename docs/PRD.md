@@ -100,13 +100,13 @@ Job hunting is fragmented, tedious, and hard to track:
 
 ### NOT in v1.0 (Planned for v1.1+)
 
-| Feature                   | Reason                                                       | Target   |
-| ------------------------- | ------------------------------------------------------------ | -------- |
-| **GitHub Integration**    | Core differentiator — adds real project context              | **v1.1** |
-| **LinkedIn Integration**  | Core differentiator — automates tracking, detects mismatches | **v1.1** |
-| PDF CV Export             | Can use browser print initially                              | v1.2     |
-| Interview AI Helper       | Separate product vertical                                    | v2.0     |
-| Multi-user Authentication | Solo use first                                               | v2.0     |
+| Feature                  | Reason                                                       | Target   | Status  |
+| ------------------------ | ------------------------------------------------------------ | -------- | ------- |
+| **GitHub Integration**   | Core differentiator — adds real project context              | **v1.1** | ✅ Done |
+| **LinkedIn Integration** | Core differentiator — automates tracking, detects mismatches | **v1.1** | ✅ Done |
+| **Multi-user Auth**      | Enable multiple users with OAuth                             | **v1.1** | ✅ Done |
+| PDF CV Export            | Can use browser print initially                              | v1.2     | Planned |
+| Interview AI Helper      | Separate product vertical                                    | v2.0     | Planned |
 
 ---
 
@@ -176,6 +176,22 @@ Sprint 8: UX Research & Planning ✅ (Complete)
 │   └── Priority Matrix
 ├── ✅ Admin Navigation
 └── ✅ Cloud Infrastructure Roadmap (PRD)
+
+Sprint 9: Authentication & Social Integrations ✅ (Complete)
+├── ✅ NextAuth.js v5 with JWT Strategy
+│   ├── GitHub OAuth Provider
+│   ├── Google OAuth Provider
+│   └── LinkedIn OAuth Provider
+├── ✅ User Role System (USER, ADMIN, OWNER)
+├── ✅ Route Protection Middleware (edge-compatible)
+├── ✅ Social Integration System
+│   ├── GitHub: Repos, Languages, Contributions
+│   ├── LinkedIn: Profile Sync (API limited)
+│   └── Token Encryption (AES-256-GCM)
+├── ✅ Settings Page with Integration Management
+├── ✅ Feature Flags for Integrations
+├── ✅ Admin Guard Component
+└── ✅ Login Page with OAuth Buttons
 ```
 
 ---
@@ -417,19 +433,21 @@ If AWS credits become available:
 
 ---
 
-## 8. Future Ideas (Post v1.0)
+## 8. Future Ideas (Post v1.1)
 
-### v1.1 — Core Integrations (Priority)
+### v1.2 — Optimization & Polish
 
-- [ ] **GitHub OAuth** — Import repos, languages, contributions
-- [ ] **LinkedIn OAuth** — Import profile, saved jobs, connections
+- [ ] **PDF CV Export** — Native PDF generation (replace browser print)
+- [ ] **Bundle Size Optimization** — Reduce AI SDK footprint
+- [ ] **Design System Audit** — Component consistency review
+- [ ] **AI Service Improvements** — Prompt optimization, caching
 - [ ] Application statistics/charts
 
-### v1.2 — Enhancements
+### v1.3 — Enhancements
 
-- [ ] **Premium CV Editor** — Gate behind payment, use Cloud Run LaTeX
 - [ ] Email reminders for follow-ups
 - [ ] Calendar Integration — Interview scheduling
+- [ ] **Premium CV Editor** — Gate behind payment, use Cloud Run LaTeX
 
 ### v2.0 — Advanced Features
 
@@ -485,6 +503,7 @@ If AWS credits become available:
 | Dec 8, 2025 | 1.1     | **CV Editor** - LaTeX editor, 3 templates, multi-model AI        |
 | Dec 8, 2025 | 1.2     | **Cloud Roadmap** - Added infrastructure roadmap for GCP/scaling |
 | Dec 8, 2025 | 1.3     | **UX Research** - Added /docs/ux/ and /admin/ux-planner          |
+| Dec 9, 2025 | 1.4     | **v1.1 Complete** - Auth, Social Integrations, GitHub/LinkedIn   |
 
 ---
 
