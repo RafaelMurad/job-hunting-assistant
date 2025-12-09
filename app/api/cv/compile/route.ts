@@ -12,20 +12,25 @@ import { NextRequest, NextResponse } from "next/server";
 import { compileLatexToPdf, validateLatexSource, LaTeXCompilationError } from "@/lib/latex";
 import { uploadCVPdf, uploadCVLatex } from "@/lib/storage";
 import { prisma } from "@/lib/db";
-
-// TODO: Replace DEFAULT_USER_ID with auth session user
-// Auth is now available via: import { auth } from "@/lib/auth";
-const DEFAULT_USER_ID = "cmiw9gfmv0000uj7ska14xors";
+import { auth } from "@/lib/auth";
 
 /**
  * POST /api/cv/compile
  *
  * Compile LaTeX to PDF. Optionally save to Blob and update user record.
+ * Requires authentication.
  */
 export async function POST(request: NextRequest): Promise<NextResponse> {
   try {
+    // Verify authentication
+    const session = await auth();
+    if (!session?.user?.id) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
     const body = await request.json();
-    const { latexContent, save = false, userId = DEFAULT_USER_ID } = body;
+    const { latexContent, save = false } = body;
+    const userId = session.user.id;
 
     if (!latexContent || typeof latexContent !== "string") {
       return NextResponse.json({ error: "LaTeX content is required" }, { status: 400 });

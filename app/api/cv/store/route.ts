@@ -16,6 +16,7 @@
 
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
+import { auth } from "@/lib/auth";
 import {
   extractLatexWithModel,
   extractWithTemplate,
@@ -26,20 +27,23 @@ import { type CVTemplateId } from "@/lib/cv-templates";
 import { uploadCVPdf, uploadCVLatex, deleteCVFiles } from "@/lib/storage";
 import { parseAIError } from "@/lib/utils";
 
-// TODO: Replace DEFAULT_USER_ID with auth session user
-// Auth is now available via: import { auth } from "@/lib/auth";
-const DEFAULT_USER_ID = "cmiw9gfmv0000uj7ska14xors";
-
 /**
  * POST /api/cv/store
  *
  * Uploads CV PDF, extracts LaTeX, stores both in Blob storage.
+ * Requires authentication.
  */
 export async function POST(request: NextRequest): Promise<NextResponse> {
   try {
+    // Verify authentication
+    const session = await auth();
+    if (!session?.user?.id) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
     const formData = await request.formData();
     const file = formData.get("file") as File | null;
-    const userId = (formData.get("userId") as string) || DEFAULT_USER_ID;
+    const userId = session.user.id;
     const selectedModel =
       (formData.get("model") as LatexExtractionModel) || AI_CONFIG.defaultLatexModel;
     const selectedTemplate = formData.get("template") as CVTemplateId | null;
@@ -178,12 +182,17 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
 /**
  * GET /api/cv/store
  *
- * Retrieve stored CV data for a user.
+ * Retrieve stored CV data for the authenticated user.
  */
-export async function GET(request: NextRequest): Promise<NextResponse> {
+export async function GET(_request: NextRequest): Promise<NextResponse> {
   try {
-    const { searchParams } = new URL(request.url);
-    const userId = searchParams.get("userId") || DEFAULT_USER_ID;
+    // Verify authentication
+    const session = await auth();
+    if (!session?.user?.id) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    const userId = session.user.id;
 
     const user = await prisma.user.findUnique({
       where: { id: userId },
@@ -241,12 +250,17 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
 /**
  * DELETE /api/cv/store
  *
- * Delete stored CV data for a user.
+ * Delete stored CV data for the authenticated user.
  */
-export async function DELETE(request: NextRequest): Promise<NextResponse> {
+export async function DELETE(_request: NextRequest): Promise<NextResponse> {
   try {
-    const { searchParams } = new URL(request.url);
-    const userId = searchParams.get("userId") || DEFAULT_USER_ID;
+    // Verify authentication
+    const session = await auth();
+    if (!session?.user?.id) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    const userId = session.user.id;
 
     // Delete files from Blob storage
     await deleteCVFiles(userId);
