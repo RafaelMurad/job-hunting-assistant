@@ -11,7 +11,7 @@
 import { router, publicProcedure } from "@/lib/trpc/init";
 import { z } from "zod";
 import { TRPCError } from "@trpc/server";
-import { UxSeverity, UxEffort, UxStatus } from "@prisma/client";
+import { type UxSeverity, type UxEffort, type UxStatus } from "@prisma/client";
 
 // =============================================================================
 // INPUT SCHEMAS

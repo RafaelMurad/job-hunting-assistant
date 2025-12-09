@@ -46,21 +46,20 @@ export const userRouter = router({
         },
       });
       return { user, created: false };
-    } else {
-      // Create new user
-      const user = await ctx.prisma.user.create({
-        data: {
-          name: input.name,
-          email: input.email,
-          phone: input.phone ?? null,
-          location: input.location,
-          summary: input.summary,
-          experience: input.experience,
-          skills: input.skills,
-        },
-      });
-      return { user, created: true };
     }
+    // Create new user
+    const user = await ctx.prisma.user.create({
+      data: {
+        name: input.name,
+        email: input.email,
+        phone: input.phone ?? null,
+        location: input.location,
+        summary: input.summary,
+        experience: input.experience,
+        skills: input.skills,
+      },
+    });
+    return { user, created: true };
   }),
 
   /**

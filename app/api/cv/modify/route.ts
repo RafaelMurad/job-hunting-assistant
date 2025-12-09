@@ -8,7 +8,7 @@
  * HOW: Uses lib/ai.ts modifyLatexWithAI function.
  */
 
-import { NextRequest, NextResponse } from "next/server";
+import { type NextRequest, NextResponse } from "next/server";
 import { modifyLatexWithAI } from "@/lib/ai";
 
 /**

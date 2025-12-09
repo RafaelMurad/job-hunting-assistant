@@ -75,20 +75,19 @@ async function upsertUserLogic(
       },
     });
     return { user, created: false };
-  } else {
-    const user = await prisma.user.create({
-      data: {
-        name: input.name,
-        email: input.email,
-        phone: input.phone ?? null,
-        location: input.location,
-        summary: input.summary,
-        experience: input.experience,
-        skills: input.skills,
-      },
-    });
-    return { user, created: true };
   }
+  const user = await prisma.user.create({
+    data: {
+      name: input.name,
+      email: input.email,
+      phone: input.phone ?? null,
+      location: input.location,
+      summary: input.summary,
+      experience: input.experience,
+      skills: input.skills,
+    },
+  });
+  return { user, created: true };
 }
 
 describe("User Router Logic", () => {
