@@ -1,11 +1,11 @@
 "use client";
 
-import { Suspense, useState, type JSX } from "react";
-import { useSearchParams } from "next/navigation";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { trpc } from "@/lib/trpc/client";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { useFeatureFlag } from "@/lib/feature-flags/hooks";
+import { trpc } from "@/lib/trpc/client";
+import { useSearchParams } from "next/navigation";
+import { Suspense, useState, type JSX } from "react";
 
 /**
  * Loading Skeleton for settings page
@@ -125,13 +125,13 @@ function SettingsPageContent(): JSX.Element {
   // Mutations
   const disconnectMutation = trpc.social.disconnect.useMutation({
     onSuccess: () => {
-      refetchIntegrations();
+      void refetchIntegrations();
     },
   });
 
   const syncMutation = trpc.social.sync.useMutation({
     onSuccess: () => {
-      refetchIntegrations();
+      void refetchIntegrations();
     },
   });
 
