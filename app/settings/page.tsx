@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, type JSX } from "react";
+import { Suspense, useState, type JSX } from "react";
 import { useSearchParams } from "next/navigation";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -8,12 +8,97 @@ import { trpc } from "@/lib/trpc/client";
 import { useFeatureFlag } from "@/lib/feature-flags/hooks";
 
 /**
- * Settings Page
- *
- * User settings including social integrations (GitHub, LinkedIn),
- * profile preferences, and account management.
+ * Loading Skeleton for settings page
  */
-export default function SettingsPage(): JSX.Element {
+function SettingsLoadingSkeleton(): JSX.Element {
+  return (
+    <div className="min-h-screen bg-gray-50 py-12">
+      <div className="mx-auto max-w-4xl px-4">
+        <div className="mb-8">
+          <div className="h-10 w-48 bg-gray-200 rounded animate-pulse mb-2" />
+          <div className="h-5 w-72 bg-gray-200 rounded animate-pulse" />
+        </div>
+        <Card className="mb-6">
+          <CardHeader>
+            <div className="h-6 w-40 bg-gray-200 rounded animate-pulse mb-2" />
+            <div className="h-4 w-64 bg-gray-200 rounded animate-pulse" />
+          </CardHeader>
+          <CardContent>
+            <div className="h-20 bg-gray-100 rounded animate-pulse" />
+          </CardContent>
+        </Card>
+      </div>
+    </div>
+  );
+}
+
+/**
+ * Notification Banner Component
+ */
+function NotificationBanner({
+  connected,
+  error,
+  success,
+}: {
+  connected: string | null;
+  error: string | null;
+  success: string | null;
+}): JSX.Element | null {
+  if (success && connected) {
+    return (
+      <div className="mb-6 rounded-lg border border-forest-300 bg-forest-50 p-4">
+        <div className="flex items-center">
+          <svg
+            className="h-5 w-5 text-forest-600"
+            fill="none"
+            viewBox="0 0 24 24"
+            strokeWidth={1.5}
+            stroke="currentColor"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+            />
+          </svg>
+          <span className="ml-2 font-medium text-forest-800">
+            Successfully connected {connected === "github" ? "GitHub" : "LinkedIn"}!
+          </span>
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="mb-6 rounded-lg border border-red-300 bg-red-50 p-4">
+        <div className="flex items-center">
+          <svg
+            className="h-5 w-5 text-red-600"
+            fill="none"
+            viewBox="0 0 24 24"
+            strokeWidth={1.5}
+            stroke="currentColor"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              d="M12 9v3.75m9-.75a9 9 0 11-18 0 9 9 0 0118 0zm-9 3.75h.008v.008H12v-.008z"
+            />
+          </svg>
+          <span className="ml-2 font-medium text-red-800">{decodeURIComponent(error)}</span>
+        </div>
+      </div>
+    );
+  }
+
+  return null;
+}
+
+/**
+ * Settings Page Content - uses searchParams
+ */
+function SettingsPageContent(): JSX.Element {
   const searchParams = useSearchParams();
   const connected = searchParams.get("connected");
   const error = searchParams.get("error");
@@ -95,49 +180,7 @@ export default function SettingsPage(): JSX.Element {
         </div>
 
         {/* Success/Error Messages */}
-        {success && connected && (
-          <div className="mb-6 rounded-lg border border-forest-300 bg-forest-50 p-4">
-            <div className="flex items-center">
-              <svg
-                className="h-5 w-5 text-forest-600"
-                fill="none"
-                viewBox="0 0 24 24"
-                strokeWidth={1.5}
-                stroke="currentColor"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-                />
-              </svg>
-              <span className="ml-2 font-medium text-forest-800">
-                Successfully connected {connected === "github" ? "GitHub" : "LinkedIn"}!
-              </span>
-            </div>
-          </div>
-        )}
-
-        {error && (
-          <div className="mb-6 rounded-lg border border-red-300 bg-red-50 p-4">
-            <div className="flex items-center">
-              <svg
-                className="h-5 w-5 text-red-600"
-                fill="none"
-                viewBox="0 0 24 24"
-                strokeWidth={1.5}
-                stroke="currentColor"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  d="M12 9v3.75m9-.75a9 9 0 11-18 0 9 9 0 0118 0zm-9 3.75h.008v.008H12v-.008z"
-                />
-              </svg>
-              <span className="ml-2 font-medium text-red-800">{decodeURIComponent(error)}</span>
-            </div>
-          </div>
-        )}
+        <NotificationBanner connected={connected} error={error} success={success} />
 
         {/* Social Integrations */}
         {integrationsEnabled && (
@@ -333,5 +376,19 @@ export default function SettingsPage(): JSX.Element {
         </Card>
       </div>
     </div>
+  );
+}
+
+/**
+ * Settings Page
+ *
+ * User settings including social integrations (GitHub, LinkedIn),
+ * profile preferences, and account management.
+ */
+export default function SettingsPage(): JSX.Element {
+  return (
+    <Suspense fallback={<SettingsLoadingSkeleton />}>
+      <SettingsPageContent />
+    </Suspense>
   );
 }
