@@ -5,7 +5,7 @@
  */
 
 import { TRPCError } from "@trpc/server";
-import { t } from "../init";
+import type { TRPCContext } from "../init";
 import { rateLimiters, getRateLimitIdentifier } from "@/lib/rate-limit";
 
 /**
@@ -13,7 +13,7 @@ import { rateLimiters, getRateLimitIdentifier } from "@/lib/rate-limit";
  *
  * Applies to all non-expensive operations.
  */
-export const rateLimitMiddleware = t.middleware(async ({ ctx, next }) => {
+export const rateLimitMiddleware = async ({ ctx, next }: { ctx: TRPCContext; next: any }) => {
   const identifier = getRateLimitIdentifier(ctx.session?.user?.id);
 
   const result = await rateLimiters.general.limit(identifier);
@@ -38,7 +38,7 @@ export const rateLimitMiddleware = t.middleware(async ({ ctx, next }) => {
  *
  * Stricter limits for expensive AI API calls.
  */
-export const aiRateLimitMiddleware = t.middleware(async ({ ctx, next }) => {
+export const aiRateLimitMiddleware = async ({ ctx, next }: { ctx: TRPCContext; next: any }) => {
   const identifier = getRateLimitIdentifier(ctx.session?.user?.id);
 
   const result = await rateLimiters.ai.limit(identifier);
@@ -63,7 +63,7 @@ export const aiRateLimitMiddleware = t.middleware(async ({ ctx, next }) => {
  *
  * Limits file uploads to prevent storage abuse.
  */
-export const uploadRateLimitMiddleware = t.middleware(async ({ ctx, next }) => {
+export const uploadRateLimitMiddleware = async ({ ctx, next }: { ctx: TRPCContext; next: any }) => {
   const identifier = getRateLimitIdentifier(ctx.session?.user?.id);
 
   const result = await rateLimiters.upload.limit(identifier);

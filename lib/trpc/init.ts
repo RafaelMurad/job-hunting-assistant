@@ -154,16 +154,16 @@ export const ownerProcedure = t.procedure.use(enforceOwner);
  * Rate-limited protected procedure
  * Use for general protected endpoints with rate limiting.
  */
-export const rateLimitedProcedure = protectedProcedure.use(rateLimitMiddleware);
+export const rateLimitedProcedure = protectedProcedure.use(t.middleware(rateLimitMiddleware));
 
 /**
  * AI rate-limited procedure
  * Use for expensive AI operations (analysis, generation, etc.)
  */
-export const aiProcedure = protectedProcedure.use(aiRateLimitMiddleware);
+export const aiProcedure = protectedProcedure.use(t.middleware(aiRateLimitMiddleware));
 
 /**
  * Upload rate-limited procedure
  * Use for file upload endpoints.
  */
-export const uploadProcedure = protectedProcedure.use(uploadRateLimitMiddleware);
+export const uploadProcedure = protectedProcedure.use(t.middleware(uploadRateLimitMiddleware));
