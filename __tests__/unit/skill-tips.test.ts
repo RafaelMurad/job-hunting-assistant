@@ -5,7 +5,7 @@
  * advice for skill gaps identified during job analysis.
  */
 
-import { describe, it, expect } from "vitest";
+import { describe, expect, it } from "vitest";
 
 // Extract the skill tip logic for testing
 // In a real app, this would be in a shared module

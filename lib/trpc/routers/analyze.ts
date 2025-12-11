@@ -7,7 +7,7 @@
  */
 
 import { analyzeJob, generateCoverLetter } from "@/lib/ai";
-import { protectedProcedure, router } from "@/lib/trpc/init";
+import { aiProcedure, router } from "@/lib/trpc/init";
 import { TRPCError } from "@trpc/server";
 import { z } from "zod";
 
@@ -62,7 +62,7 @@ export const analyzeRouter = router({
    * Analyze a job description against user's CV.
    * Returns match score, requirements, gaps, etc.
    */
-  analyzeJob: protectedProcedure.input(analyzeJobInputSchema).mutation(async ({ ctx, input }) => {
+  analyzeJob: aiProcedure.input(analyzeJobInputSchema).mutation(async ({ ctx, input }) => {
     // Get authenticated user's CV data
     const user = await ctx.prisma.user.findUnique({
       where: { id: ctx.user.id },
@@ -84,7 +84,7 @@ export const analyzeRouter = router({
   /**
    * Generate a cover letter based on job analysis.
    */
-  generateCoverLetter: protectedProcedure
+  generateCoverLetter: aiProcedure
     .input(generateCoverLetterInputSchema)
     .mutation(async ({ ctx, input }) => {
       // Get authenticated user's CV data

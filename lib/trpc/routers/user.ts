@@ -8,7 +8,7 @@
  */
 
 import { parseCVWithGeminiText, parseCVWithGeminiVision } from "@/lib/ai";
-import { protectedProcedure, router } from "@/lib/trpc/init";
+import { protectedProcedure, router, uploadProcedure } from "@/lib/trpc/init";
 import { cvUploadSchema, userSchema } from "@/lib/validations/user";
 import { TRPCError } from "@trpc/server";
 import mammoth from "mammoth";
@@ -51,7 +51,7 @@ export const userRouter = router({
    * Accepts PDF or DOCX files and extracts profile data using AI.
    * Uses centralized AI functions from lib/ai.ts
    */
-  uploadCV: protectedProcedure.input(cvUploadSchema).mutation(async ({ input }) => {
+  uploadCV: uploadProcedure.input(cvUploadSchema).mutation(async ({ input }) => {
     const { contentBase64, mimeType } = input;
     const buffer = Buffer.from(contentBase64, "base64");
 
