@@ -4,6 +4,9 @@
  * Protects API endpoints from abuse and DoS attacks.
  */
 
+/* eslint-disable @typescript-eslint/explicit-function-return-type */
+/* eslint-disable @typescript-eslint/no-explicit-any */
+
 import { TRPCError } from "@trpc/server";
 import type { TRPCContext } from "../init";
 import { rateLimiters, getRateLimitIdentifier } from "@/lib/rate-limit";
@@ -13,7 +16,13 @@ import { rateLimiters, getRateLimitIdentifier } from "@/lib/rate-limit";
  *
  * Applies to all non-expensive operations.
  */
-export const rateLimitMiddleware = async ({ ctx, next }: { ctx: TRPCContext; next: any }) => {
+export const rateLimitMiddleware = async ({
+  ctx,
+  next,
+}: {
+  ctx: TRPCContext;
+  next: any;
+}) => {
   const identifier = getRateLimitIdentifier(ctx.session?.user?.id);
 
   const result = await rateLimiters.general.limit(identifier);
@@ -31,14 +40,20 @@ export const rateLimitMiddleware = async ({ ctx, next }: { ctx: TRPCContext; nex
       rateLimit: result,
     },
   });
-});
+};
 
 /**
  * AI operations rate limiting middleware
  *
  * Stricter limits for expensive AI API calls.
  */
-export const aiRateLimitMiddleware = async ({ ctx, next }: { ctx: TRPCContext; next: any }) => {
+export const aiRateLimitMiddleware = async ({
+  ctx,
+  next,
+}: {
+  ctx: TRPCContext;
+  next: any;
+}) => {
   const identifier = getRateLimitIdentifier(ctx.session?.user?.id);
 
   const result = await rateLimiters.ai.limit(identifier);
@@ -56,14 +71,20 @@ export const aiRateLimitMiddleware = async ({ ctx, next }: { ctx: TRPCContext; n
       rateLimit: result,
     },
   });
-});
+};
 
 /**
  * File upload rate limiting middleware
  *
  * Limits file uploads to prevent storage abuse.
  */
-export const uploadRateLimitMiddleware = async ({ ctx, next }: { ctx: TRPCContext; next: any }) => {
+export const uploadRateLimitMiddleware = async ({
+  ctx,
+  next,
+}: {
+  ctx: TRPCContext;
+  next: any;
+}) => {
   const identifier = getRateLimitIdentifier(ctx.session?.user?.id);
 
   const result = await rateLimiters.upload.limit(identifier);
@@ -81,4 +102,4 @@ export const uploadRateLimitMiddleware = async ({ ctx, next }: { ctx: TRPCContex
       rateLimit: result,
     },
   });
-});
+};
