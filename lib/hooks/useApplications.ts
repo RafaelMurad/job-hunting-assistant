@@ -35,6 +35,20 @@ export interface Application {
 }
 
 /**
+ * Raw application data from tRPC query (with Date objects).
+ */
+interface ApplicationFromQuery {
+  id: string;
+  company: string;
+  role: string;
+  matchScore: number;
+  status: string;
+  appliedAt: Date | null;
+  createdAt: Date;
+  notes: string | null;
+}
+
+/**
  * Input for creating a new application.
  */
 export interface CreateApplicationInput {
@@ -105,12 +119,13 @@ export function useApplications(): UseApplicationsReturn {
   // Transform dates to strings for UI consumption
   const applications: Application[] = useMemo(() => {
     if (!applicationsQuery.data) return [];
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    return applicationsQuery.data.map((app: any) => ({
-      ...app,
-      appliedAt: app.appliedAt ? app.appliedAt.toISOString() : null,
-      createdAt: app.createdAt.toISOString(),
-    }));
+    return applicationsQuery.data.map(
+      (app: ApplicationFromQuery): Application => ({
+        ...app,
+        appliedAt: app.appliedAt ? app.appliedAt.toISOString() : null,
+        createdAt: app.createdAt.toISOString(),
+      })
+    );
   }, [applicationsQuery.data]);
 
   // Calculate statistics
