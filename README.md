@@ -2,16 +2,31 @@
 
 Job Hunt AI eliminates the friction from job hunting through AI-powered CV analysis, cover letter generation, and intelligent application management.
 
+**Live Demo:** [job-hunting-assistant.vercel.app](https://job-hunting-assistant.vercel.app)
+
 ---
 
-## 🎯 MVP Features (v1.0)
+## 🎯 Features (v1.1)
+
+### Core Features
 
 - **AI-Powered Job Analysis** - Analyze job descriptions against your CV with match scores (0-100%)
 - **Cover Letter Generation** - Automatically generate tailored cover letters (max 250 words)
 - **Application Tracking** - Track all job applications with status, dates, and notes
 - **Master CV System** - Maintain one source of truth for your professional profile
 - **CV Upload** - Import PDF/DOCX files with AI-powered data extraction
-- **Free AI Option** - Use Google Gemini (1,500 free analyses/day) or paid options (OpenAI, Claude)
+- **CV LaTeX Editor** - Edit and compile professional CV templates
+
+### Authentication & Integrations (v1.1)
+
+- **OAuth Sign-In** - GitHub, Google, LinkedIn authentication
+- **GitHub Integration** - Import repos, languages, contributions
+- **LinkedIn Integration** - Profile sync (API limited)
+- **Mobile Navigation** - Responsive hamburger menu for mobile devices
+
+### Free AI Option
+
+- Use Google Gemini (1,500 free analyses/day) or paid options (OpenAI, Claude)
 
 ---
 

@@ -2,8 +2,8 @@
 
 ## Job Hunting Assistant
 
-**Version:** 1.0 (Draft)  
-**Last Updated:** December 6, 2025  
+**Version:** 1.1 (Stable)  
+**Last Updated:** December 11, 2025  
 **Author:** Rafael Murad
 
 ---
@@ -192,6 +192,23 @@ Sprint 9: Authentication & Social Integrations ✅ (Complete)
 ├── ✅ Feature Flags for Integrations
 ├── ✅ Admin Guard Component
 └── ✅ Login Page with OAuth Buttons
+
+Sprint 10: Mobile UX & Production OAuth ✅ (Complete)
+├── ✅ Mobile Navigation Menu
+│   ├── Hamburger button (visible on mobile only)
+│   ├── Slide-out navigation panel
+│   ├── Active route highlighting
+│   └── Body scroll lock when open
+├── ✅ OAuth Production Setup
+│   ├── Separate OAuth apps for dev/prod
+│   ├── trustHost config for Vercel proxy
+│   ├── Fixed env variable newline issues
+│   └── OAuth Vercel Setup Documentation
+├── ✅ Code Quality Improvements
+│   ├── Import ordering (alphabetized)
+│   ├── Updated MCP documentation
+│   └── .gitignore updates
+└── ✅ tRPC Session-Based Auth Migration
 ```
 
 ---
