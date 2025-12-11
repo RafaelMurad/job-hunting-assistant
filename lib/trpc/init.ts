@@ -48,6 +48,7 @@ const t = initTRPC.context<TRPCContext>().create({
  */
 export const router = t.router;
 export const publicProcedure = t.procedure;
+export { t };
 
 /**
  * Middleware to enforce authentication.
@@ -143,3 +144,31 @@ const enforceOwner = t.middleware(async ({ ctx, next }) => {
  * Use this for owner-only endpoints (e.g., managing trusted users).
  */
 export const ownerProcedure = t.procedure.use(enforceOwner);
+
+/**
+ * Rate-limited procedures
+ * Apply rate limiting to protect against abuse and DoS attacks.
+ */
+import {
+  rateLimitMiddleware,
+  aiRateLimitMiddleware,
+  uploadRateLimitMiddleware,
+} from "./middleware/rate-limit";
+
+/**
+ * Rate-limited protected procedure
+ * Use for general protected endpoints with rate limiting.
+ */
+export const rateLimitedProcedure = protectedProcedure.use(rateLimitMiddleware);
+
+/**
+ * AI rate-limited procedure
+ * Use for expensive AI operations (analysis, generation, etc.)
+ */
+export const aiProcedure = protectedProcedure.use(aiRateLimitMiddleware);
+
+/**
+ * Upload rate-limited procedure
+ * Use for file upload endpoints.
+ */
+export const uploadProcedure = protectedProcedure.use(uploadRateLimitMiddleware);
