@@ -74,11 +74,16 @@ export default async function middleware(req: NextRequest): Promise<NextResponse
     return NextResponse.redirect(loginUrl);
   }
 
-  // Check admin routes for admin role
+  // Check admin routes for admin role or trusted status
   if (pathname.startsWith("/admin")) {
     const userRole = token?.role as string | undefined;
-    if (userRole !== "ADMIN" && userRole !== "OWNER") {
-      // Redirect non-admins to dashboard with error
+    const isTrusted = token?.isTrusted as boolean | undefined;
+
+    // Admin pages require ADMIN/OWNER role OR trusted status (for UX research)
+    const hasAdminAccess = userRole === "ADMIN" || userRole === "OWNER" || isTrusted === true;
+
+    if (!hasAdminAccess) {
+      // Redirect unauthorized users to dashboard with error
       return NextResponse.redirect(new URL("/dashboard?error=unauthorized", req.url));
     }
   }
