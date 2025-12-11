@@ -10,9 +10,9 @@
 
 "use client";
 
-import { useMemo } from "react";
 import { trpc } from "@/lib/trpc/client";
 import { getErrorMessage } from "@/lib/trpc/errors";
+import { useMemo } from "react";
 import type { ButtonState } from "./useAnalyze";
 
 /**

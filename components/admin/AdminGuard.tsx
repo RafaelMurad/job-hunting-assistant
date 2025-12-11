@@ -1,7 +1,7 @@
 "use client";
 
-import { type JSX, type ReactNode } from "react";
 import { trpc } from "@/lib/trpc/client";
+import { type JSX, type ReactNode } from "react";
 
 interface AdminGuardProps {
   children: ReactNode;

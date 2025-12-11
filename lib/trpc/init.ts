@@ -12,11 +12,11 @@
  * - Great DX with autocomplete
  */
 
-import { initTRPC, TRPCError } from "@trpc/server";
-import superjson from "superjson";
-import { prisma } from "@/lib/db";
 import { auth } from "@/lib/auth";
+import { prisma } from "@/lib/db";
+import { initTRPC, TRPCError } from "@trpc/server";
 import type { Session } from "next-auth";
+import superjson from "superjson";
 
 /**
  * Context passed to every tRPC procedure.

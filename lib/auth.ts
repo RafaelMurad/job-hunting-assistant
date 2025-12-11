@@ -7,14 +7,14 @@
  * @see https://authjs.dev/getting-started/installation
  */
 
+import { prisma } from "@/lib/db";
+import { encryptToken } from "@/lib/social";
+import { PrismaAdapter } from "@auth/prisma-adapter";
+import type { UserRole } from "@prisma/client";
 import NextAuth from "next-auth";
 import GitHub from "next-auth/providers/github";
 import Google from "next-auth/providers/google";
 import LinkedIn from "next-auth/providers/linkedin";
-import { PrismaAdapter } from "@auth/prisma-adapter";
-import { prisma } from "@/lib/db";
-import { encryptToken } from "@/lib/social";
-import type { UserRole } from "@prisma/client";
 
 // Extend the built-in session types
 declare module "next-auth" {
@@ -74,6 +74,9 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
     signIn: "/login",
     error: "/login", // Redirect to login page with error
   },
+
+  // Support multiple callback URLs (localhost + Vercel)
+  trustHost: true,
 
   callbacks: {
     /**

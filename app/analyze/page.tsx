@@ -1,13 +1,13 @@
 "use client";
 
-import { useState, type Dispatch, type JSX, type SetStateAction } from "react";
-import { useRouter } from "next/navigation";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Textarea } from "@/components/ui/textarea";
-import { Button } from "@/components/ui/button";
-import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
 import { useAnalyze, useApplications, type ButtonState } from "@/lib/hooks";
+import { useRouter } from "next/navigation";
+import { useState, type Dispatch, type JSX, type SetStateAction } from "react";
 
 export default function AnalyzePage(): JSX.Element {
   const router = useRouter();

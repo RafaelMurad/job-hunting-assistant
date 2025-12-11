@@ -5,8 +5,8 @@
  * All procedures require authentication.
  */
 
+import { protectedProcedure, router } from "@/lib/trpc/init";
 import { z } from "zod";
-import { router, protectedProcedure } from "@/lib/trpc/init";
 
 // Input schemas without userId (comes from session)
 const applicationCreateSchema = z.object({

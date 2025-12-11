@@ -6,10 +6,10 @@
  * Uses AI providers from lib/ai.ts.
  */
 
-import { router, protectedProcedure } from "@/lib/trpc/init";
-import { z } from "zod";
 import { analyzeJob, generateCoverLetter } from "@/lib/ai";
+import { protectedProcedure, router } from "@/lib/trpc/init";
 import { TRPCError } from "@trpc/server";
+import { z } from "zod";
 
 // Input schemas without userId (comes from session)
 const analyzeJobInputSchema = z.object({

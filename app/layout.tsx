@@ -7,6 +7,7 @@ import { FeatureFlagProvider } from "@/lib/feature-flags/provider";
 import { TRPCProvider } from "@/lib/trpc/provider";
 import { AuthProvider } from "@/components/auth-provider";
 import { UserMenu } from "@/components/user-menu";
+import { MobileMenu } from "@/components/mobile-menu";
 
 const inter = Inter({
   subsets: ["latin"],
@@ -33,11 +34,16 @@ export default function RootLayout({
               <nav className="bg-white border-b border-slate-200">
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                   <div className="flex justify-between h-16 items-center">
-                    <div className="flex items-center gap-8">
+                    <div className="flex items-center gap-4">
+                      {/* Mobile Menu - Visible only on mobile */}
+                      <MobileMenu />
+
                       <Link href="/" className="text-xl font-bold text-slate-900">
                         Job Hunt AI
                       </Link>
-                      <div className="hidden md:flex gap-6">
+
+                      {/* Desktop Navigation - Hidden on mobile */}
+                      <div className="hidden md:flex gap-6 ml-8">
                         <Link
                           href="/dashboard"
                           className="text-slate-600 hover:text-slate-900 transition-colors"
