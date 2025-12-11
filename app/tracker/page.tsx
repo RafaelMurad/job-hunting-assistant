@@ -1,5 +1,6 @@
 "use client";
 
+import { ConfirmationDialog } from "@/components/confirmation-dialog";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { useApplications, type ApplicationStatus } from "@/lib/hooks";
@@ -51,6 +52,7 @@ export default function TrackerPage(): JSX.Element {
 
   // Local state
   const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [updatingStatusId, setUpdatingStatusId] = useState<string | null>(null);
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [searchQuery, setSearchQuery] = useState<string>("");
@@ -121,6 +123,11 @@ export default function TrackerPage(): JSX.Element {
     setDeletingId(null);
   };
 
+  const handleRequestDelete = (appId: string): void => {
+    setDeletingId(appId);
+    setIsDeleteDialogOpen(true);
+  };
+
   const handleSaveNotes = (appId: string): void => {
     setSavingNotesId(appId);
     updateNotes(appId, notesDraft);
@@ -176,6 +183,21 @@ export default function TrackerPage(): JSX.Element {
   return (
     <div className="min-h-screen bg-gray-50 py-12">
       <div className="mx-auto max-w-7xl px-4">
+        <ConfirmationDialog
+          open={isDeleteDialogOpen}
+          onOpenChange={(open) => {
+            setIsDeleteDialogOpen(open);
+            if (!open) setDeletingId(null);
+          }}
+          title="Delete application?"
+          description="This action cannot be undone."
+          variant="destructive"
+          confirmText="Delete"
+          onConfirm={() => {
+            if (!deletingId) return;
+            handleDelete(deletingId);
+          }}
+        />
         {/* Header */}
         <div className="mb-8 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
           <div>
@@ -447,48 +469,26 @@ export default function TrackerPage(): JSX.Element {
                         </p>
 
                         {/* Delete button */}
-                        {deletingId === app.id ? (
-                          <div className="flex items-center gap-2">
-                            <span className="text-sm text-red-600">Delete?</span>
-                            <Button
-                              size="sm"
-                              variant="destructive"
-                              onClick={() => handleDelete(app.id)}
-                              className="h-7 px-2 text-xs"
-                            >
-                              Yes
-                            </Button>
-                            <Button
-                              size="sm"
-                              variant="outline"
-                              onClick={() => setDeletingId(null)}
-                              className="h-7 px-2 text-xs"
-                            >
-                              No
-                            </Button>
-                          </div>
-                        ) : (
-                          <button
-                            onClick={() => setDeletingId(app.id)}
-                            className="p-1 text-gray-400 opacity-0 transition-opacity hover:text-red-500 group-hover:opacity-100"
-                            aria-label={`Delete application for ${app.company}`}
-                            title="Delete application"
+                        <button
+                          onClick={() => handleRequestDelete(app.id)}
+                          className="p-1 text-gray-400 opacity-0 transition-opacity hover:text-red-500 group-hover:opacity-100"
+                          aria-label={`Delete application for ${app.company}`}
+                          title="Delete application"
+                        >
+                          <svg
+                            className="h-5 w-5"
+                            fill="none"
+                            viewBox="0 0 24 24"
+                            stroke="currentColor"
                           >
-                            <svg
-                              className="h-5 w-5"
-                              fill="none"
-                              viewBox="0 0 24 24"
-                              stroke="currentColor"
-                            >
-                              <path
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                                strokeWidth={2}
-                                d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
-                              />
-                            </svg>
-                          </button>
-                        )}
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth={2}
+                              d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
+                            />
+                          </svg>
+                        </button>
                       </div>
                     </div>
 

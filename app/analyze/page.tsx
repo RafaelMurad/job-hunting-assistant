@@ -128,6 +128,67 @@ export default function AnalyzePage(): JSX.Element {
     return "bg-red-100 text-red-800";
   };
 
+  // Generate actionable tips for skill gaps
+  const getSkillTip = (skill: string): string => {
+    const skillLower = skill.toLowerCase();
+
+    // Programming languages
+    if (skillLower.includes("python")) {
+      return "Complete a Python crash course on YouTube (4-6 hours), then build a small project like a CLI tool or web scraper.";
+    }
+    if (skillLower.includes("typescript") || skillLower.includes("javascript")) {
+      return "Work through TypeScript basics on typescript-exercises.github.io, then add types to an existing JS project.";
+    }
+    if (skillLower.includes("react")) {
+      return "Build a small React app with state management. The official React docs have excellent interactive tutorials.";
+    }
+    if (skillLower.includes("node")) {
+      return "Create a simple REST API with Express.js. Focus on understanding async patterns and middleware.";
+    }
+
+    // Cloud & DevOps
+    if (skillLower.includes("aws") || skillLower.includes("cloud")) {
+      return "Start with AWS Free Tier - deploy a static site to S3 and set up CloudFront. AWS provides excellent free training.";
+    }
+    if (skillLower.includes("docker") || skillLower.includes("container")) {
+      return "Containerize an existing project. Docker's official 'Get Started' guide walks you through in under 2 hours.";
+    }
+    if (skillLower.includes("kubernetes") || skillLower.includes("k8s")) {
+      return "Try minikube locally, then deploy a simple app. Focus on understanding pods, services, and deployments.";
+    }
+    if (skillLower.includes("ci/cd") || skillLower.includes("pipeline")) {
+      return "Set up GitHub Actions for an existing repo - start with a simple test + lint workflow.";
+    }
+
+    // Databases
+    if (skillLower.includes("mongodb") || skillLower.includes("nosql")) {
+      return "Build a small CRUD app with MongoDB Atlas (free tier). MongoDB University has excellent free courses.";
+    }
+    if (skillLower.includes("sql") || skillLower.includes("database")) {
+      return "Practice on SQLZoo or LeetCode's database problems. Focus on JOINs, aggregations, and indexing.";
+    }
+
+    // Soft skills & methodologies
+    if (skillLower.includes("agile") || skillLower.includes("scrum")) {
+      return "Read the Agile Manifesto, then consider a Scrum certification. Contribute to open source to practice collaborative workflows.";
+    }
+    if (skillLower.includes("communication") || skillLower.includes("leadership")) {
+      return "Start a technical blog or contribute to documentation. Lead code reviews or mentor junior developers.";
+    }
+
+    // AI/ML
+    if (
+      skillLower.includes("machine learning") ||
+      skillLower.includes("ml") ||
+      skillLower.includes("ai")
+    ) {
+      return "Start with fast.ai's practical deep learning course - it's free and project-focused.";
+    }
+
+    // Default tip
+    return `Search for '${skill} crash course' on YouTube, or find a beginner project tutorial. Hands-on practice is the fastest path to competency.`;
+  };
+
   // Combined error display (input error or analyze error)
   const displayError = inputError || analyzeError;
 
@@ -228,15 +289,26 @@ export default function AnalyzePage(): JSX.Element {
                       </div>
                     </div>
 
-                    {/* Gaps */}
+                    {/* Gaps with Actionable Tips */}
                     {analysis.gaps.length > 0 && (
                       <div>
                         <Label className="text-base mb-2 block">Skills to Address</Label>
-                        <div className="flex flex-wrap gap-2">
+                        <div className="space-y-3">
                           {analysis.gaps.map((gap, i) => (
-                            <Badge key={i} variant="outline" className="bg-yellow-50">
-                              {gap}
-                            </Badge>
+                            <div
+                              key={i}
+                              className="p-3 rounded-lg border bg-yellow-50 border-yellow-200 space-y-2"
+                            >
+                              <div className="flex items-start justify-between gap-2">
+                                <Badge variant="outline" className="bg-yellow-100 shrink-0">
+                                  {gap}
+                                </Badge>
+                              </div>
+                              <p className="text-sm text-muted-foreground">
+                                💡 <span className="font-medium">Quick wins:</span>{" "}
+                                {getSkillTip(gap)}
+                              </p>
+                            </div>
                           ))}
                         </div>
                       </div>

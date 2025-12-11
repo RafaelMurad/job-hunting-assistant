@@ -49,7 +49,13 @@ export default async function middleware(req: NextRequest): Promise<NextResponse
   const isAuthenticated = !!token;
 
   // Allow public routes
-  if (publicRoutes.some((route) => pathname === route || pathname.startsWith(route))) {
+  const isPublicRoute = publicRoutes.some((route) => {
+    if (route === "/") return pathname === "/";
+    if (route === "/api/auth") return pathname === "/api/auth" || pathname.startsWith("/api/auth/");
+    return pathname === route;
+  });
+
+  if (isPublicRoute) {
     // If user is logged in and trying to access login page, redirect to dashboard
     if (pathname === "/login" && isAuthenticated) {
       return NextResponse.redirect(new URL("/dashboard", req.url));
@@ -77,7 +83,11 @@ export default async function middleware(req: NextRequest): Promise<NextResponse
   // Check admin routes for admin role
   if (pathname.startsWith("/admin")) {
     const userRole = token?.role as string | undefined;
-    if (userRole !== "ADMIN" && userRole !== "OWNER") {
+    const isTrusted = token?.isTrusted as boolean | undefined;
+
+    const hasAdminAccess = userRole === "ADMIN" || userRole === "OWNER" || isTrusted === true;
+
+    if (!hasAdminAccess) {
       // Redirect non-admins to dashboard with error
       return NextResponse.redirect(new URL("/dashboard?error=unauthorized", req.url));
     }

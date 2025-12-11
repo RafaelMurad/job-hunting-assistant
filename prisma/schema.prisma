@@ -9,47 +9,47 @@ datasource db {
 }
 
 model User {
-  id        String   @id @default(cuid())
-  name      String
-  email     String   @unique
-  phone     String?
-  location  String
+  id       String  @id @default(cuid())
+  name     String
+  email    String  @unique
+  phone    String?
+  location String
 
   // CV content stored as text
-  summary    String   // Professional summary
-  experience String   // Formatted text of work experience
-  skills     String   // Comma-separated skills
+  summary    String // Professional summary
+  experience String // Formatted text of work experience
+  skills     String // Comma-separated skills
 
   // CV file storage (Vercel Blob)
-  cvPdfUrl     String?   // URL to original/compiled PDF in Blob
-  cvLatexUrl   String?   // URL to LaTeX source in Blob
-  cvFilename   String?   // Original filename for display
+  cvPdfUrl     String? // URL to original/compiled PDF in Blob
+  cvLatexUrl   String? // URL to LaTeX source in Blob
+  cvFilename   String? // Original filename for display
   cvUploadedAt DateTime? // When CV was last uploaded/updated
 
   // Authorization & Trust
-  role        UserRole  @default(USER)
-  isTrusted   Boolean   @default(false)  // Manually approved by admin
-  isVerified  Boolean   @default(false)  // Email verified
+  role       UserRole @default(USER)
+  isTrusted  Boolean  @default(false) // Manually approved by admin
+  isVerified Boolean  @default(false) // Email verified
 
   // NextAuth.js avatar (from OAuth provider)
-  image       String?
+  image String?
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
   // NextAuth.js relations
-  accounts        Account[]
-  sessions        Session[]
+  accounts Account[]
+  sessions Session[]
 
-  applications    Application[]
-  socialProfiles  SocialProfile[]
-  socialSyncs     SocialSync[]
+  applications   Application[]
+  socialProfiles SocialProfile[]
+  socialSyncs    SocialSync[]
 }
 
 enum UserRole {
   USER
   ADMIN
-  OWNER  // Rafael - full access
+  OWNER // Rafael - full access
 }
 
 // ============================================
@@ -100,69 +100,69 @@ model VerificationToken {
 // ============================================
 
 model SocialProfile {
-  id           String   @id @default(cuid())
-  userId       String
-  provider     SocialProvider
-  providerId   String   // External ID from provider (GitHub user ID, LinkedIn member ID)
+  id         String         @id @default(cuid())
+  userId     String
+  provider   SocialProvider
+  providerId String // External ID from provider (GitHub user ID, LinkedIn member ID)
 
   // OAuth tokens (should be encrypted in production)
-  accessToken  String   @db.Text
-  refreshToken String?  @db.Text
+  accessToken  String    @db.Text
+  refreshToken String?   @db.Text
   tokenExpiry  DateTime?
-  scope        String?  // Granted OAuth scopes
+  scope        String? // Granted OAuth scopes
 
   // Profile data synced from provider
-  username     String?  // GitHub username, LinkedIn vanity URL
-  displayName  String?  // Full name from provider
-  avatarUrl    String?  // Profile picture URL
-  profileUrl   String?  // Link to external profile
-  profileData  String?  @db.Text // Full JSON profile data
+  username    String? // GitHub username, LinkedIn vanity URL
+  displayName String? // Full name from provider
+  avatarUrl   String? // Profile picture URL
+  profileUrl  String? // Link to external profile
+  profileData String? @db.Text // Full JSON profile data
 
   // GitHub-specific profile fields
-  bio          String?  @db.Text  // GitHub bio / professional summary
-  company      String?             // Current employer from GitHub
-  location     String?             // Geographic location
-  blog         String?             // Portfolio/blog URL
-  hireable     Boolean?            // Open to opportunities flag
-  publicRepos  Int?                // Total public repos count
-  publicGists  Int?                // Total public gists count
-  followers    Int?                // Follower count
-  following    Int?                // Following count
-  accountCreatedAt DateTime?       // GitHub account creation date (experience indicator)
+  bio              String?   @db.Text // GitHub bio / professional summary
+  company          String? // Current employer from GitHub
+  location         String? // Geographic location
+  blog             String? // Portfolio/blog URL
+  hireable         Boolean? // Open to opportunities flag
+  publicRepos      Int? // Total public repos count
+  publicGists      Int? // Total public gists count
+  followers        Int? // Follower count
+  following        Int? // Following count
+  accountCreatedAt DateTime? // GitHub account creation date (experience indicator)
 
   // Sync metadata
-  lastSyncAt   DateTime?
-  syncStatus   SyncStatus @default(PENDING)
+  lastSyncAt DateTime?
+  syncStatus SyncStatus @default(PENDING)
 
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
-  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([provider, providerId])
-  @@unique([userId, provider])  // One profile per provider per user
+  @@unique([userId, provider]) // One profile per provider per user
   @@index([userId])
 }
 
 model SocialSync {
-  id          String       @id @default(cuid())
-  userId      String
-  provider    SocialProvider
-  syncType    String       // "profile", "repos", "jobs", "connections"
+  id       String         @id @default(cuid())
+  userId   String
+  provider SocialProvider
+  syncType String // "profile", "repos", "jobs", "connections"
 
-  status      SyncStatus   @default(PENDING)
+  status      SyncStatus @default(PENDING)
   startedAt   DateTime?
   completedAt DateTime?
-  error       String?      @db.Text
+  error       String?    @db.Text
 
   // Sync results
   itemsFound  Int?
   itemsSynced Int?
-  dataJson    String?      @db.Text // Synced data snapshot
+  dataJson    String? @db.Text // Synced data snapshot
 
-  createdAt   DateTime     @default(now())
+  createdAt DateTime @default(now())
 
-  user        User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId, provider])
   @@index([createdAt])
@@ -182,43 +182,43 @@ enum SyncStatus {
 
 // GitHub-specific data models
 model GitHubRepository {
-  id            String   @id @default(cuid())
-  userId        String
-  repoId        Int      // GitHub repo ID
+  id     String @id @default(cuid())
+  userId String
+  repoId Int // GitHub repo ID
 
-  name          String
-  fullName      String   // owner/repo
-  description   String?  @db.Text
-  url           String
-  homepage      String?
+  name        String
+  fullName    String // owner/repo
+  description String? @db.Text
+  url         String
+  homepage    String?
 
   // Repository stats
-  stars         Int      @default(0)
-  forks         Int      @default(0)
-  watchers      Int      @default(0)
-  openIssues    Int      @default(0)
+  stars      Int @default(0)
+  forks      Int @default(0)
+  watchers   Int @default(0)
+  openIssues Int @default(0)
 
   // Languages and topics
-  language      String?  // Primary language
-  languages     String?  @db.Text // JSON: { "TypeScript": 5000, "JavaScript": 2000 }
-  topics        String?  // Comma-separated topics
+  language  String? // Primary language
+  languages String? @db.Text // JSON: { "TypeScript": 5000, "JavaScript": 2000 }
+  topics    String? // Comma-separated topics
 
   // Activity
-  isPrivate     Boolean  @default(false)
-  isFork        Boolean  @default(false)
-  hasReadme     Boolean  @default(false)
-  isArchived    Boolean  @default(false)
+  isPrivate  Boolean @default(false)
+  isFork     Boolean @default(false)
+  hasReadme  Boolean @default(false)
+  isArchived Boolean @default(false)
 
   // Enhanced data
-  license       String?            // License type (MIT, Apache-2.0, etc.)
-  readmeSummary String?  @db.Text  // AI-generated summary of README
-  contributors  Int?               // Number of contributors
-  defaultBranch String?            // main, master, etc.
+  license       String? // License type (MIT, Apache-2.0, etc.)
+  readmeSummary String? @db.Text // AI-generated summary of README
+  contributors  Int? // Number of contributors
+  defaultBranch String? // main, master, etc.
 
   pushedAt      DateTime?
-  repoCreatedAt DateTime?          // When the repo was created on GitHub
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
+  repoCreatedAt DateTime? // When the repo was created on GitHub
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
 
   @@unique([userId, repoId])
   @@index([userId])
@@ -227,48 +227,48 @@ model GitHubRepository {
 
 // GitHub contribution statistics
 model GitHubContributionStats {
-  id             String   @id @default(cuid())
-  userId         String   @unique
+  id     String @id @default(cuid())
+  userId String @unique
 
   // Aggregate stats
-  totalCommits   Int      @default(0)
-  totalPRs       Int      @default(0)
-  totalIssues    Int      @default(0)
-  totalReviews   Int      @default(0)
+  totalCommits Int @default(0)
+  totalPRs     Int @default(0)
+  totalIssues  Int @default(0)
+  totalReviews Int @default(0)
 
   // Derived metrics
-  totalRepos     Int      @default(0)
-  ownedRepos     Int      @default(0)  // Non-fork repos
-  forkedRepos    Int      @default(0)
-  openSourceRepos Int     @default(0)  // Repos with licenses
+  totalRepos      Int @default(0)
+  ownedRepos      Int @default(0) // Non-fork repos
+  forkedRepos     Int @default(0)
+  openSourceRepos Int @default(0) // Repos with licenses
 
   // Language breakdown (JSON: { "TypeScript": 50000, "Python": 20000 })
-  languageBytes  String?  @db.Text
-  topLanguages   String?  // Comma-separated top 10 languages
+  languageBytes String? @db.Text
+  topLanguages  String? // Comma-separated top 10 languages
 
   // Activity indicators
-  oldestRepoDate DateTime?  // First repo creation date
-  newestRepoDate DateTime?  // Most recent repo creation
-  lastPushDate   DateTime?  // Most recent push across all repos
+  oldestRepoDate DateTime? // First repo creation date
+  newestRepoDate DateTime? // Most recent repo creation
+  lastPushDate   DateTime? // Most recent push across all repos
 
-  lastCalculated DateTime  @default(now())
-  createdAt      DateTime  @default(now())
-  updatedAt      DateTime  @updatedAt
+  lastCalculated DateTime @default(now())
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
 }
 
 // GitHub organizations
 model GitHubOrganization {
-  id          String   @id @default(cuid())
+  id          String  @id @default(cuid())
   userId      String
-  orgId       Int      // GitHub org ID
-  login       String   // org username
-  name        String?  // Display name
-  description String?  @db.Text
+  orgId       Int // GitHub org ID
+  login       String // org username
+  name        String? // Display name
+  description String? @db.Text
   url         String
   avatarUrl   String?
 
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   @@unique([userId, orgId])
   @@index([userId])
@@ -276,28 +276,28 @@ model GitHubOrganization {
 
 // LinkedIn-specific data models (for saved jobs)
 model LinkedInSavedJob {
-  id            String   @id @default(cuid())
+  id            String @id @default(cuid())
   userId        String
-  linkedInJobId String   // LinkedIn job ID
+  linkedInJobId String // LinkedIn job ID
 
-  title         String
-  company       String
-  location      String?
-  description   String?  @db.Text
-  jobUrl        String
+  title       String
+  company     String
+  location    String?
+  description String? @db.Text
+  jobUrl      String
 
   // Job metadata
-  postedAt      DateTime?
-  expiresAt     DateTime?
-  isRemote      Boolean  @default(false)
+  postedAt       DateTime?
+  expiresAt      DateTime?
+  isRemote       Boolean   @default(false)
   employmentType String? // Full-time, Part-time, Contract
 
   // Import status
   importedToTracker Boolean @default(false)
   applicationId     String? // Link to our Application if imported
 
-  savedAt       DateTime @default(now())
-  updatedAt     DateTime @updatedAt
+  savedAt   DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   @@unique([userId, linkedInJobId])
   @@index([userId])
@@ -305,40 +305,40 @@ model LinkedInSavedJob {
 
 // Trusted Users Configuration (for admin access control)
 model TrustedEmail {
-  id        String   @id @default(cuid())
-  email     String   @unique
-  role      UserRole @default(ADMIN)
-  addedBy   String?  // Who added this email
-  note      String?  // Why they're trusted
+  id      String   @id @default(cuid())
+  email   String   @unique
+  role    UserRole @default(ADMIN)
+  addedBy String? // Who added this email
+  note    String? // Why they're trusted
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 }
 
 model Application {
-  id             String   @id @default(cuid())
-  userId         String
+  id     String @id @default(cuid())
+  userId String
 
   // Job details
   company        String
   role           String
-  jobDescription String   // Full job description
+  jobDescription String // Full job description
   jobUrl         String?
 
   // Analysis results
-  matchScore     Int      // 0-100
-  analysis       String   // Claude's analysis
-  coverLetter    String   // Generated cover letter
+  matchScore  Int // 0-100
+  analysis    String // Claude's analysis
+  coverLetter String // Generated cover letter
 
   // Tracking
-  status         String   @default("saved")  // saved, applied, interviewing, rejected, offer
-  appliedAt      DateTime?
-  notes          String?
+  status    String    @default("saved") // saved, applied, interviewing, rejected, offer
+  appliedAt DateTime?
+  notes     String?
 
-  createdAt      DateTime @default(now())
-  updatedAt      DateTime @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
-  user           User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId, status])
   @@index([userId, createdAt])
@@ -369,57 +369,58 @@ enum UxStatus {
 }
 
 model UxPersona {
-  id          String   @id @default(cuid())
-  name        String   // e.g., "Alex the Active Seeker"
-  type        String   // e.g., "primary", "secondary"
-  description String   @db.Text
-  goals       String   @db.Text // JSON array of goals
-  frustrations String  @db.Text // JSON array of frustrations
-  behaviors   String   @db.Text // JSON array of behaviors
-  status      UxStatus @default(DRAFT)
-  
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-  
-  journeys    UxJourney[]
-  comments    UxComment[]
-  versions    UxVersion[]
+  id           String   @id @default(cuid())
+  name         String // e.g., "Alex the Active Seeker"
+  type         String // e.g., "primary", "secondary"
+  description  String   @db.Text
+  goals        String   @db.Text // JSON array of goals
+  frustrations String   @db.Text // JSON array of frustrations
+  behaviors    String   @db.Text // JSON array of behaviors
+  status       UxStatus @default(DRAFT)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  journeys UxJourney[]
+  comments UxComment[]
+  versions UxVersion[]
 }
 
 model UxJourney {
   id          String   @id @default(cuid())
-  name        String   // e.g., "First-Time CV Upload"
+  name        String // e.g., "First-Time CV Upload"
   description String   @db.Text
   personaId   String?
   status      UxStatus @default(DRAFT)
-  
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-  
-  persona     UxPersona? @relation(fields: [personaId], references: [id], onDelete: SetNull)
-  steps       UxJourneyStep[]
-  comments    UxComment[]
-  versions    UxVersion[]
-  
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  persona         UxPersona?         @relation(fields: [personaId], references: [id], onDelete: SetNull)
+  steps           UxJourneyStep[]
+  comments        UxComment[]
+  versions        UxVersion[]
+  implementations UxImplementation[]
+
   @@index([personaId])
 }
 
 model UxJourneyStep {
-  id           String   @id @default(cuid())
-  journeyId    String
-  orderIndex   Int
-  stage        String   // e.g., "Awareness", "Consideration", "Action"
-  action       String   @db.Text // What user does
-  thinking     String   @db.Text // What user thinks
-  feeling      String   // Emotion keyword
-  touchpoint   String   // Where it happens
-  opportunity  String?  @db.Text // Improvement opportunity
-  
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
-  
-  journey      UxJourney @relation(fields: [journeyId], references: [id], onDelete: Cascade)
-  
+  id          String  @id @default(cuid())
+  journeyId   String
+  orderIndex  Int
+  stage       String // e.g., "Awareness", "Consideration", "Action"
+  action      String  @db.Text // What user does
+  thinking    String  @db.Text // What user thinks
+  feeling     String // Emotion keyword
+  touchpoint  String // Where it happens
+  opportunity String? @db.Text // Improvement opportunity
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  journey UxJourney @relation(fields: [journeyId], references: [id], onDelete: Cascade)
+
   @@index([journeyId, orderIndex])
 }
 
@@ -427,110 +428,156 @@ model UxPainPoint {
   id          String     @id @default(cuid())
   title       String
   description String     @db.Text
-  category    String     // e.g., "navigation", "feedback", "comprehension"
+  category    String // e.g., "navigation", "feedback", "comprehension"
   severity    UxSeverity
   effort      UxEffort
   userQuote   String?    @db.Text // Example user feedback
   solution    String?    @db.Text // Proposed solution
   status      UxStatus   @default(DRAFT)
-  
-  createdAt   DateTime   @default(now())
-  updatedAt   DateTime   @updatedAt
-  
-  comments    UxComment[]
-  versions    UxVersion[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  comments        UxComment[]
+  versions        UxVersion[]
+  implementations UxImplementation[]
 }
 
 model UxPrinciple {
   id          String   @id @default(cuid())
-  name        String   // e.g., "Clarity First"
+  name        String // e.g., "Clarity First"
   description String   @db.Text
   rationale   String   @db.Text // Why this principle
   examples    String   @db.Text // JSON array of do/don't examples
   priority    Int      @default(0) // For ordering
   status      UxStatus @default(DRAFT)
-  
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-  
-  comments    UxComment[]
-  versions    UxVersion[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  comments UxComment[]
+  versions UxVersion[]
 }
 
 model UxVersion {
-  id          String   @id @default(cuid())
-  entityType  String   // "persona", "journey", "painpoint", "principle"
-  entityId    String
-  version     Int
-  data        String   @db.Text // JSON snapshot of entity at this version
-  changeNote  String?  @db.Text // What changed
-  changedBy   String?  // User identifier (FUTURE: link to auth)
-  
-  createdAt   DateTime @default(now())
-  
+  id         String  @id @default(cuid())
+  entityType String // "persona", "journey", "painpoint", "principle"
+  entityId   String
+  version    Int
+  data       String  @db.Text // JSON snapshot of entity at this version
+  changeNote String? @db.Text // What changed
+  changedBy  String? // User identifier (FUTURE: link to auth)
+
+  createdAt DateTime @default(now())
+
   // Optional relations to entities
   personaId   String?
   journeyId   String?
   painPointId String?
   principleId String?
-  
-  persona     UxPersona?  @relation(fields: [personaId], references: [id], onDelete: SetNull)
-  journey     UxJourney?  @relation(fields: [journeyId], references: [id], onDelete: SetNull)
-  painPoint   UxPainPoint? @relation(fields: [painPointId], references: [id], onDelete: SetNull)
-  principle   UxPrinciple? @relation(fields: [principleId], references: [id], onDelete: SetNull)
-  
+
+  persona   UxPersona?   @relation(fields: [personaId], references: [id], onDelete: SetNull)
+  journey   UxJourney?   @relation(fields: [journeyId], references: [id], onDelete: SetNull)
+  painPoint UxPainPoint? @relation(fields: [painPointId], references: [id], onDelete: SetNull)
+  principle UxPrinciple? @relation(fields: [principleId], references: [id], onDelete: SetNull)
+
   @@index([entityType, entityId])
   @@index([createdAt])
 }
 
 model UxComment {
-  id          String   @id @default(cuid())
-  entityType  String   // "persona", "journey", "painpoint", "principle"
-  entityId    String
-  content     String   @db.Text
-  author      String?  // User identifier (FUTURE: link to auth)
-  resolved    Boolean  @default(false)
-  
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-  
+  id         String  @id @default(cuid())
+  entityType String // "persona", "journey", "painpoint", "principle"
+  entityId   String
+  content    String  @db.Text
+  author     String? // User identifier (FUTURE: link to auth)
+  resolved   Boolean @default(false)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
   // Optional relations to entities
   personaId   String?
   journeyId   String?
   painPointId String?
   principleId String?
-  
-  persona     UxPersona?  @relation(fields: [personaId], references: [id], onDelete: SetNull)
-  journey     UxJourney?  @relation(fields: [journeyId], references: [id], onDelete: SetNull)
-  painPoint   UxPainPoint? @relation(fields: [painPointId], references: [id], onDelete: SetNull)
-  principle   UxPrinciple? @relation(fields: [principleId], references: [id], onDelete: SetNull)
-  
+
+  persona   UxPersona?   @relation(fields: [personaId], references: [id], onDelete: SetNull)
+  journey   UxJourney?   @relation(fields: [journeyId], references: [id], onDelete: SetNull)
+  painPoint UxPainPoint? @relation(fields: [painPointId], references: [id], onDelete: SetNull)
+  principle UxPrinciple? @relation(fields: [principleId], references: [id], onDelete: SetNull)
+
   @@index([entityType, entityId])
 }
 
 model UxAiAnalysis {
-  id          String   @id @default(cuid())
-  entityType  String   // "persona", "journey", "painpoint", "principle", "general"
-  entityId    String?  // Null for general analyses
-  prompt      String   @db.Text
-  response    String   @db.Text
-  model       String   // e.g., "gemini-2.5-pro"
-  applied     Boolean  @default(false) // Was suggestion applied?
-  
-  createdAt   DateTime @default(now())
-  
+  id         String  @id @default(cuid())
+  entityType String // "persona", "journey", "painpoint", "principle", "general"
+  entityId   String? // Null for general analyses
+  prompt     String  @db.Text
+  response   String  @db.Text
+  model      String // e.g., "gemini-2.5-pro"
+  applied    Boolean @default(false) // Was suggestion applied?
+
+  createdAt DateTime @default(now())
+
   @@index([entityType, entityId])
   @@index([createdAt])
 }
 
 model UxChatMessage {
-  id          String   @id @default(cuid())
-  sessionId   String   // Group messages by session
-  role        String   // "user" or "assistant"
-  content     String   @db.Text
-  context     String?  @db.Text // What UX entities were in context
-  
-  createdAt   DateTime @default(now())
-  
+  id        String  @id @default(cuid())
+  sessionId String // Group messages by session
+  role      String // "user" or "assistant"
+  content   String  @db.Text
+  context   String? @db.Text // What UX entities were in context
+
+  createdAt DateTime @default(now())
+
   @@index([sessionId, createdAt])
+}
+
+// ============================================
+// UX Implementation Tracking
+// ============================================
+
+enum UxImplementationStatus {
+  NOT_STARTED
+  IN_PROGRESS
+  IMPLEMENTED
+  VERIFIED
+}
+
+model UxImplementation {
+  id          String  @id @default(cuid())
+  painPointId String? // Link to pain point being addressed
+  journeyId   String? // Link to journey step being improved
+
+  title       String // Short description of the fix
+  description String? @db.Text // Detailed implementation notes
+
+  // Code tracking
+  files         String  @db.Text // JSON array of file paths involved
+  searchPattern String? // Grep pattern to verify implementation
+  commit        String? // Git commit SHA when implemented
+  prNumber      Int? // GitHub PR number
+
+  // Status
+  status   UxImplementationStatus @default(NOT_STARTED)
+  priority Int                    @default(0) // P1=1, P2=2, P3=3
+
+  // AI analysis
+  aiVerified  Boolean   @default(false) // AI confirmed implementation
+  aiNotes     String?   @db.Text // AI analysis of implementation
+  lastScanned DateTime? // When AI last checked the code
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  painPoint UxPainPoint? @relation(fields: [painPointId], references: [id], onDelete: SetNull)
+  journey   UxJourney?   @relation(fields: [journeyId], references: [id], onDelete: SetNull)
+
+  @@index([status])
+  @@index([painPointId])
+  @@index([journeyId])
 }
