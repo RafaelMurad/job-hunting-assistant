@@ -19,6 +19,7 @@
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { FileUpload, type UploadProgress } from "@/components/ui/file-upload";
 import { Input } from "@/components/ui/input";
 import {
   Select,
@@ -95,6 +96,9 @@ export default function CVEditorPage(): JSX.Element {
   const [aiInstruction, setAiInstruction] = useState<string>("");
   const [toast, setToast] = useState<Toast | null>(null);
 
+  // Advanced Mode toggle - hides LaTeX editor and AI tools by default
+  const [advancedMode, setAdvancedMode] = useState<boolean>(false);
+
   // Model selection state
   const [availableModels, setAvailableModels] = useState<ModelInfo[]>([]);
   const [selectedModel, setSelectedModel] = useState<string>("gemini-2.5-flash");
@@ -112,6 +116,10 @@ export default function CVEditorPage(): JSX.Element {
   const [compiling, setCompiling] = useState(false);
   const [modifying, setModifying] = useState(false);
   const [analyzing, setAnalyzing] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState<UploadProgress>({
+    status: "idle",
+    progress: 0,
+  });
 
   // ============================================
   // EFFECTS
@@ -298,11 +306,49 @@ export default function CVEditorPage(): JSX.Element {
       } catch (error) {
         console.error("Upload error:", error);
         showToast("error", "Upload failed. Please try again.");
+        setUploadProgress({ status: "error", progress: 0, message: "Upload failed" });
       } finally {
         setUploading(false);
+        // Reset progress after a delay
+        setTimeout(() => {
+          setUploadProgress({ status: "idle", progress: 0 });
+        }, 2000);
       }
     },
     [selectedModel, selectedTemplate]
+  );
+
+  // Handler for FileUpload component (drag-and-drop)
+  const handleFileSelect = useCallback(
+    (file: File): void => {
+      // Validate file type
+      const validTypes = [
+        "application/pdf",
+        "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+      ];
+      const isTexFile = file.name.toLowerCase().endsWith(".tex");
+
+      if (!validTypes.includes(file.type) && !isTexFile) {
+        showToast("error", "Please upload a PDF, DOCX, or TEX file.");
+        return;
+      }
+
+      // Create a synthetic event to reuse handleUpload logic
+      const syntheticEvent = {
+        target: {
+          files: [file],
+        },
+      } as unknown as ChangeEvent<HTMLInputElement>;
+
+      // Update progress
+      setUploadProgress({ status: "uploading", progress: 30, step: "Uploading file..." });
+
+      // Call the existing handler
+      void handleUpload(syntheticEvent).then(() => {
+        setUploadProgress({ status: "complete", progress: 100, step: "Done!" });
+      });
+    },
+    [handleUpload]
   );
 
   const handleCompile = async (save: boolean): Promise<void> => {
@@ -576,43 +622,40 @@ export default function CVEditorPage(): JSX.Element {
 
       {/* Header */}
       <div className="mb-8">
-        <h1 className="text-3xl font-bold mb-2">CV Editor</h1>
-        <p className="text-muted-foreground">
-          Upload your CV, edit with AI assistance, and download a polished PDF.
-        </p>
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+          <div>
+            <h1 className="text-3xl font-bold mb-2">CV Editor</h1>
+            <p className="text-muted-foreground">
+              {advancedMode
+                ? "Edit LaTeX source, use AI assistance, and check ATS compatibility."
+                : "Upload your CV, choose a template, and download a polished PDF."}
+            </p>
+          </div>
+          {/* Advanced Mode Toggle */}
+          <Button
+            variant={advancedMode ? "default" : "outline"}
+            onClick={() => setAdvancedMode(!advancedMode)}
+            className="shrink-0 w-full sm:w-auto"
+          >
+            {advancedMode ? "✓ Advanced Mode" : "⚡ Advanced Mode"}
+          </Button>
+        </div>
       </div>
 
-      {/* Toolbar */}
+      {/* Toolbar - Simplified for Simple Mode, Full for Advanced */}
       <Card className="mb-6">
         <CardContent className="py-4 space-y-4">
-          {/* Row 1: Model, Template, Upload */}
-          <div className="flex flex-wrap items-center gap-4">
-            {/* Model Selector */}
-            <div className="flex items-center gap-2">
-              <span className="text-sm text-muted-foreground whitespace-nowrap">Model:</span>
-              <Select value={selectedModel} onValueChange={setSelectedModel} disabled={uploading}>
-                <SelectTrigger className="w-[200px] h-9">
-                  <SelectValue placeholder="Select model" />
-                </SelectTrigger>
-                <SelectContent>
-                  {availableModels.map((model) => (
-                    <SelectItem key={model.id} value={model.id} disabled={!model.available}>
-                      {model.name} ({model.cost}){!model.available && " - no key"}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-
-            {/* Template Selector */}
-            <div className="flex items-center gap-2">
+          {/* Row 1: Essential controls */}
+          <div className="flex flex-col sm:flex-row flex-wrap items-stretch sm:items-center gap-3 sm:gap-4">
+            {/* Template Selector - Always visible */}
+            <div className="flex items-center gap-2 w-full sm:w-auto">
               <span className="text-sm text-muted-foreground whitespace-nowrap">Template:</span>
               <Select
                 value={selectedTemplate}
                 onValueChange={handleTemplateChange}
                 disabled={uploading}
               >
-                <SelectTrigger className="w-[180px] h-9">
+                <SelectTrigger className="w-full sm:w-[180px] h-11 sm:h-9">
                   <SelectValue placeholder="Select template" />
                 </SelectTrigger>
                 <SelectContent>
@@ -625,13 +668,36 @@ export default function CVEditorPage(): JSX.Element {
               </Select>
             </div>
 
+            {/* Model Selector - Only in Advanced Mode */}
+            {advancedMode && (
+              <div className="flex items-center gap-2 w-full sm:w-auto">
+                <span className="text-sm text-muted-foreground whitespace-nowrap">Model:</span>
+                <Select value={selectedModel} onValueChange={setSelectedModel} disabled={uploading}>
+                  <SelectTrigger className="w-full sm:w-[200px] h-11 sm:h-9">
+                    <SelectValue placeholder="Select model" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {availableModels.map((model) => (
+                      <SelectItem key={model.id} value={model.id} disabled={!model.available}>
+                        {model.name} ({model.cost}){!model.available && " - no key"}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            )}
+
+            {/* Spacer - hidden on mobile */}
+            <div className="hidden sm:block flex-1" />
+
             {/* Upload Button */}
             <Button
               variant="default"
               disabled={uploading}
               onClick={() => document.getElementById("cv-upload")?.click()}
+              className="w-full sm:w-auto h-11 sm:h-9"
             >
-              {uploading ? "Extracting..." : "Upload CV"}
+              {uploading ? "Extracting..." : "📄 Upload CV"}
             </Button>
             <Input
               id="cv-upload"
@@ -642,55 +708,67 @@ export default function CVEditorPage(): JSX.Element {
               disabled={uploading}
             />
 
-            {/* Spacer */}
-            <div className="flex-1" />
+            {/* Download Button - Always visible when PDF available */}
+            {previewPdfUrl && (
+              <Button
+                variant="secondary"
+                onClick={handleDownload}
+                className="w-full sm:w-auto h-11 sm:h-9"
+              >
+                ⬇️ Download PDF
+              </Button>
+            )}
 
-            {/* View Mode Toggle */}
-            <div className="flex items-center gap-1 bg-muted rounded-lg p-1">
-              <Button
-                variant={viewMode === "pdf" ? "default" : "ghost"}
-                size="sm"
-                onClick={() => setViewMode("pdf")}
-                className="h-7 px-3"
-              >
-                PDF
-              </Button>
-              <Button
-                variant={viewMode === "split" ? "default" : "ghost"}
-                size="sm"
-                onClick={() => setViewMode("split")}
-                className="h-7 px-3"
-              >
-                Split
-              </Button>
-              <Button
-                variant={viewMode === "latex" ? "default" : "ghost"}
-                size="sm"
-                onClick={() => setViewMode("latex")}
-                className="h-7 px-3"
-              >
-                LaTeX
-              </Button>
-            </div>
+            {/* View Mode Toggle - Only in Advanced Mode */}
+            {advancedMode && (
+              <div className="flex items-center gap-1 bg-muted rounded-lg p-1 w-full sm:w-auto justify-center">
+                <Button
+                  variant={viewMode === "pdf" ? "default" : "ghost"}
+                  size="sm"
+                  onClick={() => setViewMode("pdf")}
+                  className="h-9 sm:h-7 px-3 flex-1 sm:flex-none"
+                >
+                  PDF
+                </Button>
+                <Button
+                  variant={viewMode === "split" ? "default" : "ghost"}
+                  size="sm"
+                  onClick={() => setViewMode("split")}
+                  className="h-9 sm:h-7 px-3 flex-1 sm:flex-none"
+                >
+                  Split
+                </Button>
+                <Button
+                  variant={viewMode === "latex" ? "default" : "ghost"}
+                  size="sm"
+                  onClick={() => setViewMode("latex")}
+                  className="h-9 sm:h-7 px-3 flex-1 sm:flex-none"
+                >
+                  LaTeX
+                </Button>
+              </div>
+            )}
           </div>
 
           {/* Row 2: File info (only shows when file is loaded) */}
           {cvData?.filename && (
-            <div className="flex items-center gap-3 pt-2 border-t">
-              <span className="text-sm font-medium">Current:</span>
-              <span className="text-sm text-muted-foreground">{cvData.filename}</span>
-              {modelUsed && (
-                <Badge variant={fallbackUsed ? "secondary" : "outline"} className="text-xs">
-                  {modelUsed}
-                  {fallbackUsed && " (fallback)"}
-                </Badge>
-              )}
-              <div className="flex-1" />
+            <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2 sm:gap-3 pt-2 border-t">
+              <div className="flex items-center gap-2 flex-wrap">
+                <span className="text-sm font-medium">Current:</span>
+                <span className="text-sm text-muted-foreground">{cvData.filename}</span>
+                {modelUsed && (
+                  <Badge variant={fallbackUsed ? "secondary" : "outline"} className="text-xs">
+                    {modelUsed}
+                    {fallbackUsed && " (fallback)"}
+                  </Badge>
+                )}
+              </div>
+              <div className="hidden sm:block flex-1" />
               <Button
                 variant="ghost"
                 size="sm"
                 onClick={handleDelete}
-                className="text-red-600 hover:text-red-700 hover:bg-red-50 h-7"
+                className="text-red-600 hover:text-red-700 hover:bg-red-50 h-9 sm:h-7 w-full sm:w-auto"
               >
                 Delete CV
               </Button>
@@ -700,24 +778,28 @@ export default function CVEditorPage(): JSX.Element {
       </Card>
 
       {/* Main Editor Area */}
-      <div className={`grid gap-6 mb-6 ${viewMode === "split" ? "lg:grid-cols-2" : "grid-cols-1"}`}>
-        {/* PDF Preview */}
-        {(viewMode === "pdf" || viewMode === "split") && (
-          <Card className="h-[600px]">
+      <div
+        className={`grid gap-6 mb-6 ${advancedMode && viewMode === "split" ? "lg:grid-cols-2" : "grid-cols-1"}`}
+      >
+        {/* PDF Preview - Always visible in Simple Mode, conditional in Advanced Mode */}
+        {(!advancedMode || viewMode === "pdf" || viewMode === "split") && (
+          <Card className="min-h-[400px] md:min-h-[600px]">
             <CardHeader className="pb-2">
               <div className="flex items-center justify-between">
                 <CardTitle className="text-lg">PDF Preview</CardTitle>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={handleDownload}
-                  disabled={!previewPdfUrl}
-                >
-                  Download PDF
-                </Button>
+                {advancedMode && (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={handleDownload}
+                    disabled={!previewPdfUrl}
+                  >
+                    Download PDF
+                  </Button>
+                )}
               </div>
             </CardHeader>
-            <CardContent className="h-[calc(100%-60px)]">
+            <CardContent className="h-[350px] md:h-[calc(100%-60px)]">
               {previewPdfUrl ? (
                 <iframe
                   src={previewPdfUrl}
@@ -725,16 +807,23 @@ export default function CVEditorPage(): JSX.Element {
                   title="CV Preview"
                 />
               ) : (
-                <div className="flex items-center justify-center h-full text-muted-foreground border rounded bg-muted/20">
-                  Upload a PDF or compile LaTeX to see preview
-                </div>
+                <FileUpload
+                  onFileSelect={handleFileSelect}
+                  progress={uploadProgress}
+                  accept=".pdf,.docx,.tex"
+                  maxSize={10 * 1024 * 1024}
+                  disabled={uploading}
+                  title="Upload your CV"
+                  description="Drag and drop or click to browse (PDF, DOCX, or LaTeX)"
+                  className="h-full"
+                />
               )}
             </CardContent>
           </Card>
         )}
 
-        {/* LaTeX Editor */}
-        {(viewMode === "latex" || viewMode === "split") && (
+        {/* LaTeX Editor - Only in Advanced Mode */}
+        {advancedMode && (viewMode === "latex" || viewMode === "split") && (
           <Card className="h-[600px]">
             <CardHeader className="pb-2">
               <div className="flex items-center justify-between">
@@ -779,134 +868,140 @@ export default function CVEditorPage(): JSX.Element {
         )}
       </div>
 
-      {/* AI Assistant */}
-      <Card className="mb-6">
-        <CardHeader>
-          <CardTitle className="text-lg">AI Assistant</CardTitle>
-          <CardDescription>
-            Describe the changes you want to make and AI will modify your CV.
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="flex gap-4">
-            <Input
-              value={aiInstruction}
-              onChange={(e) => setAiInstruction(e.target.value)}
-              placeholder='e.g., "Add a new skill: Kubernetes" or "Make the summary more concise"'
-              className="flex-1"
-              onKeyDown={(e) => {
-                if (e.key === "Enter" && !e.shiftKey) {
-                  e.preventDefault();
-                  void handleAIModify();
-                }
-              }}
-            />
-            <Button
-              onClick={handleAIModify}
-              disabled={modifying || !latexContent || !aiInstruction}
-            >
-              {modifying ? "Modifying..." : "Apply"}
-            </Button>
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* ATS Analysis */}
-      <Card>
-        <CardHeader>
-          <div className="flex items-center justify-between">
-            <div>
-              <CardTitle className="text-lg">ATS Compliance Check</CardTitle>
-              <CardDescription>
-                Analyze your CV for Applicant Tracking System compatibility.
-              </CardDescription>
-            </div>
-            <Button
-              variant="outline"
-              onClick={handleATSCheck}
-              disabled={analyzing || !latexContent}
-            >
-              {analyzing ? "Analyzing..." : "Check ATS Score"}
-            </Button>
-          </div>
-        </CardHeader>
-        {atsAnalysis && (
+      {/* AI Assistant - Only in Advanced Mode */}
+      {advancedMode && (
+        <Card className="mb-6">
+          <CardHeader>
+            <CardTitle className="text-lg">AI Assistant</CardTitle>
+            <CardDescription>
+              Describe the changes you want to make and AI will modify your CV.
+            </CardDescription>
+          </CardHeader>
           <CardContent>
-            <div className="space-y-4">
-              {/* Score */}
-              <div className="flex items-center gap-4">
-                <div
-                  className={`text-4xl font-bold ${
-                    atsAnalysis.score >= 80
-                      ? "text-green-600"
-                      : atsAnalysis.score >= 60
-                        ? "text-yellow-600"
-                        : "text-red-600"
-                  }`}
-                >
-                  {atsAnalysis.score}
-                </div>
-                <div className="flex-1">
-                  <div className="h-2 bg-muted rounded-full overflow-hidden">
-                    <div
-                      className={`h-full ${
-                        atsAnalysis.score >= 80
-                          ? "bg-green-500"
-                          : atsAnalysis.score >= 60
-                            ? "bg-yellow-500"
-                            : "bg-red-500"
-                      }`}
-                      style={{ width: `${atsAnalysis.score}%` }}
-                    />
-                  </div>
-                </div>
-              </div>
-
-              {/* Summary */}
-              <p className="text-sm text-muted-foreground">{atsAnalysis.summary}</p>
-
-              {/* Issues */}
-              {atsAnalysis.issues.length > 0 && (
-                <div className="space-y-2">
-                  <h4 className="font-medium">Issues Found:</h4>
-                  {atsAnalysis.issues.map((issue, index) => (
-                    <div
-                      key={index}
-                      className={`p-3 rounded-lg border ${
-                        issue.severity === "error"
-                          ? "bg-red-50 border-red-200"
-                          : issue.severity === "warning"
-                            ? "bg-yellow-50 border-yellow-200"
-                            : "bg-blue-50 border-blue-200"
-                      }`}
-                    >
-                      <div className="flex items-start gap-2">
-                        <Badge
-                          variant={
-                            issue.severity === "error"
-                              ? "destructive"
-                              : issue.severity === "warning"
-                                ? "outline"
-                                : "secondary"
-                          }
-                        >
-                          {issue.severity}
-                        </Badge>
-                        <div className="flex-1">
-                          <p className="text-sm font-medium">{issue.message}</p>
-                          <p className="text-sm text-muted-foreground mt-1">
-                            💡 {issue.suggestion}
-                          </p>
-                        </div>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              )}
+            <div className="flex flex-col sm:flex-row gap-3 sm:gap-4">
+              <Input
+                value={aiInstruction}
+                onChange={(e) => setAiInstruction(e.target.value)}
+                placeholder='e.g., "Add a new skill: Kubernetes" or "Make the summary more concise"'
+                className="flex-1"
+                onKeyDown={(e) => {
+                  if (e.key === "Enter" && !e.shiftKey) {
+                    e.preventDefault();
+                    void handleAIModify();
+                  }
+                }}
+              />
+              <Button
+                onClick={handleAIModify}
+                disabled={modifying || !latexContent || !aiInstruction}
+                className="w-full sm:w-auto"
+              >
+                {modifying ? "Modifying..." : "Apply"}
+              </Button>
             </div>
           </CardContent>
-        )}
-      </Card>
+        </Card>
+      )}
+
+      {/* ATS Analysis - Only in Advanced Mode */}
+      {advancedMode && (
+        <Card>
+          <CardHeader>
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+              <div>
+                <CardTitle className="text-lg">ATS Compliance Check</CardTitle>
+                <CardDescription>
+                  Analyze your CV for Applicant Tracking System compatibility.
+                </CardDescription>
+              </div>
+              <Button
+                variant="outline"
+                onClick={handleATSCheck}
+                disabled={analyzing || !latexContent}
+                className="w-full sm:w-auto"
+              >
+                {analyzing ? "Analyzing..." : "Check ATS Score"}
+              </Button>
+            </div>
+          </CardHeader>
+          {atsAnalysis && (
+            <CardContent>
+              <div className="space-y-4">
+                {/* Score */}
+                <div className="flex items-center gap-4">
+                  <div
+                    className={`text-4xl font-bold ${
+                      atsAnalysis.score >= 80
+                        ? "text-green-600"
+                        : atsAnalysis.score >= 60
+                          ? "text-yellow-600"
+                          : "text-red-600"
+                    }`}
+                  >
+                    {atsAnalysis.score}
+                  </div>
+                  <div className="flex-1">
+                    <div className="h-2 bg-muted rounded-full overflow-hidden">
+                      <div
+                        className={`h-full ${
+                          atsAnalysis.score >= 80
+                            ? "bg-green-500"
+                            : atsAnalysis.score >= 60
+                              ? "bg-yellow-500"
+                              : "bg-red-500"
+                        }`}
+                        style={{ width: `${atsAnalysis.score}%` }}
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                {/* Summary */}
+                <p className="text-sm text-muted-foreground">{atsAnalysis.summary}</p>
+
+                {/* Issues */}
+                {atsAnalysis.issues.length > 0 && (
+                  <div className="space-y-2">
+                    <h4 className="font-medium">Issues Found:</h4>
+                    {atsAnalysis.issues.map((issue, index) => (
+                      <div
+                        key={index}
+                        className={`p-3 rounded-lg border ${
+                          issue.severity === "error"
+                            ? "bg-red-50 border-red-200"
+                            : issue.severity === "warning"
+                              ? "bg-yellow-50 border-yellow-200"
+                              : "bg-blue-50 border-blue-200"
+                        }`}
+                      >
+                        <div className="flex items-start gap-2">
+                          <Badge
+                            variant={
+                              issue.severity === "error"
+                                ? "destructive"
+                                : issue.severity === "warning"
+                                  ? "outline"
+                                  : "secondary"
+                            }
+                          >
+                            {issue.severity}
+                          </Badge>
+                          <div className="flex-1">
+                            <p className="text-sm font-medium">{issue.message}</p>
+                            <p className="text-sm text-muted-foreground mt-1">
+                              💡 {issue.suggestion}
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </CardContent>
+          )}
+        </Card>
+      )}
     </div>
   );
 }

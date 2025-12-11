@@ -2,73 +2,53 @@
 
 This document catalogs current UI/UX issues identified through user journey mapping.
 
+**Last Updated:** Sprint 11 (December 2024)
+
 ---
 
-## Critical Issues (🔴)
+## ✅ Resolved Issues
 
-### 1. No Filtering/Sorting in Tracker
+### 1. No Filtering/Sorting in Tracker ✅
+
+**Status:** RESOLVED (Sprint 10)
 
 **Location:** `/tracker`
 
-**Problem:** Users with many applications can't find specific ones quickly.
-
-**Impact:**
-
-- Overwhelm with growing list
-- Time wasted scrolling
-- Missed follow-ups
-
-**Solution Options:**
-
-- Add status filter tabs
-- Add search box
-- Add sort by date/company/score
-- Consider Kanban board view
+**Solution Implemented:** Added status filter tabs and search functionality.
 
 ---
 
-### 2. No Actionable Advice for Skill Gaps
+### 2. No Actionable Advice for Skill Gaps ✅
+
+**Status:** RESOLVED (Sprint 11)
 
 **Location:** `/analyze` results
 
-**Problem:** We show skill gaps but don't suggest how to address them.
+**Solution Implemented:** Added "💡 Quick wins" section with actionable tips for each skill gap. Tips are context-aware for common technologies (Python, AWS, Docker, etc.) and provide specific learning resources.
 
-**Impact:**
+---
 
-- User knows the problem but not the solution
-- Missed opportunity to add value
-- Cover letter doesn't address gaps
+### 3. No Drag-and-Drop Upload ✅
 
-**Solution Options:**
+**Status:** RESOLVED (Sprint 11)
 
-- Add "How to address this" tips
-- Suggest learning resources
-- Auto-include gap mitigation in cover letter
-- Show similar jobs with better match
+**Location:** `/cv`
+
+**Solution Implemented:** Added FileUpload component with drag-and-drop zone in the CV Editor empty state. Shows visual feedback during drag and upload progress.
+
+---
+
+### 5. LaTeX Editor Intimidating ✅
+
+**Status:** RESOLVED (Sprint 11)
+
+**Location:** `/cv`
+
+**Solution Implemented:** Added "Advanced Mode" toggle. By default, users see a simple PDF preview with upload/download. Advanced Mode reveals the LaTeX editor, AI Assistant, and ATS checker for power users.
 
 ---
 
 ## Medium Issues (🟡)
-
-### 3. No Drag-and-Drop Upload
-
-**Location:** `/profile`, `/cv`
-
-**Problem:** File upload requires clicking button, no visual drop zone.
-
-**Impact:**
-
-- Minor friction
-- Feels outdated
-- Mobile users unaffected
-
-**Solution Options:**
-
-- Add drop zone with visual feedback
-- Show accepted file types
-- Add paste from clipboard
-
----
 
 ### 4. No Extraction Progress Indication
 
@@ -89,14 +69,6 @@ This document catalogs current UI/UX issues identified through user journey mapp
 - Partial results as they come
 
 ---
-
-### 5. LaTeX Editor Intimidating
-
-**Location:** `/cv`
-
-**Problem:** Non-technical users see raw LaTeX code.
-
-**Impact:**
 
 - Feature feels inaccessible
 - Fear of breaking things
@@ -178,23 +150,36 @@ This document catalogs current UI/UX issues identified through user journey mapp
 
 ## Summary Matrix
 
-| Issue                  | Location      | Severity  | Effort | Priority |
-| ---------------------- | ------------- | --------- | ------ | -------- |
-| No tracker filtering   | /tracker      | 🔴 High   | Medium | P1       |
-| No gap advice          | /analyze      | 🔴 High   | Medium | P1       |
-| No drag-drop upload    | /profile, /cv | 🟡 Medium | Low    | P2       |
-| No extraction progress | /profile      | 🟡 Medium | Medium | P2       |
-| LaTeX intimidating     | /cv           | 🟡 Medium | High   | P2       |
-| No user state          | All           | 🟡 Medium | Medium | P2       |
-| Dense cards            | /tracker      | 🟢 Low    | Low    | P3       |
-| Limited dashboard      | /dashboard    | 🟢 Low    | Medium | P3       |
-| No confirmations       | Various       | 🟢 Low    | Low    | P3       |
+| Issue                  | Location   | Severity  | Effort | Status      |
+| ---------------------- | ---------- | --------- | ------ | ----------- |
+| No tracker filtering   | /tracker   | 🔴 High   | Medium | ✅ RESOLVED |
+| No gap advice          | /analyze   | 🔴 High   | Medium | ✅ RESOLVED |
+| No drag-drop upload    | /cv        | 🟡 Medium | Low    | ✅ RESOLVED |
+| LaTeX intimidating     | /cv        | 🟡 Medium | High   | ✅ RESOLVED |
+| No extraction progress | /profile   | 🟡 Medium | Medium | Backlog     |
+| No user state          | All        | 🟡 Medium | Medium | Backlog     |
+| Dense cards            | /tracker   | 🟢 Low    | Low    | Backlog     |
+| Limited dashboard      | /dashboard | 🟢 Low    | Medium | Backlog     |
+| No confirmations       | Various    | 🟢 Low    | Low    | Backlog     |
+
+---
+
+## Sprint 11 Summary
+
+**Resolved in Sprint 11:**
+
+- ✅ Actionable skill gap advice with context-aware tips
+- ✅ Drag-and-drop CV upload
+- ✅ Advanced Mode toggle for CV Editor (LaTeX hidden by default)
+- ✅ Mobile-responsive UX Planner
+- ✅ 44px touch targets for accessibility
+- ✅ UX Implementation tracking system
 
 ---
 
 ## Next Steps
 
-1. Address P1 issues in next sprint
-2. Group P2 issues into "Polish" sprint
+1. ~~Address P1 issues in next sprint~~ ✅ DONE
+2. Continue with remaining P2 issues (extraction progress, user state)
 3. P3 issues as time permits
 4. Validate with user testing after changes

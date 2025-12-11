@@ -16,7 +16,7 @@ import Markdown from "react-markdown";
  * Requires admin access.
  */
 
-type Tab = "journeys" | "personas" | "pain-points" | "principles";
+type Tab = "journeys" | "personas" | "pain-points" | "principles" | "implementations";
 type UxAnalysisResult = {
   summary: string;
   issues: Array<{
@@ -49,6 +49,9 @@ function UXPlannerContent(): JSX.Element {
   // Fetch all UX data
   const { data, isLoading } = trpc.ux.getAll.useQuery();
   const { data: stats } = trpc.ux.getStats.useQuery();
+  const { data: implementations, refetch: refetchImplementations } =
+    trpc.ux.listImplementations.useQuery();
+  const { data: implStats } = trpc.ux.getImplementationStats.useQuery();
   const { data: chatHistory, refetch: refetchChat } = trpc.ux.getChatHistory.useQuery(
     { sessionId: chatSessionId },
     { enabled: chatOpen } // Only fetch when chat is open, no polling
@@ -67,6 +70,12 @@ function UXPlannerContent(): JSX.Element {
   const chatMutation = trpc.ux.chat.useMutation({
     onSuccess: () => void refetchChat(),
     onError: (error) => console.error("Chat error:", error),
+  });
+  const updateImplementationMutation = trpc.ux.updateImplementation.useMutation({
+    onSuccess: () => void refetchImplementations(),
+  });
+  const scanImplementationMutation = trpc.ux.scanImplementation.useMutation({
+    onSuccess: () => void refetchImplementations(),
   });
 
   // Scroll chat to bottom when new messages arrive or when sending
@@ -125,7 +134,7 @@ function UXPlannerContent(): JSX.Element {
   return (
     <div className="flex min-h-screen bg-nordic-neutral-50">
       {/* Main Content */}
-      <div className={`flex-1 p-8 transition-all ${chatOpen ? "mr-96" : ""}`}>
+      <div className={`flex-1 p-4 md:p-8 transition-all ${chatOpen ? "md:mr-96" : ""}`}>
         <div className="mx-auto max-w-6xl">
           {/* Admin Navigation */}
           <div className="mb-4 flex gap-4 text-sm">
@@ -159,7 +168,7 @@ function UXPlannerContent(): JSX.Element {
 
           {/* Stats Bar */}
           {stats && (
-            <div className="mb-6 grid grid-cols-4 gap-4">
+            <div className="mb-6 grid grid-cols-2 gap-3 md:grid-cols-4 md:gap-4">
               <div className="rounded-lg bg-white p-4 border border-nordic-neutral-200">
                 <div className="text-2xl font-bold text-fjord-600">{stats.personaCount}</div>
                 <div className="text-sm text-nordic-neutral-500">Personas</div>
@@ -180,7 +189,7 @@ function UXPlannerContent(): JSX.Element {
           )}
 
           {/* Tabs */}
-          <div className="mb-6 flex gap-2">
+          <div className="mb-6 flex gap-2 overflow-x-auto pb-2 -mx-4 px-4 md:mx-0 md:px-0 md:overflow-visible">
             {[
               {
                 id: "journeys" as const,
@@ -205,6 +214,12 @@ function UXPlannerContent(): JSX.Element {
                 label: "Principles",
                 icon: "📐",
                 count: data?.principles.length,
+              },
+              {
+                id: "implementations" as const,
+                label: "Tracking",
+                icon: "✅",
+                count: implementations?.length,
               },
             ].map((tab) => (
               <button
@@ -358,6 +373,124 @@ function UXPlannerContent(): JSX.Element {
                           </div>
                         </button>
                       ))}
+                    </div>
+                  </>
+                )}
+
+                {/* Implementations Tracking */}
+                {activeTab === "implementations" && (
+                  <>
+                    <div className="mb-4 flex items-center justify-between">
+                      <h2 className="font-semibold text-nordic-neutral-900">
+                        Implementation Tracking
+                      </h2>
+                      {implStats && (
+                        <span className="text-sm text-nordic-neutral-500">
+                          {implStats.completionRate}% complete
+                        </span>
+                      )}
+                    </div>
+
+                    {/* Status Summary */}
+                    {implStats && (
+                      <div className="mb-4 grid grid-cols-4 gap-2 text-center text-xs">
+                        <div className="rounded-lg bg-nordic-neutral-100 p-2">
+                          <div className="font-semibold">{implStats.notStarted}</div>
+                          <div className="text-nordic-neutral-500">Todo</div>
+                        </div>
+                        <div className="rounded-lg bg-yellow-100 p-2">
+                          <div className="font-semibold">{implStats.inProgress}</div>
+                          <div className="text-nordic-neutral-500">Active</div>
+                        </div>
+                        <div className="rounded-lg bg-green-100 p-2">
+                          <div className="font-semibold">{implStats.implemented}</div>
+                          <div className="text-nordic-neutral-500">Done</div>
+                        </div>
+                        <div className="rounded-lg bg-fjord-100 p-2">
+                          <div className="font-semibold">{implStats.verified}</div>
+                          <div className="text-nordic-neutral-500">Verified</div>
+                        </div>
+                      </div>
+                    )}
+
+                    <div className="space-y-2">
+                      {implementations?.map((impl) => (
+                        <div
+                          key={impl.id}
+                          className="rounded-lg border border-nordic-neutral-200 p-3"
+                        >
+                          <div className="flex items-start justify-between gap-2">
+                            <div className="flex-1">
+                              <div className="font-medium text-nordic-neutral-900">
+                                {impl.title}
+                              </div>
+                              {impl.painPoint && (
+                                <div className="text-xs text-nordic-neutral-500">
+                                  Pain Point: {impl.painPoint.title}
+                                </div>
+                              )}
+                            </div>
+                            <select
+                              value={impl.status}
+                              onChange={(e) =>
+                                updateImplementationMutation.mutate({
+                                  id: impl.id,
+                                  status: e.target.value as
+                                    | "NOT_STARTED"
+                                    | "IN_PROGRESS"
+                                    | "IMPLEMENTED"
+                                    | "VERIFIED",
+                                })
+                              }
+                              className={`rounded-md border px-2 py-1 text-xs font-medium ${
+                                impl.status === "VERIFIED"
+                                  ? "bg-fjord-100 text-fjord-700"
+                                  : impl.status === "IMPLEMENTED"
+                                    ? "bg-green-100 text-green-700"
+                                    : impl.status === "IN_PROGRESS"
+                                      ? "bg-yellow-100 text-yellow-700"
+                                      : "bg-nordic-neutral-100 text-nordic-neutral-700"
+                              }`}
+                            >
+                              <option value="NOT_STARTED">Todo</option>
+                              <option value="IN_PROGRESS">In Progress</option>
+                              <option value="IMPLEMENTED">Done</option>
+                              <option value="VERIFIED">Verified</option>
+                            </select>
+                          </div>
+                          {impl.aiNotes && (
+                            <div className="mt-2 text-xs text-nordic-neutral-500 bg-nordic-neutral-50 p-2 rounded">
+                              💡 {impl.aiNotes}
+                            </div>
+                          )}
+                          <div className="mt-2 flex gap-2">
+                            <button
+                              onClick={() => scanImplementationMutation.mutate({ id: impl.id })}
+                              disabled={scanImplementationMutation.isPending}
+                              className="text-xs text-fjord-600 hover:underline"
+                            >
+                              🔍 Scan
+                            </button>
+                            {impl.commit && (
+                              <span className="text-xs text-nordic-neutral-500">
+                                Commit: {impl.commit.slice(0, 7)}
+                              </span>
+                            )}
+                            {impl.prNumber && (
+                              <span className="text-xs text-nordic-neutral-500">
+                                PR #{impl.prNumber}
+                              </span>
+                            )}
+                          </div>
+                        </div>
+                      ))}
+                      {(!implementations || implementations.length === 0) && (
+                        <div className="text-center text-sm text-nordic-neutral-500 py-8">
+                          No implementations tracked yet.
+                          <br />
+                          Use the AI chat to identify improvements to track.
+                        </div>
+                      )}
                     </div>
                   </>
                 )}
@@ -654,9 +787,9 @@ function UXPlannerContent(): JSX.Element {
         </div>
       </div>
 
-      {/* Chat Sidebar */}
+      {/* Chat Sidebar - Full screen on mobile, sidebar on desktop */}
       {chatOpen && (
-        <div className="fixed right-0 top-0 h-full w-96 border-l border-nordic-neutral-200 bg-white shadow-lg flex flex-col">
+        <div className="fixed inset-0 md:inset-auto md:right-0 md:top-0 md:h-full md:w-96 border-l border-nordic-neutral-200 bg-white shadow-lg flex flex-col z-50">
           <div className="border-b border-nordic-neutral-200 p-4 flex items-start justify-between">
             <div>
               <h3 className="font-semibold text-nordic-neutral-900">🤖 UX Research Assistant</h3>

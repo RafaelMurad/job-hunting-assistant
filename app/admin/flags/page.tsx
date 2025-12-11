@@ -63,7 +63,7 @@ function FeatureFlagsContent({
   const totalCount = FEATURE_FLAGS.length;
 
   return (
-    <div className="min-h-screen bg-nordic-neutral-50 p-8">
+    <div className="min-h-screen bg-nordic-neutral-50 p-4 md:p-8">
       <div className="mx-auto max-w-4xl">
         {/* Admin Navigation */}
         <div className="mb-4 flex gap-4 text-sm">

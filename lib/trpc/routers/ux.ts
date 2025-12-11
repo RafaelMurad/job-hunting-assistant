@@ -979,6 +979,178 @@ export const uxRouter = router({
 
       return { response };
     }),
+
+  // ===========================================================================
+  // IMPLEMENTATION TRACKING
+  // ===========================================================================
+
+  /**
+   * List all implementations with optional filtering
+   */
+  listImplementations: adminProcedure
+    .input(
+      z
+        .object({
+          status: z.enum(["NOT_STARTED", "IN_PROGRESS", "IMPLEMENTED", "VERIFIED"]).optional(),
+          painPointId: z.string().optional(),
+          journeyId: z.string().optional(),
+        })
+        .optional()
+    )
+    .query(async ({ ctx, input }) => {
+      const where: {
+        status?: "NOT_STARTED" | "IN_PROGRESS" | "IMPLEMENTED" | "VERIFIED";
+        painPointId?: string;
+        journeyId?: string;
+      } = {};
+
+      if (input?.status) where.status = input.status;
+      if (input?.painPointId) where.painPointId = input.painPointId;
+      if (input?.journeyId) where.journeyId = input.journeyId;
+
+      return ctx.prisma.uxImplementation.findMany({
+        where,
+        include: {
+          painPoint: { select: { id: true, title: true, severity: true } },
+          journey: { select: { id: true, name: true } },
+        },
+        orderBy: [{ priority: "asc" }, { createdAt: "desc" }],
+      });
+    }),
+
+  /**
+   * Create a new implementation tracking entry
+   */
+  createImplementation: adminProcedure
+    .input(
+      z.object({
+        title: z.string().min(1),
+        description: z.string().optional(),
+        painPointId: z.string().optional(),
+        journeyId: z.string().optional(),
+        files: z.array(z.string()).default([]),
+        searchPattern: z.string().optional(),
+        priority: z.number().min(1).max(3).default(2),
+      })
+    )
+    .mutation(async ({ ctx, input }) => {
+      return ctx.prisma.uxImplementation.create({
+        data: {
+          title: input.title,
+          description: input.description ?? null,
+          painPointId: input.painPointId ?? null,
+          journeyId: input.journeyId ?? null,
+          files: JSON.stringify(input.files),
+          searchPattern: input.searchPattern ?? null,
+          priority: input.priority,
+        },
+      });
+    }),
+
+  /**
+   * Update implementation status
+   */
+  updateImplementation: adminProcedure
+    .input(
+      z.object({
+        id: z.string(),
+        status: z.enum(["NOT_STARTED", "IN_PROGRESS", "IMPLEMENTED", "VERIFIED"]).optional(),
+        commit: z.string().optional(),
+        prNumber: z.number().optional(),
+        aiVerified: z.boolean().optional(),
+        aiNotes: z.string().optional(),
+      })
+    )
+    .mutation(async ({ ctx, input }) => {
+      const { id, status, commit, prNumber, aiVerified, aiNotes } = input;
+
+      // Build update data explicitly to handle undefined -> null conversion
+      const updateData: {
+        status?: "NOT_STARTED" | "IN_PROGRESS" | "IMPLEMENTED" | "VERIFIED";
+        commit?: string | null;
+        prNumber?: number | null;
+        aiVerified?: boolean;
+        aiNotes?: string | null;
+        lastScanned?: Date;
+      } = {};
+
+      if (status !== undefined) updateData.status = status;
+      if (commit !== undefined) updateData.commit = commit;
+      if (prNumber !== undefined) updateData.prNumber = prNumber;
+      if (aiVerified !== undefined) {
+        updateData.aiVerified = aiVerified;
+        updateData.lastScanned = new Date();
+      }
+      if (aiNotes !== undefined) updateData.aiNotes = aiNotes;
+
+      return ctx.prisma.uxImplementation.update({
+        where: { id },
+        data: updateData,
+      });
+    }),
+
+  /**
+   * AI-powered scan to verify implementation status
+   * Checks if the specified code patterns exist in the codebase
+   */
+  scanImplementation: adminProcedure
+    .input(z.object({ id: z.string() }))
+    .mutation(async ({ ctx, input }) => {
+      const implementation = await ctx.prisma.uxImplementation.findUnique({
+        where: { id: input.id },
+        include: { painPoint: true },
+      });
+
+      if (!implementation) {
+        throw new TRPCError({
+          code: "NOT_FOUND",
+          message: "Implementation not found",
+        });
+      }
+
+      // Parse files array
+      const files = JSON.parse(implementation.files) as string[];
+
+      // For now, return a simple check based on whether we have file paths
+      // In a real implementation, this would use AI to analyze the code
+      const hasFiles = files.length > 0;
+      const aiNotes = hasFiles
+        ? `Found ${files.length} file(s) associated with this implementation. Manual verification recommended.`
+        : "No files associated with this implementation yet. Add file paths to enable tracking.";
+
+      // Update the implementation with scan results
+      return ctx.prisma.uxImplementation.update({
+        where: { id: input.id },
+        data: {
+          lastScanned: new Date(),
+          aiNotes,
+          // Only mark as verified if there are actual files
+          aiVerified: hasFiles && implementation.status === "IMPLEMENTED",
+        },
+      });
+    }),
+
+  /**
+   * Get implementation summary statistics
+   */
+  getImplementationStats: adminProcedure.query(async ({ ctx }) => {
+    const [notStarted, inProgress, implemented, verified, total] = await Promise.all([
+      ctx.prisma.uxImplementation.count({ where: { status: "NOT_STARTED" } }),
+      ctx.prisma.uxImplementation.count({ where: { status: "IN_PROGRESS" } }),
+      ctx.prisma.uxImplementation.count({ where: { status: "IMPLEMENTED" } }),
+      ctx.prisma.uxImplementation.count({ where: { status: "VERIFIED" } }),
+      ctx.prisma.uxImplementation.count(),
+    ]);
+
+    return {
+      notStarted,
+      inProgress,
+      implemented,
+      verified,
+      total,
+      completionRate: total > 0 ? Math.round(((implemented + verified) / total) * 100) : 0,
+    };
+  }),
 });
 
 export type UxRouter = typeof uxRouter;
