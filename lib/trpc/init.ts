@@ -17,6 +17,11 @@ import superjson from "superjson";
 import { prisma } from "@/lib/db";
 import { auth } from "@/lib/auth";
 import type { Session } from "next-auth";
+import {
+  rateLimitMiddleware,
+  aiRateLimitMiddleware,
+  uploadRateLimitMiddleware,
+} from "./middleware/rate-limit";
 
 /**
  * Context passed to every tRPC procedure.
@@ -144,16 +149,6 @@ const enforceOwner = t.middleware(async ({ ctx, next }) => {
  * Use this for owner-only endpoints (e.g., managing trusted users).
  */
 export const ownerProcedure = t.procedure.use(enforceOwner);
-
-/**
- * Rate-limited procedures
- * Apply rate limiting to protect against abuse and DoS attacks.
- */
-import {
-  rateLimitMiddleware,
-  aiRateLimitMiddleware,
-  uploadRateLimitMiddleware,
-} from "./middleware/rate-limit";
 
 /**
  * Rate-limited protected procedure
