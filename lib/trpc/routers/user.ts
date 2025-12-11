@@ -7,9 +7,9 @@
  * NOTE: Uses centralized AI config from lib/ai.ts for model version management.
  */
 
-import { router, protectedProcedure } from "@/lib/trpc/init";
-import { userSchema, cvUploadSchema } from "@/lib/validations/user";
-import { parseCVWithGeminiVision, parseCVWithGeminiText } from "@/lib/ai";
+import { parseCVWithGeminiText, parseCVWithGeminiVision } from "@/lib/ai";
+import { protectedProcedure, router } from "@/lib/trpc/init";
+import { cvUploadSchema, userSchema } from "@/lib/validations/user";
 import { TRPCError } from "@trpc/server";
 import mammoth from "mammoth";
 

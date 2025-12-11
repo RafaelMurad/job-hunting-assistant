@@ -10,14 +10,14 @@ import { type JSX } from "react";
  * Requires admin or owner access.
  */
 
-import Link from "next/link";
-import { useFeatureFlags, useFeatureFlagHydrated } from "@/lib/feature-flags/hooks";
+import { AdminGuard } from "@/components/admin/AdminGuard";
 import {
   FEATURE_FLAGS,
   getFlagsByCategory,
   type FeatureFlag,
 } from "@/lib/feature-flags/flags.config";
-import { AdminGuard } from "@/components/admin/AdminGuard";
+import { useFeatureFlagHydrated, useFeatureFlags } from "@/lib/feature-flags/hooks";
+import Link from "next/link";
 
 export default function FeatureFlagsAdminPage(): JSX.Element {
   const { flags, toggle, resetAll } = useFeatureFlags();

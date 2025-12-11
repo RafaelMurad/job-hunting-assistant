@@ -10,9 +10,9 @@
 
 "use client";
 
-import { useState, type Dispatch, type SetStateAction } from "react";
 import { trpc } from "@/lib/trpc/client";
 import { getErrorMessage } from "@/lib/trpc/errors";
+import { useState, type Dispatch, type SetStateAction } from "react";
 
 /**
  * Job analysis result from AI.

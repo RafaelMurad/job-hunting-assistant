@@ -5,20 +5,20 @@
  * Most procedures require authentication, except getConfiguredProviders.
  */
 
-import { z } from "zod";
-import { router, publicProcedure, protectedProcedure } from "../init";
-import { TRPCError } from "@trpc/server";
 import {
-  githubProvider,
-  linkedInProvider,
   decryptToken,
-  isTokenExpired,
   encryptToken,
-  isProviderConfigured,
   getConfiguredProviders,
+  githubProvider,
+  isProviderConfigured,
+  isTokenExpired,
+  linkedInProvider,
   type IntegrationStatus,
   type SyncResult,
 } from "@/lib/social";
+import { TRPCError } from "@trpc/server";
+import { z } from "zod";
+import { protectedProcedure, publicProcedure, router } from "../init";
 
 // =============================================================================
 // INPUT SCHEMAS
