@@ -11,7 +11,7 @@
 import { router, adminProcedure } from "@/lib/trpc/init";
 import { z } from "zod";
 import { TRPCError } from "@trpc/server";
-import { type UxSeverity, type UxEffort, type UxStatus } from "@prisma/client";
+import { type UxSeverity, type UxEffort, type UxStatus } from "@/lib/prisma-types";
 
 // =============================================================================
 // INPUT SCHEMAS
@@ -117,17 +117,21 @@ export const uxRouter = router({
     ]);
 
     // Transform JSON strings to arrays for client
-    const transformedPersonas = personas.map((p) => ({
-      ...p,
-      goals: JSON.parse(p.goals) as string[],
-      frustrations: JSON.parse(p.frustrations) as string[],
-      behaviors: JSON.parse(p.behaviors) as string[],
-    }));
+    const transformedPersonas = personas.map(
+      (p: { goals: string; frustrations: string; behaviors: string; [key: string]: unknown }) => ({
+        ...p,
+        goals: JSON.parse(p.goals) as string[],
+        frustrations: JSON.parse(p.frustrations) as string[],
+        behaviors: JSON.parse(p.behaviors) as string[],
+      })
+    );
 
-    const transformedPrinciples = principles.map((p) => ({
-      ...p,
-      examples: JSON.parse(p.examples) as { do: string[]; dont: string[] },
-    }));
+    const transformedPrinciples = principles.map(
+      (p: { examples: string; [key: string]: unknown }) => ({
+        ...p,
+        examples: JSON.parse(p.examples) as { do: string[]; dont: string[] },
+      })
+    );
 
     return {
       personas: transformedPersonas,
@@ -177,12 +181,14 @@ export const uxRouter = router({
       orderBy: { createdAt: "desc" },
     });
 
-    return personas.map((p) => ({
-      ...p,
-      goals: JSON.parse(p.goals) as string[],
-      frustrations: JSON.parse(p.frustrations) as string[],
-      behaviors: JSON.parse(p.behaviors) as string[],
-    }));
+    return personas.map(
+      (p: { goals: string; frustrations: string; behaviors: string; [key: string]: unknown }) => ({
+        ...p,
+        goals: JSON.parse(p.goals) as string[],
+        frustrations: JSON.parse(p.frustrations) as string[],
+        behaviors: JSON.parse(p.behaviors) as string[],
+      })
+    );
   }),
 
   getPersona: adminProcedure.input(z.object({ id: z.string() })).query(async ({ ctx, input }) => {
@@ -567,7 +573,7 @@ export const uxRouter = router({
       orderBy: { priority: "asc" },
     });
 
-    return principles.map((p) => ({
+    return principles.map((p: { examples: string; [key: string]: unknown }) => ({
       ...p,
       examples: JSON.parse(p.examples) as { do: string[]; dont: string[] },
     }));
@@ -837,14 +843,23 @@ export const uxRouter = router({
     ]);
 
     const result = await analyzePainPoints(
-      painPoints.map((p) => ({
-        title: p.title,
-        description: p.description,
-        category: p.category,
-        severity: p.severity,
-        effort: p.effort,
-        solution: p.solution,
-      })),
+      painPoints.map(
+        (p: {
+          title: string;
+          description: string;
+          category: string;
+          severity: string;
+          effort: string;
+          solution: string | null;
+        }) => ({
+          title: p.title,
+          description: p.description,
+          category: p.category,
+          severity: p.severity,
+          effort: p.effort,
+          solution: p.solution,
+        })
+      ),
       { journeys, personas }
     );
 
@@ -938,28 +953,38 @@ export const uxRouter = router({
 
       // Transform data for AI
       const uxData = {
-        personas: personas.map((p) => ({
-          name: p.name,
-          type: p.type,
-          description: p.description,
-          goals: JSON.parse(p.goals) as string[],
-        })),
-        journeys: journeys.map((j) => ({
-          name: j.name,
-          description: j.description,
-          steps: j.steps.map((s) => ({
-            stage: s.stage,
-            action: s.action,
-            feeling: s.feeling,
-          })),
-        })),
-        painPoints: painPoints.map((p) => ({
-          title: p.title,
-          description: p.description,
-          severity: p.severity,
-          category: p.category,
-        })),
-        principles: principles.map((p) => ({
+        personas: personas.map(
+          (p: { name: string; type: string; description: string; goals: string }) => ({
+            name: p.name,
+            type: p.type,
+            description: p.description,
+            goals: JSON.parse(p.goals) as string[],
+          })
+        ),
+        journeys: journeys.map(
+          (j: {
+            name: string;
+            description: string;
+            steps: Array<{ stage: string; action: string; feeling: string }>;
+          }) => ({
+            name: j.name,
+            description: j.description,
+            steps: j.steps.map((s: { stage: string; action: string; feeling: string }) => ({
+              stage: s.stage,
+              action: s.action,
+              feeling: s.feeling,
+            })),
+          })
+        ),
+        painPoints: painPoints.map(
+          (p: { title: string; description: string; severity: string; category: string }) => ({
+            title: p.title,
+            description: p.description,
+            severity: p.severity,
+            category: p.category,
+          })
+        ),
+        principles: principles.map((p: { name: string; description: string }) => ({
           name: p.name,
           description: p.description,
         })),

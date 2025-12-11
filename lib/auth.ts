@@ -14,7 +14,7 @@ import LinkedIn from "next-auth/providers/linkedin";
 import { PrismaAdapter } from "@auth/prisma-adapter";
 import { prisma } from "@/lib/db";
 import { encryptToken } from "@/lib/social";
-import type { UserRole } from "@prisma/client";
+import { type UserRole } from "@/lib/prisma-types";
 
 // Extend the built-in session types
 declare module "next-auth" {
@@ -140,7 +140,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
 
         // User exists - check if this OAuth provider is already linked
         const existingAccount = existingUser.accounts.find(
-          (acc) => acc.provider === account?.provider
+          (acc: { provider: string }) => acc.provider === account?.provider
         );
 
         if (!existingAccount && account) {

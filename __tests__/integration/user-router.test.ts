@@ -12,7 +12,8 @@
 
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { mockDeep, mockReset } from "vitest-mock-extended";
-import type { PrismaClient, User } from "@prisma/client";
+import type { PrismaClient } from "@prisma/client";
+import { UserRole, type User } from "@/lib/prisma-types";
 
 // Create mocked Prisma client
 const prismaMock = mockDeep<PrismaClient>();
@@ -31,7 +32,7 @@ const mockUser: User = {
   cvLatexUrl: null,
   cvFilename: null,
   cvUploadedAt: null,
-  role: "USER",
+  role: UserRole.USER,
   isTrusted: false,
   isVerified: false,
   image: null,
