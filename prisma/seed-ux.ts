@@ -7,7 +7,7 @@
  */
 
 import { PrismaClient } from "@prisma/client";
-import { UxSeverity, UxEffort, UxStatus } from "../lib/prisma-types";
+import { UxSeverity, UxEffort, UxStatus } from "../types";
 
 const prisma = new PrismaClient();
 

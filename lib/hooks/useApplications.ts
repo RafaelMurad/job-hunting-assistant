@@ -14,63 +14,19 @@ import { useMemo } from "react";
 import { trpc } from "@/lib/trpc/client";
 import { getErrorMessage } from "@/lib/trpc/errors";
 import type { ButtonState } from "./useAnalyze";
-
-/**
- * Application status options.
- */
-export type ApplicationStatus = "saved" | "applied" | "interviewing" | "offer" | "rejected";
-
-/**
- * Application data structure with string dates for UI.
- */
-export interface Application {
-  id: string;
-  company: string;
-  role: string;
-  matchScore: number;
-  status: string;
-  appliedAt: string | null;
-  createdAt: string;
-  notes: string | null;
-}
+import type {
+  Application,
+  ApplicationStatus,
+  CreateApplicationInput,
+  ApplicationStats,
+  ApplicationEntity,
+} from "@/types";
 
 /**
  * Raw application data from tRPC query (with Date objects).
+ * Alias for ApplicationEntity from centralized types.
  */
-interface ApplicationFromQuery {
-  id: string;
-  company: string;
-  role: string;
-  matchScore: number;
-  status: string;
-  appliedAt: Date | null;
-  createdAt: Date;
-  notes: string | null;
-}
-
-/**
- * Input for creating a new application.
- */
-export interface CreateApplicationInput {
-  company: string;
-  role: string;
-  jobDescription: string;
-  matchScore: number;
-  analysis: string;
-  coverLetter: string;
-  status: ApplicationStatus;
-}
-
-/**
- * Application statistics.
- */
-export interface ApplicationStats {
-  total: number;
-  applied: number;
-  interviewing: number;
-  offers: number;
-  avgMatchScore: number;
-}
+type ApplicationFromQuery = ApplicationEntity;
 
 /**
  * Return type for useApplications hook.
