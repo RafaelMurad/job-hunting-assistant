@@ -1,14 +1,20 @@
 /**
- * API Route Middleware
+ * API Route Guards & Response Utilities
  *
- * Provides reusable authentication and error handling wrappers
- * for Next.js API routes following industry-standard patterns.
+ * Provides reusable authentication guards and standardized response helpers
+ * for Next.js API routes following the Data Access Layer (DAL) pattern.
  *
- * @module lib/api/middleware
+ * In Next.js 16+, authentication checks should happen close to where data
+ * is accessed (Server Components, Server Actions, Route Handlers), not in
+ * the proxy layer. These guards implement that pattern.
+ *
+ * @see https://nextjs.org/docs/app/guides/authentication
+ * @module lib/api/route-guards
  */
 
 import { type NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
+import { logger } from "@/lib/logger";
 import type { Session } from "next-auth";
 
 // =============================================================================
@@ -159,7 +165,7 @@ export function withAuth<T = unknown>(
         userId: session.user.id,
       });
     } catch (error) {
-      console.error("[API] Unexpected error in authenticated route:", error);
+      logger.error("API", "Unexpected error in authenticated route", error);
       return serverError();
     }
   };
@@ -197,7 +203,7 @@ export function withAdminAuth<T = unknown>(
         userId: session.user.id,
       });
     } catch (error) {
-      console.error("[API] Unexpected error in admin route:", error);
+      logger.error("API", "Unexpected error in admin route", error);
       return serverError();
     }
   };

@@ -23,4 +23,4 @@ export {
   type AuthenticatedHandler,
   type APIErrorResponse,
   type APISuccessResponse,
-} from "./middleware";
+} from "./route-guards";
