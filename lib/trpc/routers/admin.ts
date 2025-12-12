@@ -5,6 +5,7 @@
  * and authorization checks.
  */
 
+import type { PrismaClient } from "@prisma/client";
 import { TRPCError } from "@trpc/server";
 import { z } from "zod";
 import { adminProcedure, ownerProcedure, publicProcedure, router } from "../init";
@@ -41,8 +42,7 @@ const removeTrustedEmailSchema = z.object({
  * Check if a user has admin access
  */
 async function hasAdminAccess(
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  prisma: any,
+  prisma: PrismaClient,
   userId: string
 ): Promise<{ hasAccess: boolean; role: string | null; reason?: string }> {
   // Get user
@@ -107,8 +107,7 @@ export const adminRouter = router({
       orderBy: { createdAt: "desc" },
     });
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    return trustedEmails.map((entry: any) => ({
+    return trustedEmails.map((entry) => ({
       id: entry.id,
       email: entry.email,
       role: entry.role,
@@ -270,8 +269,7 @@ export const adminRouter = router({
       orderBy: { createdAt: "desc" },
     });
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    return users.map((user: any) => ({
+    return users.map((user) => ({
       ...user,
       isOwner: user.email === OWNER_EMAIL,
     }));
