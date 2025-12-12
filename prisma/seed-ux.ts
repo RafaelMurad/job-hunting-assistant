@@ -6,7 +6,8 @@
  * Run with: npx tsx prisma/seed-ux.ts
  */
 
-import { PrismaClient, UxSeverity, UxEffort, UxStatus } from "@prisma/client";
+import { PrismaClient } from "@prisma/client";
+import { UxEffort, UxSeverity, UxStatus } from "../types";
 
 const prisma = new PrismaClient();
 

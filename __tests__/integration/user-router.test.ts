@@ -10,9 +10,10 @@
  * - Test the core logic that would be executed by tRPC procedures
  */
 
-import { describe, it, expect, vi, beforeEach } from "vitest";
+import { UserRole, type User } from "@/types";
+import type { PrismaClient } from "@prisma/client";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import { mockDeep, mockReset } from "vitest-mock-extended";
-import type { PrismaClient, User } from "@prisma/client";
 
 // Create mocked Prisma client
 const prismaMock = mockDeep<PrismaClient>();
@@ -31,7 +32,7 @@ const mockUser: User = {
   cvLatexUrl: null,
   cvFilename: null,
   cvUploadedAt: null,
-  role: "USER",
+  role: UserRole.USER,
   isTrusted: false,
   isVerified: false,
   image: null,

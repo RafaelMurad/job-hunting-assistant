@@ -9,7 +9,7 @@
  */
 
 import { adminProcedure, router } from "@/lib/trpc/init";
-import { type UxEffort, type UxSeverity, type UxStatus } from "@prisma/client";
+import type { UxEffort, UxSeverity, UxStatus } from "@/types";
 import { TRPCError } from "@trpc/server";
 import { z } from "zod";
 
