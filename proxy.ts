@@ -1,5 +1,5 @@
 /**
- * Next.js Middleware for Route Protection
+ * Next.js Proxy for Route Protection (Next.js 16+)
  *
  * Protects sensitive routes and redirects unauthenticated users to login.
  * Uses getToken() from next-auth/jwt for edge-compatible auth checks.
