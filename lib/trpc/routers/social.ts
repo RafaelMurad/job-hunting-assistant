@@ -64,8 +64,7 @@ export const socialRouter = router({
 
     // GitHub
     if (configuredProviders.includes("github")) {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const githubProfile = profiles.find((p: any) => p.provider === "GITHUB");
+      const githubProfile = profiles.find((p) => p.provider === "GITHUB");
       statuses.push({
         provider: "github",
         connected: !!githubProfile,
@@ -84,8 +83,7 @@ export const socialRouter = router({
 
     // LinkedIn
     if (configuredProviders.includes("linkedin")) {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const linkedInProfile = profiles.find((p: any) => p.provider === "LINKEDIN");
+      const linkedInProfile = profiles.find((p) => p.provider === "LINKEDIN");
       statuses.push({
         provider: "linkedin",
         connected: !!linkedInProfile,
@@ -512,8 +510,7 @@ export const socialRouter = router({
       orderBy: { stars: "desc" },
     });
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    return repos.map((repo: any) => ({
+    return repos.map((repo) => ({
       id: repo.id,
       name: repo.name,
       fullName: repo.fullName,
@@ -550,8 +547,7 @@ export const socialRouter = router({
         take: input.limit,
       });
 
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      return syncs.map((sync: any) => ({
+      return syncs.map((sync) => ({
         id: sync.id,
         provider: sync.provider,
         syncType: sync.syncType,

@@ -4,14 +4,17 @@
  * Protects endpoints from abuse and basic DoS attempts.
  */
 
-/* eslint-disable @typescript-eslint/explicit-function-return-type */
-/* eslint-disable @typescript-eslint/no-explicit-any */
-
-import { getRateLimitIdentifier, rateLimiters } from "@/lib/rate-limit";
-import { TRPCError } from "@trpc/server";
+import { getRateLimitIdentifier, rateLimiters, type RateLimitResult } from "@/lib/rate-limit";
+import { TRPCError, type AnyMiddlewareFunction } from "@trpc/server";
 import type { TRPCContext } from "../init";
 
-export const rateLimitMiddleware = async ({ ctx, next }: { ctx: TRPCContext; next: any }) => {
+type AnyMiddlewareOpts = Parameters<AnyMiddlewareFunction>[0];
+type RateLimitedContext = TRPCContext & { rateLimit: RateLimitResult };
+
+export const rateLimitMiddleware: AnyMiddlewareFunction = async ({
+  ctx,
+  next,
+}: AnyMiddlewareOpts & { ctx: TRPCContext }) => {
   const identifier = getRateLimitIdentifier(ctx.session?.user?.id);
   const result = await rateLimiters.general.limit(identifier);
 
@@ -22,15 +25,18 @@ export const rateLimitMiddleware = async ({ ctx, next }: { ctx: TRPCContext; nex
     });
   }
 
-  return next({
-    ctx: {
-      ...ctx,
-      rateLimit: result,
-    },
-  });
+  const nextCtx: RateLimitedContext = {
+    ...ctx,
+    rateLimit: result,
+  };
+
+  return next({ ctx: nextCtx });
 };
 
-export const aiRateLimitMiddleware = async ({ ctx, next }: { ctx: TRPCContext; next: any }) => {
+export const aiRateLimitMiddleware: AnyMiddlewareFunction = async ({
+  ctx,
+  next,
+}: AnyMiddlewareOpts & { ctx: TRPCContext }) => {
   const identifier = getRateLimitIdentifier(ctx.session?.user?.id);
   const result = await rateLimiters.ai.limit(identifier);
 
@@ -41,15 +47,18 @@ export const aiRateLimitMiddleware = async ({ ctx, next }: { ctx: TRPCContext; n
     });
   }
 
-  return next({
-    ctx: {
-      ...ctx,
-      rateLimit: result,
-    },
-  });
+  const nextCtx: RateLimitedContext = {
+    ...ctx,
+    rateLimit: result,
+  };
+
+  return next({ ctx: nextCtx });
 };
 
-export const uploadRateLimitMiddleware = async ({ ctx, next }: { ctx: TRPCContext; next: any }) => {
+export const uploadRateLimitMiddleware: AnyMiddlewareFunction = async ({
+  ctx,
+  next,
+}: AnyMiddlewareOpts & { ctx: TRPCContext }) => {
   const identifier = getRateLimitIdentifier(ctx.session?.user?.id);
   const result = await rateLimiters.upload.limit(identifier);
 
@@ -60,10 +69,10 @@ export const uploadRateLimitMiddleware = async ({ ctx, next }: { ctx: TRPCContex
     });
   }
 
-  return next({
-    ctx: {
-      ...ctx,
-      rateLimit: result,
-    },
-  });
+  const nextCtx: RateLimitedContext = {
+    ...ctx,
+    rateLimit: result,
+  };
+
+  return next({ ctx: nextCtx });
 };
