@@ -9,31 +9,12 @@
 
 import { prisma } from "@/lib/db";
 import { encryptToken } from "@/lib/social";
+import { type UserRole } from "@/types";
 import { PrismaAdapter } from "@auth/prisma-adapter";
-import type { UserRole } from "@prisma/client";
 import NextAuth from "next-auth";
 import GitHub from "next-auth/providers/github";
 import Google from "next-auth/providers/google";
 import LinkedIn from "next-auth/providers/linkedin";
-
-// Extend the built-in session types
-declare module "next-auth" {
-  interface Session {
-    user: {
-      id: string;
-      name?: string | null;
-      email?: string | null;
-      image?: string | null;
-      role: UserRole;
-      isTrusted: boolean;
-    };
-  }
-
-  interface User {
-    role?: UserRole;
-    isTrusted?: boolean;
-  }
-}
 
 export const { handlers, signIn, signOut, auth } = NextAuth({
   adapter: PrismaAdapter(prisma),
@@ -85,7 +66,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
      */
     async jwt({ token, user, trigger }) {
       // On sign in, add user data to token
-      if (user) {
+      if (user?.id) {
         token.id = user.id;
         token.role = user.role ?? "USER";
         token.isTrusted = user.isTrusted ?? false;
