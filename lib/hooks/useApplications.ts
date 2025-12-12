@@ -62,16 +62,13 @@ export interface UseApplicationsReturn {
  * };
  */
 export function useApplications(): UseApplicationsReturn {
-  // Error state
-  // const [error, setError] = useState<string | null>(null);
-
   // tRPC query for listing applications
   const applicationsQuery = trpc.applications.list.useQuery();
 
   // Transform dates to strings for UI consumption
   const applications: Application[] = useMemo(() => {
     if (!applicationsQuery.data) return [];
-    return applicationsQuery.data.map((app) => ({
+    return applicationsQuery.data.map((app: { appliedAt: Date | null; createdAt: Date } & Omit<Application, "appliedAt" | "createdAt">) => ({
       ...app,
       appliedAt: app.appliedAt ? app.appliedAt.toISOString() : null,
       createdAt: app.createdAt.toISOString(),

@@ -5,9 +5,10 @@
  */
 
 import { AI_CONFIG } from "../config";
-import type { ExtractedCVContent } from "@/lib/cv-templates";
+import type { ExtractedCVContent } from "../types";
+import { extractedCVContentSchema } from "../schemas";
 import { LATEX_EXTRACTION_PROMPT, CV_CONTENT_EXTRACTION_PROMPT } from "../prompts";
-import { cleanAndValidateLatex, cleanJsonResponse } from "../utils";
+import { cleanAndValidateLatex, cleanJsonResponse, parseJsonOrThrow } from "../utils";
 
 // =============================================================================
 // TYPES
@@ -215,5 +216,9 @@ export async function extractContentWithOpenRouter(
     throw new Error("No content in OpenRouter response");
   }
 
-  return JSON.parse(cleanJsonResponse(responseContent)) as ExtractedCVContent;
+  return parseJsonOrThrow(
+    cleanJsonResponse(responseContent),
+    extractedCVContentSchema,
+    "OpenRouter CV content extraction"
+  );
 }
