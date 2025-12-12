@@ -20,10 +20,10 @@ http://localhost:3000/api/auth/callback/github
 https://job-hunting-assistant.vercel.app/api/auth/callback/github
 ```
 
-Your current credentials (already in `.env`):
+Your credentials live in your environment variables:
 
-- `AUTH_GITHUB_ID`: `Ov23li70Dt0KXP3eg3sf` ✓
-- `AUTH_GITHUB_SECRET`: `0b4f16dfcf41d94f6e9270a6ef0a240514cc0a60` ✓
+- `AUTH_GITHUB_ID`
+- `AUTH_GITHUB_SECRET`
 
 ---
 
@@ -43,10 +43,10 @@ http://localhost:3000/api/auth/callback/google
 https://job-hunting-assistant.vercel.app/api/auth/callback/google
 ```
 
-Your current credentials (already in `.env`):
+Your credentials live in your environment variables:
 
-- `AUTH_GOOGLE_ID`: `1070079258548-o22ubrsk89tuqot3cqi6ied2tlvkcmbg.apps.googleusercontent.com` ✓
-- `AUTH_GOOGLE_SECRET`: ✓ (check `.env`)
+- `AUTH_GOOGLE_ID`
+- `AUTH_GOOGLE_SECRET`
 
 ---
 

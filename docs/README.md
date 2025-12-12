@@ -16,7 +16,7 @@ Quick-read guides (3-5 min each) documenting what I learned building this.
 
 **Database:**
 
-- [database-decisions.md](./database-decisions.md) - Prisma, SQLite → PostgreSQL path, schema design
+- [database-decisions.md](./database-decisions.md) - Prisma + PostgreSQL decisions (includes historical SQLite → Postgres notes)
 
 **Code Quality:**
 
@@ -37,4 +37,4 @@ No fluff, no AI-generated filler. Just what I actually learned.
 
 ---
 
-**Last updated:** Nov 17, 2025
+**Last updated:** Dec 12, 2025

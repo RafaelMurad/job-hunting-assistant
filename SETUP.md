@@ -8,21 +8,34 @@
 npm install
 ```
 
-### 2. Set Up Database
+### 2. Configure Environment Variables
+
+Create `.env.local` in the project root.
+
+Start from `.env.example` and set at minimum:
 
 ```bash
-npx prisma migrate dev --name init
+# Database (PostgreSQL)
+DATABASE_URL="postgresql://..."              # pooled/serverless URL
+DATABASE_URL_UNPOOLED="postgresql://..."    # direct URL for migrations
+
+# NextAuth (required)
+AUTH_SECRET="your-random-secret"
+
+# At least one OAuth provider for sign-in (GitHub is easiest)
+AUTH_GITHUB_ID="..."
+AUTH_GITHUB_SECRET="..."
+
+# AI (pick one provider)
+AI_PROVIDER="gemini"
+GEMINI_API_KEY="..."
 ```
 
-### 3. Add Your Claude API Key
-
-Create `.env.local` file:
+### 3. Set Up Database
 
 ```bash
-ANTHROPIC_API_KEY=your_api_key_here
+npx prisma migrate dev
 ```
-
-Get your API key from: https://console.anthropic.com/
 
 ### 4. Start Development Server
 
@@ -60,18 +73,18 @@ Open http://localhost:3000
 
 ## Key Features
 
-- **AI-Powered Job Analysis**: Uses Claude Sonnet 4.5 to analyze job fit
+- **AI-Powered Job Analysis**: Uses Gemini/OpenAI/Claude (configurable) to analyze job fit
 - **Match Scoring**: Get 0-100% match scores based on your CV
 - **Cover Letter Generation**: Automatically generate tailored cover letters (max 250 words)
 - **Application Tracking**: Track status, dates, and notes for each application
 
 ## Tech Stack
 
-- Next.js 14 (App Router)
+- Next.js 16 (App Router)
 - TypeScript
-- Prisma + SQLite
+- Prisma + PostgreSQL (Neon recommended)
 - TailwindCSS + Shadcn/ui
-- Claude API (Sonnet 4.5)
+- Multi-provider AI (Gemini / OpenAI / Claude)
 
 ## Troubleshooting
 
@@ -79,15 +92,11 @@ Open http://localhost:3000
 **Fix**: Run `npx prisma generate && npx prisma migrate dev`
 
 **Issue**: API errors during analysis
-**Fix**: Verify your ANTHROPIC_API_KEY is set in `.env.local`
+**Fix**: Verify your selected AI provider key is set in `.env.local` (e.g., `GEMINI_API_KEY`)
 
 **Issue**: Port 3000 already in use
 **Fix**: Run `npm run dev -- -p 3001` to use a different port
 
 ## Next Steps for Development
 
-- Add authentication (Clerk or NextAuth)
-- Add application status updates
-- Export applications to CSV
-- Email reminders for follow-ups
-- Chrome extension for quick job saves
+For what’s next, see the roadmap: `docs/ROADMAP.md`.

@@ -1,4 +1,4 @@
-# Database - Prisma & SQLite → PostgreSQL
+# Database - Prisma & PostgreSQL (and the earlier SQLite → Postgres path)
 
 **Read time: 3 min**
 
@@ -25,28 +25,35 @@ SELECT * FROM User WHERE id = ?
 **Other benefits:**
 
 - Automatic migrations
-- Works with SQLite (dev) and PostgreSQL (prod)
+- Works well with PostgreSQL (locally and in production)
 - Schema in one file (`prisma/schema.prisma`)
 
 **Trade-off:** Prisma is easier but adds abstraction. For complex queries, sometimes raw SQL is clearer.
 
 ---
 
-## SQLite for Dev, PostgreSQL for Prod
+## PostgreSQL Today (v1.1)
 
-**Current: SQLite**
+**Current: PostgreSQL**
+
+- The Prisma datasource is configured for PostgreSQL (see `prisma/schema.prisma`).
+- Recommended: Neon (connection pooling for serverless + direct URL for migrations).
+
+## Historical Context: SQLite → PostgreSQL
+
+**Earlier: SQLite**
 
 - Zero setup (single file: `prisma/dev.db`)
 - Perfect for local development
 - Git-ignored (in `.gitignore`)
 
-**Future: PostgreSQL**
+**Now: PostgreSQL**
 
 - Better for production (multi-user, concurrent writes)
 - Required for Vercel deployment
 - Migration: Just change connection string in `.env`
 
-**Lesson:** Start simple (SQLite), upgrade when needed (PostgreSQL).
+**Lesson:** Start simple when you can, but align early with production constraints (serverless + multi-user = PostgreSQL).
 
 ---
 

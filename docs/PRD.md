@@ -2,8 +2,9 @@
 
 ## Job Hunting Assistant
 
-**Version:** 1.1 (Stable)  
-**Last Updated:** December 11, 2025  
+**Product Version:** v1.1 (Stable)  
+**Document Revision:** 1.5  
+**Last Updated:** December 12, 2025  
 **Author:** Rafael Murad
 
 ---
@@ -222,7 +223,7 @@ Sprint 10: Mobile UX & Production OAuth ✅ (Complete)
 | **Framework**  | Next.js 16 (App Router)               | Server Components, Server Actions, great DX     |
 | **Language**   | TypeScript                            | Type safety, better tooling, portfolio standard |
 | **Styling**    | Tailwind CSS 4 + Shadcn/ui            | Rapid development, consistent design            |
-| **Database**   | SQLite (dev) / PostgreSQL (prod)      | Zero-setup locally, scalable in production      |
+| **Database**   | PostgreSQL (Neon)                     | Production-ready locally + in Vercel            |
 | **ORM**        | Prisma                                | Type-safe queries, easy migrations              |
 | **AI**         | Multi-provider (Gemini/OpenAI/Claude) | Flexibility, cost optimization                  |
 | **Hosting**    | Vercel                                | Native Next.js support, free tier               |
@@ -238,35 +239,16 @@ Sprint 10: Mobile UX & Production OAuth ✅ (Complete)
 
 ### Data Models
 
-```prisma
-model User {
-  id          String   @id
-  name        String
-  email       String   @unique
-  phone       String?
-  location    String
-  summary     String   // Professional summary
-  experience  String   // Work history
-  skills      String   // Comma-separated
-  applications Application[]
-}
+The schema has evolved beyond the MVP examples above (NextAuth models, CV file fields, social integrations).
 
-model Application {
-  id             String   @id
-  userId         String
-  company        String
-  role           String
-  jobDescription String
-  jobUrl         String?
-  matchScore     Int      // 0-100
-  analysis       String   // AI analysis
-  coverLetter    String   // Generated letter
-  status         String   // saved, applied, interviewing, rejected, offer
-  appliedAt      DateTime?
-  notes          String?
-  user           User     @relation(...)
-}
-```
+**Canonical source of truth:** `prisma/schema.prisma`
+
+At a high level:
+
+- `User` (profile + CV content + auth metadata)
+- `Application` (tracker data + analysis + cover letter)
+- NextAuth models (`Account`, `Session`, `VerificationToken`)
+- Social integration models (`SocialProfile`, `SocialSync`, etc.)
 
 ---
 
@@ -450,30 +432,31 @@ If AWS credits become available:
 
 ---
 
-## 8. Future Ideas (Post v1.1)
+## 8. Roadmap (Post v1.1)
 
-### v1.2 — Optimization & Polish
+This section is the product-facing view. For execution-focused milestones and definitions of done, see `docs/ROADMAP.md`.
 
-- [ ] **PDF CV Export** — Native PDF generation (replace browser print)
-- [ ] **Bundle Size Optimization** — Reduce AI SDK footprint
-- [ ] **Design System Audit** — Component consistency review
-- [ ] **AI Service Improvements** — Prompt optimization, caching
-- [ ] Application statistics/charts
+### v1.2 (Draft) — Privacy, Reliability, Polish
 
-### v1.3 — Enhancements
+| Milestone | Goal                                               | Why it matters                        |
+| --------- | -------------------------------------------------- | ------------------------------------- |
+| M1        | Replace `latexonline.cc` compilation in production | GDPR + reliability risk reduction     |
+| M2        | Make CV blob storage private + signed downloads    | Reduce accidental PII exposure        |
+| M3        | Security & abuse hardening                         | Safer to share publicly / scale usage |
+| M4        | UX + performance polish                            | Better repeat usage, less friction    |
 
-- [ ] Email reminders for follow-ups
-- [ ] Calendar Integration — Interview scheduling
-- [ ] **Premium CV Editor** — Gate behind payment, use Cloud Run LaTeX
+### v1.3 (Draft) — Enhancements
 
-### v2.0 — Advanced Features
+- Calendar integration for interviews
+- Follow-up reminders
+- Premium CV editor gating (depends on v1.2 LaTeX migration)
 
-- [ ] **Interview Prep Module** — AI-generated questions based on job + your GitHub projects
-- [ ] **Salary Negotiation Helper** — Market data + scripts
-- [ ] **Multi-user + Teams** — Share with career coaches
-- [ ] **Browser Extension** — One-click save from job boards
-- [ ] **Auto-apply suggestions** — "Based on your profile, apply to these 5 jobs"
-- [ ] **Direct Style Replication** — Premium feature using Pro AI models
+### v2.0 (Ideas) — Advanced
+
+- Interview prep module
+- Salary negotiation helper
+- Multi-user + teams
+- Browser extension
 
 ---
 
@@ -512,15 +495,16 @@ If AWS credits become available:
 
 ## Changelog
 
-| Date        | Version | Changes                                                          |
-| ----------- | ------- | ---------------------------------------------------------------- |
-| Dec 6, 2025 | 0.1     | Initial draft                                                    |
-| Dec 6, 2025 | 0.2     | Elevated GitHub/LinkedIn to v1.1, added Data Sources section     |
-| Dec 7, 2025 | 1.0     | **MVP Complete** - All P0 features done, deployed to Vercel      |
-| Dec 8, 2025 | 1.1     | **CV Editor** - LaTeX editor, 3 templates, multi-model AI        |
-| Dec 8, 2025 | 1.2     | **Cloud Roadmap** - Added infrastructure roadmap for GCP/scaling |
-| Dec 8, 2025 | 1.3     | **UX Research** - Added /docs/ux/ and /admin/ux-planner          |
-| Dec 9, 2025 | 1.4     | **v1.1 Complete** - Auth, Social Integrations, GitHub/LinkedIn   |
+| Date         | Doc Revision | Changes                                                          |
+| ------------ | ------------ | ---------------------------------------------------------------- |
+| Dec 6, 2025  | 0.1          | Initial draft                                                    |
+| Dec 6, 2025  | 0.2          | Elevated GitHub/LinkedIn to v1.1, added Data Sources section     |
+| Dec 7, 2025  | 1.0          | **MVP Complete** - All P0 features done, deployed to Vercel      |
+| Dec 8, 2025  | 1.1          | **CV Editor** - LaTeX editor, 3 templates, multi-model AI        |
+| Dec 8, 2025  | 1.2          | **Cloud Roadmap** - Added infrastructure roadmap for GCP/scaling |
+| Dec 8, 2025  | 1.3          | **UX Research** - Added /docs/ux/ and /admin/ux-planner          |
+| Dec 9, 2025  | 1.4          | **v1.1 Complete** - Auth, Social Integrations, GitHub/LinkedIn   |
+| Dec 12, 2025 | 1.5          | Clarified roadmap + doc versioning, synced stack notes           |
 
 ---
 

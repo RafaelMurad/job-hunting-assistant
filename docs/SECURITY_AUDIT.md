@@ -1,7 +1,7 @@
 # Security Audit Report
 
 **Date:** December 2025
-**Version:** 1.0
+**Version:** 1.1
 **Prepared for:** Job Hunt AI Platform
 
 ---
@@ -23,44 +23,41 @@ This document identifies security vulnerabilities, data storage concerns, and ar
 
 ## 1. Authentication & Authorization Issues
 
-### 1.1 No Authentication System (CRITICAL)
+### 1.1 Authentication System (RESOLVED in v1.1)
 
 **Current State:**
 
-- Application has no user authentication
-- All tRPC procedures use `publicProcedure`
-- Single hardcoded user ID in some API routes
-- Anyone can access any endpoint
+- NextAuth.js v5 implemented with JWT strategy
+- Protected routes enforced via Next.js middleware
+- tRPC context includes session and protected procedures are available
 
 **Evidence:**
 
 ```typescript
-// lib/trpc/init.ts - Line 45
-export const publicProcedure = t.procedure;
-// FUTURE: Add protected procedure with auth middleware
-// export const protectedProcedure = t.procedure.use(isAuthed);
+// lib/trpc/init.ts
+// - protectedProcedure enforces authentication
+// - adminProcedure/ownerProcedure enforce roles
+// - rate limited procedures exist for abuse protection
 ```
 
-**Risk:** Complete data exposure. Any user can read/modify any data.
+**Risk:** Reduced significantly. Remaining risk is primarily incorrect authorization (e.g., any endpoint accidentally left public or not scoped to the authenticated user).
 
 **Remediation:**
 
-1. Implement NextAuth.js or Clerk for authentication
-2. Add session management to tRPC context
-3. Create `protectedProcedure` middleware
-4. Protect all sensitive endpoints
+1. Audit `publicProcedure` usage and confirm each one is safe to be public
+2. Confirm user-scoped routes always filter by `ctx.session.user.id`
+3. Add automated tests for authorization boundaries (non-owner cannot access owner/admin routes)
 
-**Priority:** CRITICAL - Must fix before multi-user deployment
+**Priority:** HIGH - Ongoing assurance (regression prevention)
 
 ---
 
-### 1.2 Admin Pages Unprotected (HIGH)
+### 1.2 Admin Pages Protection (RESOLVED in v1.1)
 
 **Current State:**
 
-- `/admin/flags` and `/admin/ux-planner` are accessible to anyone
-- AdminGuard component created but depends on non-existent auth
-- No server-side route protection
+- `/admin/*` routes are protected in middleware
+- Non-admin users are redirected away from admin routes
 
 **Evidence:**
 
@@ -72,9 +69,8 @@ export const publicProcedure = t.procedure;
 
 **Remediation:**
 
-1. Add Next.js middleware to protect `/admin/*` routes
-2. Implement server-side session validation
-3. Use AdminGuard with actual authentication
+1. Keep middleware checks aligned with role semantics (ADMIN/OWNER/trusted)
+2. Add tests to prevent accidental removal of `/admin` protections
 
 **Priority:** HIGH
 
@@ -293,13 +289,12 @@ const blob = await put(`cv/${userId}/cv.pdf`, pdfBuffer, {
 
 ## 4. API Security Issues
 
-### 4.1 No Rate Limiting (HIGH)
+### 4.1 Rate Limiting (PARTIALLY RESOLVED in v1.1)
 
 **Current State:**
 
-- tRPC endpoints have no rate limiting
-- API routes have no request throttling
-- AI operations have no usage caps
+- Rate limiting middleware exists for general, AI, and upload traffic
+- Current implementation is in-memory and best-effort for serverless
 
 **Risk:**
 
@@ -309,10 +304,9 @@ const blob = await put(`cv/${userId}/cv.pdf`, pdfBuffer, {
 
 **Remediation:**
 
-1. Implement rate limiting middleware (e.g., `@upstash/ratelimit`)
-2. Add per-user quotas for AI operations
-3. Implement request throttling at Vercel level
-4. Add spending limits on AI providers
+1. If/when the app is exposed to broader public usage, move to a distributed limiter (Upstash/Vercel KV)
+2. Add per-user quotas for AI operations if costs become a concern
+3. Consider provider-side budget limits where available
 
 **Priority:** HIGH
 
@@ -484,22 +478,22 @@ DATABASE_URL=
 
 ---
 
-## 7. Remediation Roadmap
+## 7. Remediation Roadmap (Updated for v1.1)
 
 ### Phase 1: Critical (Immediate)
 
-| Issue             | Action                  | Effort   |
-| ----------------- | ----------------------- | -------- |
-| No Authentication | Implement NextAuth.js   | 3-5 days |
-| Admin Unprotected | Add middleware + guards | 1 day    |
+| Issue            | Action                                   | Effort |
+| ---------------- | ---------------------------------------- | ------ |
+| Auth regressions | Add authz tests + audit public endpoints | 1 day  |
+| LaTeX GDPR       | Self-host compilation                    | 3 days |
 
 ### Phase 2: High Priority (Next Sprint)
 
-| Issue         | Action                 | Effort |
-| ------------- | ---------------------- | ------ |
-| Rate Limiting | Add Upstash ratelimit  | 1 day  |
-| Token Storage | Improve key management | 2 days |
-| LaTeX GDPR    | Self-host compilation  | 3 days |
+| Issue                  | Action                                | Effort  |
+| ---------------------- | ------------------------------------- | ------- |
+| Distributed rate limit | Use Upstash/Vercel KV if needed       | 1 day   |
+| Token encryption       | Fail hard in production on bad config | 0.5 day |
+| Blob privacy           | Private blobs + signed URLs           | 1 day   |
 
 ### Phase 3: Medium Priority (Future Sprint)
 
@@ -532,7 +526,7 @@ DATABASE_URL=
 
 ### Security Best Practices
 
-- [ ] Authentication implemented
+- [x] Authentication implemented
 - [ ] Authorization for all routes
 - [ ] Rate limiting enabled
 - [ ] Security headers configured
@@ -545,11 +539,11 @@ DATABASE_URL=
 
 ## 9. Conclusion
 
-The codebase shows solid engineering practices for an MVP but requires significant security hardening before production scaling. The most critical issues are:
+The codebase has solid security fundamentals for v1.1 (auth + protected routes). The most important remaining risks to address before broader usage are:
 
-1. **No authentication** - Must be addressed immediately
-2. **LaTeX GDPR risk** - Required before EU users
-3. **No rate limiting** - Required before public launch
+1. **LaTeX GDPR risk** - Replace third-party compilation for production
+2. **Storage privacy** - Ensure CV files are not publicly accessible by default
+3. **Rate limiting robustness** - Use distributed rate limiting if traffic increases
 
 With the recommended remediations, the platform can achieve production-ready security posture.
 
