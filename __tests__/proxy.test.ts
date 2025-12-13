@@ -1,5 +1,5 @@
 /**
- * Middleware Tests
+ * Proxy Tests (Next.js 16+ Route Protection)
  *
  * Tests route protection and authorization logic
  */

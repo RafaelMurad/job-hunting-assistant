@@ -23,8 +23,17 @@
 Create `.env.local` file in the project root:
 
 ```bash
-# Database
-DATABASE_URL="file:./dev.db"
+# Database (PostgreSQL)
+# Recommended for dev too: use Neon (free tier) or a local Postgres instance
+DATABASE_URL="postgresql://..."
+DATABASE_URL_UNPOOLED="postgresql://..."
+
+# Auth (required to use the app UI)
+AUTH_SECRET="your-random-secret"
+
+# At least one OAuth provider (GitHub is easiest for local dev)
+AUTH_GITHUB_ID="..."
+AUTH_GITHUB_SECRET="..."
 
 # AI Provider - Using free Gemini
 AI_PROVIDER="gemini"
@@ -48,7 +57,7 @@ This will install:
 ### 4. Initialize Database
 
 ```bash
-npx prisma migrate dev --name init
+npx prisma migrate dev
 ```
 
 ### 5. Start the App

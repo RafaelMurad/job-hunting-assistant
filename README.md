@@ -66,7 +66,8 @@ Open http://localhost:3000
 - **[SETUP.md](./SETUP.md)** - Quick start guide and local setup
 - **[DEPLOYMENT.md](./docs/DEPLOYMENT.md)** - Production deployment to Vercel 🚀
 - **[STRICT_RULES.md](./docs/STRICT_RULES.md)** - Code quality and validation rules
-- **[Implementation Plan](./docs/IMPLEMENTATION_PLAN.md)** - Technical implementation details
+- **[Roadmap](./docs/ROADMAP.md)** - What’s next (v1.2+ milestones)
+- **[Implementation Plan (Archived)](./docs/archive/IMPLEMENTATION_PLAN.md)** - MVP build notes (historical)
 - **[PRD](./docs/PRD.md)** - Product Requirements Document
 
 ---
