@@ -5,8 +5,13 @@
  */
 
 import { AI_CONFIG, getModelName } from "../config";
-import type { JobAnalysisResult, ParsedCVData, LatexExtractionModel } from "../types";
-import type { ExtractedCVContent } from "@/lib/cv-templates";
+import type {
+  LatexExtractionModel,
+  JobAnalysisResult,
+  ParsedCVData,
+  ExtractedCVContent,
+} from "../types";
+import { jobAnalysisSchema, parsedCVDataSchema, extractedCVContentSchema } from "../schemas";
 import {
   ANALYSIS_PROMPT,
   COVER_LETTER_PROMPT,
@@ -20,6 +25,7 @@ import {
   cleanAndValidateLatex,
   cleanJsonResponse,
   extractJsonFromText,
+  parseJsonOrThrow,
   isValidJson,
 } from "../utils";
 
@@ -42,11 +48,8 @@ export async function analyzeWithGemini(
   const text = result.response.text();
 
   // Clean JSON from markdown code blocks if present
-  const jsonText = text
-    .replace(/```json\n?/g, "")
-    .replace(/```\n?/g, "")
-    .trim();
-  return JSON.parse(jsonText) as JobAnalysisResult;
+  const jsonText = cleanJsonResponse(text);
+  return parseJsonOrThrow(jsonText, jobAnalysisSchema, "Gemini job analysis");
 }
 
 // =============================================================================
@@ -101,7 +104,7 @@ export async function parseCVWithGeminiVision(pdfBuffer: Buffer): Promise<Parsed
     throw new Error("Could not parse AI response as JSON");
   }
 
-  return JSON.parse(jsonText) as ParsedCVData;
+  return parseJsonOrThrow(jsonText, parsedCVDataSchema, "Gemini CV vision parsing");
 }
 
 /**
@@ -124,7 +127,7 @@ export async function parseCVWithGeminiText(cvText: string): Promise<ParsedCVDat
     throw new Error("Could not parse AI response as JSON");
   }
 
-  return JSON.parse(jsonText) as ParsedCVData;
+  return parseJsonOrThrow(jsonText, parsedCVDataSchema, "Gemini CV text parsing");
 }
 
 // =============================================================================
@@ -303,5 +306,5 @@ export async function extractContentWithGemini(
   ]);
 
   const jsonText = cleanJsonResponse(result.response.text());
-  return JSON.parse(jsonText) as ExtractedCVContent;
+  return parseJsonOrThrow(jsonText, extractedCVContentSchema, "Gemini CV content extraction");
 }

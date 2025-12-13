@@ -20,12 +20,12 @@
  */
 
 import { FEATURE_FLAGS, type FeatureFlagKey } from "./flags.config";
+import { flagStateSchema, type FlagState } from "@/lib/ai/schemas";
 
 const STORAGE_KEY = "job-hunter-feature-flags";
 
-export interface FlagState {
-  [key: string]: boolean;
-}
+// Re-export the type for backward compatibility
+export type { FlagState };
 
 /**
  * Get the initial state of all flags based on defaults and environment
@@ -50,6 +50,7 @@ export function getInitialFlagState(): FlagState {
 
 /**
  * Load flag state from localStorage (client-side only)
+ * Uses Zod validation to ensure type safety from untrusted localStorage data.
  */
 export function loadFlagState(): FlagState {
   if (typeof window === "undefined") {
@@ -59,10 +60,15 @@ export function loadFlagState(): FlagState {
   try {
     const stored = localStorage.getItem(STORAGE_KEY);
     if (stored) {
-      const parsed = JSON.parse(stored) as FlagState;
-      // Merge with defaults to handle new flags
-      const defaults = getInitialFlagState();
-      return { ...defaults, ...parsed };
+      // Validate localStorage data with Zod schema
+      const parseResult = flagStateSchema.safeParse(JSON.parse(stored));
+      if (parseResult.success) {
+        // Merge with defaults to handle new flags
+        const defaults = getInitialFlagState();
+        return { ...defaults, ...parseResult.data };
+      }
+      // Invalid data format, fall through to defaults
+      console.warn("[Feature Flags] Invalid localStorage data, using defaults");
     }
   } catch {
     // Ignore parsing errors, return defaults

@@ -21,19 +21,28 @@ const KEY_LENGTH = 32; // 256 bits
 // KEY MANAGEMENT
 // =============================================================================
 
+// Cached random key for development (regenerated per process start)
+let devEncryptionKey: Buffer | null = null;
+
 /**
  * Get or derive encryption key from environment
+ * SECURITY: Always requires proper key - no weak fallbacks
  */
 function getEncryptionKey(): Buffer {
   const key = SOCIAL_CONFIG.encryptionKey;
 
   if (!key) {
-    // In development, use a deterministic key (NOT for production!)
+    // SECURITY: In development, generate a random key per process
+    // This means social tokens won't persist across restarts in dev, but that's acceptable
     if (process.env.NODE_ENV === "development") {
-      console.warn(
-        "[TokenManager] Warning: Using development encryption key. Set SOCIAL_ENCRYPTION_KEY for production."
-      );
-      return Buffer.alloc(KEY_LENGTH, "dev-key-do-not-use-in-production!");
+      if (!devEncryptionKey) {
+        console.warn(
+          "[TokenManager] Warning: SOCIAL_ENCRYPTION_KEY not set. Using random key for this session. " +
+            "Social tokens will not persist across restarts. Set SOCIAL_ENCRYPTION_KEY for persistence."
+        );
+        devEncryptionKey = randomBytes(KEY_LENGTH);
+      }
+      return devEncryptionKey;
     }
     throw new Error("SOCIAL_ENCRYPTION_KEY environment variable is not set");
   }

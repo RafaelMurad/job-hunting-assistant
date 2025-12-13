@@ -6,12 +6,13 @@
 
 import { AI_CONFIG, isModelAvailable, getModelInfo } from "../config";
 import type { LatexExtractionModel, LatexExtractionResult, ATSAnalysisResult } from "../types";
+import { atsAnalysisSchema } from "../schemas";
 import { extractLatexWithGemini } from "../providers/gemini";
 import { extractLatexWithOpenAI } from "../providers/openai";
 import { extractLatexWithClaude } from "../providers/claude";
 import { extractLatexWithOpenRouter } from "../providers/openrouter";
 import { ATS_ANALYSIS_PROMPT, LATEX_MODIFY_PROMPT } from "../prompts";
-import { cleanAndValidateLatex, extractJsonFromText } from "../utils";
+import { cleanAndValidateLatex, extractJsonFromText, parseJsonOrThrow } from "../utils";
 
 // Re-export for backward compatibility
 export { cleanAndValidateLatex };
@@ -175,5 +176,5 @@ export async function analyzeATSCompliance(latexContent: string): Promise<ATSAna
     throw new Error("Could not parse ATS analysis response as JSON");
   }
 
-  return JSON.parse(jsonText) as ATSAnalysisResult;
+  return parseJsonOrThrow(jsonText, atsAnalysisSchema, "ATS compliance analysis");
 }

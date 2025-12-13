@@ -23,8 +23,8 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
     LinkedIn({
       clientId: process.env.AUTH_LINKEDIN_ID!,
       clientSecret: process.env.AUTH_LINKEDIN_SECRET!,
-      // Allow linking LinkedIn to existing account with same email
-      allowDangerousEmailAccountLinking: true,
+      // SECURITY: Removed allowDangerousEmailAccountLinking to prevent account takeover
+      // Users must link accounts manually through settings if they want multiple providers
     }),
     GitHub({
       clientId: process.env.AUTH_GITHUB_ID!,
@@ -35,14 +35,12 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
           scope: "read:user user:email",
         },
       },
-      // Allow linking GitHub to existing account with same email
-      allowDangerousEmailAccountLinking: true,
+      // SECURITY: Removed allowDangerousEmailAccountLinking to prevent account takeover
     }),
     Google({
       clientId: process.env.AUTH_GOOGLE_ID!,
       clientSecret: process.env.AUTH_GOOGLE_SECRET!,
-      // Allow linking Google to existing account with same email
-      allowDangerousEmailAccountLinking: true,
+      // SECURITY: Removed allowDangerousEmailAccountLinking to prevent account takeover
     }),
   ],
 
@@ -124,7 +122,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
 
         // User exists - check if this OAuth provider is already linked
         const existingAccount = existingUser.accounts.find(
-          (acc) => acc.provider === account?.provider
+          (acc: { provider: string }) => acc.provider === account?.provider
         );
 
         if (!existingAccount && account) {

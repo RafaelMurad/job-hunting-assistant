@@ -18,6 +18,7 @@ const mockGetToken = vi.mocked(getToken);
 describe("Middleware - Route Protection", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    process.env.AUTH_SECRET = "test-auth-secret";
   });
 
   describe("Public Routes", () => {
