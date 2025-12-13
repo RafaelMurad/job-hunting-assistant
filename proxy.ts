@@ -19,6 +19,24 @@
 import { getToken } from "next-auth/jwt";
 import { NextResponse, type NextRequest } from "next/server";
 
+const MAX_RSC_REQUEST_CONTENT_LENGTH_BYTES = 1_024;
+
+function parseContentLength(headerValue: string | null): number | null {
+  if (!headerValue) return null;
+  const parsed = Number.parseInt(headerValue, 10);
+  return Number.isFinite(parsed) && parsed >= 0 ? parsed : null;
+}
+
+function isRscRequest(req: NextRequest): boolean {
+  // App Router RSC requests commonly include the `_rsc` query param.
+  return req.nextUrl.searchParams.has("_rsc");
+}
+
+function isServerActionRequest(req: NextRequest): boolean {
+  // Next.js uses `Next-Action` to identify Server Actions requests.
+  return req.headers.has("next-action") || req.headers.has("Next-Action");
+}
+
 /**
  * Protected route patterns
  *
@@ -84,6 +102,39 @@ function isPublicPath(pathname: string): boolean {
  */
 export default async function proxy(req: NextRequest): Promise<NextResponse> {
   const { pathname } = req.nextUrl;
+
+  // --- Security guardrails (belt + suspenders) ---
+  // These mitigate abuse patterns against RSC/Server Actions transport.
+  // Primary fix is upgrading Next.js to patched versions.
+  const isApiRoute = pathname === "/api" || pathname.startsWith("/api/");
+  const method = req.method.toUpperCase();
+  const contentLength = parseContentLength(req.headers.get("content-length"));
+
+  // Server Actions are not used in this repo; block action-shaped requests.
+  if (!isApiRoute && isServerActionRequest(req)) {
+    return new NextResponse("Forbidden", { status: 403 });
+  }
+
+  // Pages/RSC endpoints should not receive state-changing HTTP methods.
+  if (!isApiRoute && method !== "GET" && method !== "HEAD" && method !== "OPTIONS") {
+    return new NextResponse("Method Not Allowed", { status: 405 });
+  }
+
+  // RSC fetches should be GET/HEAD with no body; reject abnormal payloads early.
+  if (!isApiRoute && isRscRequest(req)) {
+    if (method !== "GET" && method !== "HEAD") {
+      return new NextResponse("Method Not Allowed", { status: 405 });
+    }
+
+    if (contentLength !== null && contentLength > MAX_RSC_REQUEST_CONTENT_LENGTH_BYTES) {
+      return new NextResponse("Payload Too Large", { status: 413 });
+    }
+
+    const contentType = req.headers.get("content-type");
+    if (contentType) {
+      return new NextResponse("Bad Request", { status: 400 });
+    }
+  }
 
   // Get JWT token (edge-compatible, optimistic check from cookie only)
   // SECURITY: AUTH_SECRET must be set - empty secret would allow JWT forgery

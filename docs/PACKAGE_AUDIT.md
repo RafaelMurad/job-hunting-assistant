@@ -13,11 +13,11 @@ This audit analyzes all dependencies for maintenance status, security, bundle si
 
 ### Core Framework
 
-| Package | Version | Status | Recommendation |
-|---------|---------|--------|----------------|
-| `next` | ^16.0.7 | Active | Keep - Latest App Router features |
-| `react` | 19.2.0 | Active | Keep - React 19 with server components |
-| `react-dom` | 19.2.0 | Active | Keep |
+| Package     | Version | Status | Recommendation                         |
+| ----------- | ------- | ------ | -------------------------------------- |
+| `next`      | ^16.0.7 | Active | Keep - Latest App Router features      |
+| `react`     | 19.2.0  | Active | Keep - React 19 with server components |
+| `react-dom` | 19.2.0  | Active | Keep                                   |
 
 **Notes:** Using cutting-edge Next.js 16 and React 19. This is bleeding edge but provides the best DX and performance.
 
@@ -25,10 +25,10 @@ This audit analyzes all dependencies for maintenance status, security, bundle si
 
 ### Database & ORM
 
-| Package | Version | Status | Recommendation |
-|---------|---------|--------|----------------|
-| `prisma` | ^6.19.0 | Active | Keep |
-| `@prisma/client` | ^6.19.0 | Active | Keep |
+| Package          | Version | Status | Recommendation |
+| ---------------- | ------- | ------ | -------------- |
+| `prisma`         | ^6.19.0 | Active | Keep           |
+| `@prisma/client` | ^6.19.0 | Active | Keep           |
 
 **Notes:** Prisma is the industry standard for TypeScript ORMs. No action needed.
 
@@ -38,10 +38,10 @@ This audit analyzes all dependencies for maintenance status, security, bundle si
 
 ### Authentication
 
-| Package | Version | Status | Recommendation |
-|---------|---------|--------|----------------|
-| `next-auth` | ^5.0.0-beta.30 | Beta | Monitor |
-| `@auth/prisma-adapter` | ^2.11.1 | Active | Keep |
+| Package                | Version        | Status | Recommendation |
+| ---------------------- | -------------- | ------ | -------------- |
+| `next-auth`            | ^5.0.0-beta.30 | Beta   | Monitor        |
+| `@auth/prisma-adapter` | ^2.11.1        | Active | Keep           |
 
 **Action Required:** NextAuth v5 is still in beta. Monitor for stable release and upgrade when available. The beta is production-ready but may have breaking changes.
 
@@ -49,13 +49,13 @@ This audit analyzes all dependencies for maintenance status, security, bundle si
 
 ### State Management & Data Fetching
 
-| Package | Version | Status | Recommendation |
-|---------|---------|--------|----------------|
-| `@tanstack/react-query` | ^5.90.12 | Active | Keep |
-| `@trpc/client` | ^11.1.1 | Active | Keep |
-| `@trpc/react-query` | ^11.1.1 | Active | Keep |
-| `@trpc/server` | ^11.1.1 | Active | Keep |
-| `superjson` | ^2.2.6 | Active | Keep |
+| Package                 | Version  | Status | Recommendation |
+| ----------------------- | -------- | ------ | -------------- |
+| `@tanstack/react-query` | ^5.90.12 | Active | Keep           |
+| `@trpc/client`          | ^11.1.1  | Active | Keep           |
+| `@trpc/react-query`     | ^11.1.1  | Active | Keep           |
+| `@trpc/server`          | ^11.1.1  | Active | Keep           |
+| `superjson`             | ^2.2.6   | Active | Keep           |
 
 **Notes:** TanStack Query + tRPC is the gold standard for type-safe API communication in Next.js apps. No changes needed.
 
@@ -63,11 +63,11 @@ This audit analyzes all dependencies for maintenance status, security, bundle si
 
 ### AI SDKs
 
-| Package | Version | Bundle Size | Status | Recommendation |
-|---------|---------|-------------|--------|----------------|
-| `@google/generative-ai` | ^0.21.0 | ~50KB | Active | Keep |
-| `openai` | ^4.77.0 | ~200KB | Active | Keep |
-| `@anthropic-ai/sdk` | ^0.69.0 | ~150KB | Active | Keep |
+| Package                 | Version | Bundle Size | Status | Recommendation |
+| ----------------------- | ------- | ----------- | ------ | -------------- |
+| `@google/generative-ai` | ^0.21.0 | ~50KB       | Active | Keep           |
+| `openai`                | ^4.77.0 | ~200KB      | Active | Keep           |
+| `@anthropic-ai/sdk`     | ^0.69.0 | ~150KB      | Active | Keep           |
 
 **Notes:** All AI SDKs are official and actively maintained. The bundle sizes are reasonable given they're server-only.
 
@@ -77,10 +77,10 @@ This audit analyzes all dependencies for maintenance status, security, bundle si
 
 ### UI Components
 
-| Package | Version | Status | Recommendation |
-|---------|---------|--------|----------------|
-| `@radix-ui/react-dialog` | ^1.1.15 | Active | Keep |
-| `@radix-ui/react-select` | ^2.2.6 | Active | Keep |
+| Package                  | Version | Status | Recommendation |
+| ------------------------ | ------- | ------ | -------------- |
+| `@radix-ui/react-dialog` | ^1.1.15 | Active | Keep           |
+| `@radix-ui/react-select` | ^2.2.6  | Active | Keep           |
 
 **Notes:** Radix UI primitives are the foundation of shadcn/ui. Excellent accessibility and composability.
 
@@ -90,11 +90,11 @@ This audit analyzes all dependencies for maintenance status, security, bundle si
 
 ### Form Handling
 
-| Package | Version | Status | Recommendation |
-|---------|---------|--------|----------------|
-| `react-hook-form` | ^7.66.0 | Active | Keep |
-| `@hookform/resolvers` | ^5.2.2 | Active | Keep |
-| `zod` | ^3.25.76 | Active | Keep |
+| Package               | Version  | Status | Recommendation |
+| --------------------- | -------- | ------ | -------------- |
+| `react-hook-form`     | ^7.66.0  | Active | Keep           |
+| `@hookform/resolvers` | ^5.2.2   | Active | Keep           |
+| `zod`                 | ^3.25.76 | Active | Keep           |
 
 **Notes:** React Hook Form + Zod is the industry standard for form validation. No alternatives needed.
 
@@ -102,13 +102,13 @@ This audit analyzes all dependencies for maintenance status, security, bundle si
 
 ### Styling
 
-| Package | Version | Status | Recommendation |
-|---------|---------|--------|----------------|
-| `tailwindcss` | ^4 | Active | Keep |
-| `@tailwindcss/postcss` | ^4 | Active | Keep |
-| `class-variance-authority` | ^0.7.1 | Active | Keep |
-| `clsx` | ^2.1.1 | Active | Keep |
-| `tailwind-merge` | ^3.4.0 | Active | Keep |
+| Package                    | Version | Status | Recommendation |
+| -------------------------- | ------- | ------ | -------------- |
+| `tailwindcss`              | ^4      | Active | Keep           |
+| `@tailwindcss/postcss`     | ^4      | Active | Keep           |
+| `class-variance-authority` | ^0.7.1  | Active | Keep           |
+| `clsx`                     | ^2.1.1  | Active | Keep           |
+| `tailwind-merge`           | ^3.4.0  | Active | Keep           |
 
 **Notes:** This is the optimal Tailwind setup. CVA is essential for variant-based components.
 
@@ -116,9 +116,9 @@ This audit analyzes all dependencies for maintenance status, security, bundle si
 
 ### Document Processing
 
-| Package | Version | Bundle Size | Status | Recommendation |
-|---------|---------|-------------|--------|----------------|
-| `mammoth` | ^1.11.0 | ~500KB | Active | Keep |
+| Package   | Version | Bundle Size | Status | Recommendation |
+| --------- | ------- | ----------- | ------ | -------------- |
+| `mammoth` | ^1.11.0 | ~500KB      | Active | Keep           |
 
 **Notes:** Mammoth is the best option for DOCX text extraction. It's server-only so bundle size doesn't affect client.
 
@@ -128,9 +128,9 @@ This audit analyzes all dependencies for maintenance status, security, bundle si
 
 ### Markdown
 
-| Package | Version | Status | Recommendation |
-|---------|---------|--------|----------------|
-| `react-markdown` | ^10.1.0 | Active | Keep |
+| Package          | Version | Status | Recommendation |
+| ---------------- | ------- | ------ | -------------- |
+| `react-markdown` | ^10.1.0 | Active | Keep           |
 
 **Notes:** Standard choice for rendering markdown in React.
 
@@ -138,9 +138,9 @@ This audit analyzes all dependencies for maintenance status, security, bundle si
 
 ### Storage
 
-| Package | Version | Status | Recommendation |
-|---------|---------|--------|----------------|
-| `@vercel/blob` | ^2.0.0 | Active | Keep |
+| Package        | Version | Status | Recommendation |
+| -------------- | ------- | ------ | -------------- |
+| `@vercel/blob` | ^2.0.0  | Active | Keep           |
 
 **Notes:** Native Vercel Blob integration. Perfect for the deployment platform.
 
@@ -148,8 +148,8 @@ This audit analyzes all dependencies for maintenance status, security, bundle si
 
 ### Utilities
 
-| Package | Version | Status | Recommendation |
-|---------|---------|--------|----------------|
+| Package  | Version | Status | Recommendation     |
+| -------- | ------- | ------ | ------------------ |
 | `dotenv` | ^17.2.3 | Active | Keep (dev scripts) |
 
 **Notes:** Only used in seed scripts. Next.js handles env vars natively.
@@ -160,17 +160,17 @@ This audit analyzes all dependencies for maintenance status, security, bundle si
 
 ### Testing
 
-| Package | Version | Status | Recommendation |
-|---------|---------|--------|----------------|
-| `vitest` | ^4.0.10 | Active | Keep |
-| `@vitest/coverage-v8` | ^4.0.10 | Active | Keep |
-| `@vitest/ui` | ^4.0.10 | Active | Keep |
-| `@testing-library/react` | ^16.3.0 | Active | Keep |
-| `@testing-library/jest-dom` | ^6.9.1 | Active | Keep |
-| `@testing-library/user-event` | ^14.6.1 | Active | Keep |
-| `vitest-mock-extended` | ^3.1.0 | Active | Keep |
-| `happy-dom` | ^20.0.10 | Active | Keep |
-| `@vitejs/plugin-react` | ^5.1.1 | Active | Keep |
+| Package                       | Version  | Status | Recommendation |
+| ----------------------------- | -------- | ------ | -------------- |
+| `vitest`                      | ^4.0.10  | Active | Keep           |
+| `@vitest/coverage-v8`         | ^4.0.10  | Active | Keep           |
+| `@vitest/ui`                  | ^4.0.10  | Active | Keep           |
+| `@testing-library/react`      | ^16.3.0  | Active | Keep           |
+| `@testing-library/jest-dom`   | ^6.9.1   | Active | Keep           |
+| `@testing-library/user-event` | ^14.6.1  | Active | Keep           |
+| `vitest-mock-extended`        | ^3.1.0   | Active | Keep           |
+| `happy-dom`                   | ^20.0.10 | Active | Keep           |
+| `@vitejs/plugin-react`        | ^5.1.1   | Active | Keep           |
 
 **Notes:** Excellent testing setup. Vitest is faster than Jest and has better ESM support.
 
@@ -178,16 +178,16 @@ This audit analyzes all dependencies for maintenance status, security, bundle si
 
 ### Code Quality
 
-| Package | Version | Status | Recommendation |
-|---------|---------|--------|----------------|
-| `eslint` | ^9 | Active | Keep |
-| `eslint-config-next` | 16.0.7 | Active | Keep |
-| `eslint-config-prettier` | ^10.1.8 | Active | Keep |
-| `prettier` | ^3.6.2 | Active | Keep |
-| `husky` | ^9.1.7 | Active | Keep |
-| `lint-staged` | ^16.2.6 | Active | Keep |
-| `typescript` | ^5 | Active | Keep |
-| `ts-node` | ^10.9.2 | Active | Keep (seed scripts) |
+| Package                  | Version | Status | Recommendation      |
+| ------------------------ | ------- | ------ | ------------------- |
+| `eslint`                 | ^9      | Active | Keep                |
+| `eslint-config-next`     | 16.0.7  | Active | Keep                |
+| `eslint-config-prettier` | ^10.1.8 | Active | Keep                |
+| `prettier`               | ^3.6.2  | Active | Keep                |
+| `husky`                  | ^9.1.7  | Active | Keep                |
+| `lint-staged`            | ^16.2.6 | Active | Keep                |
+| `typescript`             | ^5      | Active | Keep                |
+| `ts-node`                | ^10.9.2 | Active | Keep (seed scripts) |
 
 **Notes:** Comprehensive code quality setup. No changes needed.
 
@@ -209,6 +209,7 @@ npm install @upstash/ratelimit @upstash/redis
 
 **Current:** Direct console calls with context prefixes
 **Recommendation:** For production, consider:
+
 - `pino` - Fast, structured logging
 - Vercel's built-in logging (if staying on Vercel)
 
@@ -220,14 +221,14 @@ npm install @upstash/ratelimit @upstash/redis
 
 These are commonly added but not necessary for this project:
 
-| Package | Why Not Needed |
-|---------|----------------|
-| `axios` | Native `fetch` is sufficient, tRPC handles API calls |
-| `lodash` | Modern JS has most utilities built-in |
-| `moment`/`dayjs` | Native `Date` and `Intl` APIs are sufficient |
-| `uuid` | Prisma generates IDs, crypto.randomUUID() available |
-| `bcrypt` | OAuth-only auth, no password hashing needed |
-| `jsonwebtoken` | NextAuth handles JWT internally |
+| Package          | Why Not Needed                                       |
+| ---------------- | ---------------------------------------------------- |
+| `axios`          | Native `fetch` is sufficient, tRPC handles API calls |
+| `lodash`         | Modern JS has most utilities built-in                |
+| `moment`/`dayjs` | Native `Date` and `Intl` APIs are sufficient         |
+| `uuid`           | Prisma generates IDs, crypto.randomUUID() available  |
+| `bcrypt`         | OAuth-only auth, no password hashing needed          |
+| `jsonwebtoken`   | NextAuth handles JWT internally                      |
 
 ---
 
@@ -249,13 +250,13 @@ Run `npm audit` to check for current vulnerabilities.
 
 ### Client-Side Impact
 
-| Category | Packages | Est. Size |
-|----------|----------|-----------|
-| React + Next.js | Core | ~150KB |
-| Radix UI | Dialog, Select | ~30KB |
-| React Hook Form | Forms | ~15KB |
-| TanStack Query | Data fetching | ~25KB |
-| Styling (CVA, clsx, tw-merge) | Utils | ~10KB |
+| Category                      | Packages       | Est. Size |
+| ----------------------------- | -------------- | --------- |
+| React + Next.js               | Core           | ~150KB    |
+| Radix UI                      | Dialog, Select | ~30KB     |
+| React Hook Form               | Forms          | ~15KB     |
+| TanStack Query                | Data fetching  | ~25KB     |
+| Styling (CVA, clsx, tw-merge) | Utils          | ~10KB     |
 
 **Total Client Bundle:** ~230KB (gzipped: ~70KB) - Excellent
 

@@ -152,7 +152,7 @@ function info(module: string, message: string, context?: LogContext): void {
   const prefix = formatPrefix(module);
   const contextStr = formatContext(context);
 
-  // Use console.info or console.log (info might be filtered in some environments)
+  // eslint-disable-next-line no-console
   console.info(`${prefix} ${message}${contextStr}`);
 }
 
@@ -183,7 +183,12 @@ function debug(module: string, message: string, context?: LogContext): void {
  * log.error("Failed to process", error);
  * log.info("Upload completed", { size: 1024 });
  */
-function scope(module: string) {
+function scope(module: string): {
+  error: (message: string, err?: unknown, context?: LogContext) => void;
+  warn: (message: string, context?: LogContext) => void;
+  info: (message: string, context?: LogContext) => void;
+  debug: (message: string, context?: LogContext) => void;
+} {
   return {
     error: (message: string, err?: unknown, context?: LogContext) =>
       error(module, message, err, context),
@@ -201,7 +206,15 @@ function scope(module: string) {
  * log.error("Failed to process", error);
  * // Output: [CVStore:POST] Failed to process Error: ...
  */
-function api(route: string, method: string) {
+function api(
+  route: string,
+  method: string
+): {
+  error: (message: string, err?: unknown, context?: LogContext) => void;
+  warn: (message: string, context?: LogContext) => void;
+  info: (message: string, context?: LogContext) => void;
+  debug: (message: string, context?: LogContext) => void;
+} {
   const prefix = formatPrefix(route, method);
   return {
     error: (message: string, err?: unknown, context?: LogContext) => {
@@ -218,6 +231,7 @@ function api(route: string, method: string) {
     info: (message: string, context?: LogContext) => {
       if (!enabledLevels.has("info")) return;
       const contextStr = formatContext(context);
+      // eslint-disable-next-line no-console
       console.info(`${prefix} ${message}${contextStr}`);
     },
     debug: (message: string, context?: LogContext) => {

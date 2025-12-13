@@ -11,11 +11,7 @@ import type {
   ParsedCVData,
   ExtractedCVContent,
 } from "../types";
-import {
-  jobAnalysisSchema,
-  parsedCVDataSchema,
-  extractedCVContentSchema,
-} from "../schemas";
+import { jobAnalysisSchema, parsedCVDataSchema, extractedCVContentSchema } from "../schemas";
 import {
   ANALYSIS_PROMPT,
   COVER_LETTER_PROMPT,

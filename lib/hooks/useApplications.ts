@@ -68,11 +68,18 @@ export function useApplications(): UseApplicationsReturn {
   // Transform dates to strings for UI consumption
   const applications: Application[] = useMemo(() => {
     if (!applicationsQuery.data) return [];
-    return applicationsQuery.data.map((app: { appliedAt: Date | null; createdAt: Date } & Omit<Application, "appliedAt" | "createdAt">) => ({
-      ...app,
-      appliedAt: app.appliedAt ? app.appliedAt.toISOString() : null,
-      createdAt: app.createdAt.toISOString(),
-    }));
+    return applicationsQuery.data.map(
+      (
+        app: { appliedAt: Date | null; createdAt: Date } & Omit<
+          Application,
+          "appliedAt" | "createdAt"
+        >
+      ) => ({
+        ...app,
+        appliedAt: app.appliedAt ? app.appliedAt.toISOString() : null,
+        createdAt: app.createdAt.toISOString(),
+      })
+    );
   }, [applicationsQuery.data]);
 
   // Calculate statistics

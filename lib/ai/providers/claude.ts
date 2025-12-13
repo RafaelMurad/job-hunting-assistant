@@ -43,7 +43,11 @@ export async function analyzeWithClaude(
     throw new Error("Unexpected response type from Claude");
   }
 
-  return parseJsonOrThrow(cleanJsonResponse(content.text), jobAnalysisSchema, "Claude job analysis");
+  return parseJsonOrThrow(
+    cleanJsonResponse(content.text),
+    jobAnalysisSchema,
+    "Claude job analysis"
+  );
 }
 
 // =============================================================================

@@ -4,7 +4,7 @@
  * Tests route protection and authorization logic
  */
 
-import middleware from "@/middleware";
+import proxy from "@/proxy";
 import { getToken } from "next-auth/jwt";
 import { NextRequest } from "next/server";
 import { beforeEach, describe, expect, it, vi } from "vitest";
@@ -18,6 +18,7 @@ const mockGetToken = vi.mocked(getToken);
 describe("Middleware - Route Protection", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    process.env.AUTH_SECRET = "test-auth-secret";
   });
 
   describe("Public Routes", () => {
@@ -25,7 +26,7 @@ describe("Middleware - Route Protection", () => {
       mockGetToken.mockResolvedValue(null);
 
       const req = new NextRequest(new URL("http://localhost:3000/"));
-      const response = await middleware(req);
+      const response = await proxy(req);
 
       expect(response.status).toBe(200);
     });
@@ -34,7 +35,7 @@ describe("Middleware - Route Protection", () => {
       mockGetToken.mockResolvedValue(null);
 
       const req = new NextRequest(new URL("http://localhost:3000/login"));
-      const response = await middleware(req);
+      const response = await proxy(req);
 
       expect(response.status).toBe(200);
     });
@@ -48,7 +49,7 @@ describe("Middleware - Route Protection", () => {
       } as never);
 
       const req = new NextRequest(new URL("http://localhost:3000/login"));
-      const response = await middleware(req);
+      const response = await proxy(req);
 
       expect(response.status).toBe(307);
       expect(response.headers.get("location")).toContain("/dashboard");
@@ -60,7 +61,7 @@ describe("Middleware - Route Protection", () => {
       mockGetToken.mockResolvedValue(null);
 
       const req = new NextRequest(new URL("http://localhost:3000/dashboard"));
-      const response = await middleware(req);
+      const response = await proxy(req);
 
       expect(response.status).toBe(307);
       expect(response.headers.get("location")).toContain("/login");
@@ -76,7 +77,7 @@ describe("Middleware - Route Protection", () => {
       } as never);
 
       const req = new NextRequest(new URL("http://localhost:3000/dashboard"));
-      const response = await middleware(req);
+      const response = await proxy(req);
 
       expect(response.status).toBe(200);
     });
@@ -85,7 +86,7 @@ describe("Middleware - Route Protection", () => {
       mockGetToken.mockResolvedValue(null);
 
       const req = new NextRequest(new URL("http://localhost:3000/tracker"));
-      const response = await middleware(req);
+      const response = await proxy(req);
 
       expect(response.status).toBe(307);
       expect(response.headers.get("location")).toContain("/login");
@@ -95,7 +96,7 @@ describe("Middleware - Route Protection", () => {
       mockGetToken.mockResolvedValue(null);
 
       const req = new NextRequest(new URL("http://localhost:3000/profile"));
-      const response = await middleware(req);
+      const response = await proxy(req);
 
       expect(response.status).toBe(307);
       expect(response.headers.get("location")).toContain("/login");
@@ -105,7 +106,7 @@ describe("Middleware - Route Protection", () => {
       mockGetToken.mockResolvedValue(null);
 
       const req = new NextRequest(new URL("http://localhost:3000/cv"));
-      const response = await middleware(req);
+      const response = await proxy(req);
 
       expect(response.status).toBe(307);
       expect(response.headers.get("location")).toContain("/login");
@@ -122,7 +123,7 @@ describe("Middleware - Route Protection", () => {
       } as never);
 
       const req = new NextRequest(new URL("http://localhost:3000/admin/flags"));
-      const response = await middleware(req);
+      const response = await proxy(req);
 
       expect(response.status).toBe(307);
       expect(response.headers.get("location")).toContain("/dashboard");
@@ -138,7 +139,7 @@ describe("Middleware - Route Protection", () => {
       } as never);
 
       const req = new NextRequest(new URL("http://localhost:3000/admin/flags"));
-      const response = await middleware(req);
+      const response = await proxy(req);
 
       expect(response.status).toBe(200);
     });
@@ -152,7 +153,7 @@ describe("Middleware - Route Protection", () => {
       } as never);
 
       const req = new NextRequest(new URL("http://localhost:3000/admin/ux-planner"));
-      const response = await middleware(req);
+      const response = await proxy(req);
 
       expect(response.status).toBe(200);
     });
@@ -166,7 +167,7 @@ describe("Middleware - Route Protection", () => {
       } as never);
 
       const req = new NextRequest(new URL("http://localhost:3000/admin/ux-planner"));
-      const response = await middleware(req);
+      const response = await proxy(req);
 
       expect(response.status).toBe(200);
     });
@@ -175,7 +176,7 @@ describe("Middleware - Route Protection", () => {
       mockGetToken.mockResolvedValue(null);
 
       const req = new NextRequest(new URL("http://localhost:3000/admin/flags"));
-      const response = await middleware(req);
+      const response = await proxy(req);
 
       expect(response.status).toBe(307);
       expect(response.headers.get("location")).toContain("/login");
@@ -187,7 +188,7 @@ describe("Middleware - Route Protection", () => {
       mockGetToken.mockResolvedValue(null);
 
       const req = new NextRequest(new URL("http://localhost:3000/tracker"));
-      const response = await middleware(req);
+      const response = await proxy(req);
 
       expect(response.headers.get("location")).toContain("callbackUrl=%2Ftracker");
     });
@@ -196,7 +197,7 @@ describe("Middleware - Route Protection", () => {
       mockGetToken.mockResolvedValue(null);
 
       const req = new NextRequest(new URL("http://localhost:3000/admin/flags"));
-      const response = await middleware(req);
+      const response = await proxy(req);
 
       expect(response.headers.get("location")).toContain("callbackUrl=%2Fadmin%2Fflags");
     });

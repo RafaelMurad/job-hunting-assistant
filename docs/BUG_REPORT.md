@@ -20,6 +20,7 @@ This document contains bugs identified during a code audit. Bugs are prioritized
 `URL.createObjectURL()` creates blob URLs that hold references in memory. These URLs are created for PDF preview but never revoked with `URL.revokeObjectURL()`, causing memory to accumulate with each preview.
 
 **Current Code:**
+
 ```typescript
 const blobUrl = URL.createObjectURL(pdfBlob);
 setPreviewPdfUrl(blobUrl);
@@ -28,10 +29,11 @@ setPreviewPdfUrl(blobUrl);
 
 **Fix:**
 Add cleanup in useEffect:
+
 ```typescript
 useEffect(() => {
   return () => {
-    if (previewPdfUrl?.startsWith('blob:')) {
+    if (previewPdfUrl?.startsWith("blob:")) {
       URL.revokeObjectURL(previewPdfUrl);
     }
   };
@@ -47,6 +49,7 @@ useEffect(() => {
 **Type:** Memory Leak / State Update on Unmounted Component
 
 **Affected Files:**
+
 - `lib/hooks/useAnalyze.ts` (line 84)
 - `app/analyze/page.tsx` (lines 39, 77)
 - `app/cv/page.tsx` (lines 143, 313)
@@ -57,6 +60,7 @@ useEffect(() => {
 Multiple `setTimeout` calls are not stored and cancelled when components unmount. This can cause "state update on unmounted component" warnings and potential crashes.
 
 **Example Issue in useAnalyze.ts:**
+
 ```typescript
 const resetButtonState = (setter, delay = 2000): void => {
   setTimeout(() => setter("idle"), delay);
@@ -66,6 +70,7 @@ const resetButtonState = (setter, delay = 2000): void => {
 
 **Fix:**
 Return timeout ID and clean up:
+
 ```typescript
 const timeoutRef = useRef<NodeJS.Timeout>();
 
@@ -96,6 +101,7 @@ useEffect(() => {
 Throwing plain `Error` instead of `TRPCError` means errors won't be properly serialized or handled by the tRPC client.
 
 **Current Code:**
+
 ```typescript
 if (!application) {
   throw new Error("Application not found or access denied");
@@ -103,6 +109,7 @@ if (!application) {
 ```
 
 **Fix:**
+
 ```typescript
 import { TRPCError } from "@trpc/server";
 
@@ -126,6 +133,7 @@ if (!application) {
 The ATS compliance check endpoint doesn't require authentication. This exposes expensive AI resources to unauthenticated users.
 
 **Current Code:**
+
 ```typescript
 export async function POST(request: NextRequest): Promise<NextResponse> {
   // No auth check - anyone can call this endpoint
@@ -135,6 +143,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
 ```
 
 **Fix:**
+
 ```typescript
 import { auth } from "@/lib/auth";
 
@@ -154,6 +163,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
 ### BUG-005: Silent JSON Parsing Failure
 
 **Files:**
+
 - `lib/social/providers/linkedin.ts` (lines 65, 133, 271)
 - `lib/social/providers/github.ts` (line 426)
 
@@ -164,12 +174,14 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
 Using `.catch(() => ({}))` silently swallows JSON parsing errors, losing valuable error context.
 
 **Current Code:**
+
 ```typescript
 const errorBody = await response.json().catch(() => ({}));
 throw createOAuthError("linkedin", { status: response.status, body: errorBody });
 ```
 
 **Fix:**
+
 ```typescript
 let errorBody = {};
 try {
@@ -193,6 +205,7 @@ throw createOAuthError("linkedin", { status: response.status, body: errorBody })
 Calling `setState` during render (outside useEffect) can cause infinite re-renders or state update warnings.
 
 **Current Code:**
+
 ```typescript
 if (userData && !formData && !loading) {
   setFormData(userData); // Called during render, not in useEffect
@@ -200,6 +213,7 @@ if (userData && !formData && !loading) {
 ```
 
 **Fix:**
+
 ```typescript
 useEffect(() => {
   if (userData && !formData && !loading) {
@@ -213,6 +227,7 @@ useEffect(() => {
 ### BUG-007: Unsafe FormData Type Casting
 
 **Files:**
+
 - `app/api/cv/store/route.ts` (lines 48-49)
 - `app/api/cv/upload/route.ts` (line 41)
 
@@ -223,16 +238,20 @@ useEffect(() => {
 Casting `formData.get()` results directly as specific types without validation could lead to runtime errors.
 
 **Current Code:**
+
 ```typescript
-const selectedModel = (formData.get("model") as LatexExtractionModel) || AI_CONFIG.defaultLatexModel;
+const selectedModel =
+  (formData.get("model") as LatexExtractionModel) || AI_CONFIG.defaultLatexModel;
 ```
 
 **Fix:**
+
 ```typescript
 const modelString = formData.get("model");
-const selectedModel = typeof modelString === 'string' && isValidModel(modelString)
-  ? (modelString as LatexExtractionModel)
-  : AI_CONFIG.defaultLatexModel;
+const selectedModel =
+  typeof modelString === "string" && isValidModel(modelString)
+    ? (modelString as LatexExtractionModel)
+    : AI_CONFIG.defaultLatexModel;
 ```
 
 ---
@@ -250,6 +269,7 @@ const selectedModel = typeof modelString === 'string' && isValidModel(modelStrin
 JWT token claims were cast without validation.
 
 **Resolution:**
+
 - Migrated middleware.ts to proxy.ts (Next.js 16 pattern)
 - Added strict AUTH_SECRET validation (returns error if not set)
 - Type casting retained but now behind proper secret validation
@@ -269,6 +289,7 @@ JWT token claims were cast without validation.
 Setting success state and then redirecting with setTimeout may not complete properly if redirect happens before state update is rendered.
 
 **Current Code:**
+
 ```typescript
 if (success) {
   setSaveState("success");
@@ -278,10 +299,11 @@ if (success) {
 
 **Fix:**
 Either redirect immediately or ensure the state update completes:
+
 ```typescript
 if (success) {
   setSaveState("success");
-  await new Promise(resolve => setTimeout(resolve, 1000)); // Allow render
+  await new Promise((resolve) => setTimeout(resolve, 1000)); // Allow render
   router.push("/tracker");
 }
 ```
@@ -299,6 +321,7 @@ if (success) {
 When API response is not OK, code tries to access result.error without handling potential JSON parse failure.
 
 **Current Code:**
+
 ```typescript
 const result = await response.json();
 if (!response.ok) {
@@ -307,6 +330,7 @@ if (!response.ok) {
 ```
 
 **Fix:**
+
 ```typescript
 let result = null;
 try {
@@ -324,13 +348,13 @@ if (!response.ok) {
 
 ## Summary
 
-| Priority | Count | Status |
-|----------|-------|--------|
-| Critical | 2 | Pending |
-| High | 2 | Pending |
-| Medium | 3 | Pending |
-| Medium | 1 | ✅ Fixed (BUG-008) |
-| Low | 2 | Pending |
+| Priority  | Count  | Status                 |
+| --------- | ------ | ---------------------- |
+| Critical  | 2      | Pending                |
+| High      | 2      | Pending                |
+| Medium    | 3      | Pending                |
+| Medium    | 1      | ✅ Fixed (BUG-008)     |
+| Low       | 2      | Pending                |
 | **Total** | **10** | **9 Pending, 1 Fixed** |
 
 ---
@@ -339,12 +363,12 @@ if (!response.ok) {
 
 The following files exceed 800 lines and would benefit from refactoring:
 
-| File | Lines | Recommendation |
-|------|-------|----------------|
-| `lib/trpc/routers/ux.ts` | 1,156 | Split into sub-routers by feature (journeys, painpoints, personas) |
-| `app/cv/page.tsx` | 1,020 | Extract hooks (useLatexEditor, usePDFPreview), separate components |
-| `app/admin/ux-planner/page.tsx` | 916 | Extract editor panels as components, separate state management |
-| `lib/cv-templates/index.ts` | 822 | Consider moving templates to data files or database |
+| File                            | Lines | Recommendation                                                     |
+| ------------------------------- | ----- | ------------------------------------------------------------------ |
+| `lib/trpc/routers/ux.ts`        | 1,156 | Split into sub-routers by feature (journeys, painpoints, personas) |
+| `app/cv/page.tsx`               | 1,020 | Extract hooks (useLatexEditor, usePDFPreview), separate components |
+| `app/admin/ux-planner/page.tsx` | 916   | Extract editor panels as components, separate state management     |
+| `lib/cv-templates/index.ts`     | 822   | Consider moving templates to data files or database                |
 
 **Note:** These are not bugs but technical debt. Refactoring should be done incrementally with proper testing.
 

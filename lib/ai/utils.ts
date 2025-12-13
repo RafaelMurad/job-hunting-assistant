@@ -15,9 +15,7 @@ import { type ZodSchema, type ZodError } from "zod";
  * Result type for safe JSON parsing operations.
  * Follows the Result pattern for explicit error handling.
  */
-export type SafeParseResult<T> =
-  | { success: true; data: T }
-  | { success: false; error: string };
+export type SafeParseResult<T> = { success: true; data: T } | { success: false; error: string };
 
 /**
  * Safely parse a JSON string with optional Zod schema validation.
@@ -34,10 +32,7 @@ export type SafeParseResult<T> =
  * // With schema (returns typed and validated data)
  * const user = safeParseJson('{"name": "John"}', userSchema);
  */
-export function safeParseJson<T>(
-  jsonString: string,
-  schema?: ZodSchema<T>
-): T | null {
+export function safeParseJson<T>(jsonString: string, schema?: ZodSchema<T>): T | null {
   try {
     const parsed: unknown = JSON.parse(jsonString);
 
@@ -73,11 +68,7 @@ export function safeParseJson<T>(
  * When using Zod schemas with .default(), the output type has all
  * fields as required (defaults are applied during parsing).
  */
-export function parseJsonOrThrow<T>(
-  jsonString: string,
-  schema?: ZodSchema,
-  context?: string
-): T {
+export function parseJsonOrThrow<T>(jsonString: string, schema?: ZodSchema, context?: string): T {
   const contextPrefix = context ? `[${context}] ` : "";
 
   let parsed: unknown;
@@ -124,10 +115,7 @@ export function parseJsonOrThrow<T>(
  *   console.error(result.error);
  * }
  */
-export function parseJsonSafe<T>(
-  jsonString: string,
-  schema?: ZodSchema<T>
-): SafeParseResult<T> {
+export function parseJsonSafe<T>(jsonString: string, schema?: ZodSchema<T>): SafeParseResult<T> {
   try {
     const parsed: unknown = JSON.parse(jsonString);
 
