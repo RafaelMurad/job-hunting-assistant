@@ -144,9 +144,15 @@ export default async function proxy(req: NextRequest): Promise<NextResponse> {
     return NextResponse.redirect(new URL("/login?error=configuration", req.url));
   }
 
+  // In production/preview on Vercel, NextAuth uses secure cookie names (e.g. `__Secure-...`).
+  // The edge runtime can mis-detect this depending on deployment URL/proto.
+  // Force secure cookie parsing in prod to avoid redirect loops to /login.
+  const secureCookie = process.env.NODE_ENV === "production";
+
   const token = await getToken({
     req,
     secret: authSecret,
+    secureCookie,
   });
 
   const isAuthenticated = !!token;
