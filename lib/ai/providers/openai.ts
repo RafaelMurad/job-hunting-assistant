@@ -6,8 +6,9 @@
 
 import { AI_CONFIG } from "../config";
 import type { JobAnalysisResult } from "../types";
+import { jobAnalysisSchema } from "../schemas";
 import { ANALYSIS_PROMPT, COVER_LETTER_PROMPT, LATEX_EXTRACTION_PROMPT } from "../prompts";
-import { cleanAndValidateLatex } from "../utils";
+import { cleanAndValidateLatex, parseJsonOrThrow } from "../utils";
 
 // =============================================================================
 // JOB ANALYSIS
@@ -34,7 +35,7 @@ export async function analyzeWithOpenAI(
   if (!firstChoice?.message.content) {
     throw new Error("No response from OpenAI");
   }
-  return JSON.parse(firstChoice.message.content) as JobAnalysisResult;
+  return parseJsonOrThrow(firstChoice.message.content, jobAnalysisSchema, "OpenAI job analysis");
 }
 
 // =============================================================================

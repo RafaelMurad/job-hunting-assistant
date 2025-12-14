@@ -6,8 +6,9 @@
 
 import { AI_CONFIG } from "../config";
 import type { JobAnalysisResult } from "../types";
+import { jobAnalysisSchema } from "../schemas";
 import { ANALYSIS_PROMPT, COVER_LETTER_PROMPT, LATEX_EXTRACTION_PROMPT } from "../prompts";
-import { cleanAndValidateLatex, cleanJsonResponse } from "../utils";
+import { cleanAndValidateLatex, cleanJsonResponse, parseJsonOrThrow } from "../utils";
 
 // =============================================================================
 // JOB ANALYSIS
@@ -42,7 +43,11 @@ export async function analyzeWithClaude(
     throw new Error("Unexpected response type from Claude");
   }
 
-  return JSON.parse(cleanJsonResponse(content.text)) as JobAnalysisResult;
+  return parseJsonOrThrow(
+    cleanJsonResponse(content.text),
+    jobAnalysisSchema,
+    "Claude job analysis"
+  );
 }
 
 // =============================================================================

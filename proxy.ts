@@ -1,18 +1,41 @@
 /**
  * Next.js Proxy for Route Protection (Next.js 16+)
  *
- * Protects sensitive routes and redirects unauthenticated users to login.
- * Uses getToken() from next-auth/jwt for edge-compatible auth checks.
+ * Replaces middleware.ts with the new proxy pattern.
+ * Performs lightweight, optimistic authentication checks.
  *
- * NOTE: We use getToken() instead of auth() to avoid importing Prisma,
- * which would exceed Vercel's Edge Function size limit (1 MB).
+ * IMPORTANT: In Next.js 16+, proxy is the recommended pattern for:
+ * - Route protection (redirect unauthenticated users)
+ * - Request/response header manipulation
+ * - Rewrites and redirects
  *
- * @see https://nextjs.org/docs/app/building-your-application/routing/middleware
- * @see https://authjs.dev/getting-started/session-management/protecting#nextjs-middleware
+ * Full authorization checks should happen in Server Components or Server Actions,
+ * closer to where the data is accessed (Data Access Layer pattern).
+ *
+ * @see https://nextjs.org/docs/app/api-reference/file-conventions/proxy
+ * @see https://nextjs.org/docs/app/guides/authentication
  */
 
 import { getToken } from "next-auth/jwt";
 import { NextResponse, type NextRequest } from "next/server";
+
+const MAX_RSC_REQUEST_CONTENT_LENGTH_BYTES = 1_024;
+
+function parseContentLength(headerValue: string | null): number | null {
+  if (!headerValue) return null;
+  const parsed = Number.parseInt(headerValue, 10);
+  return Number.isFinite(parsed) && parsed >= 0 ? parsed : null;
+}
+
+function isRscRequest(req: NextRequest): boolean {
+  // App Router RSC requests commonly include the `_rsc` query param.
+  return req.nextUrl.searchParams.has("_rsc");
+}
+
+function isServerActionRequest(req: NextRequest): boolean {
+  // Next.js uses `Next-Action` to identify Server Actions requests.
+  return req.headers.has("next-action") || req.headers.has("Next-Action");
+}
 
 /**
  * Protected route patterns
@@ -22,7 +45,6 @@ import { NextResponse, type NextRequest } from "next/server";
  */
 const protectedRoutes = [
   "/admin",
-  "/admin/:path*",
   "/settings",
   "/tracker",
   "/dashboard",
@@ -32,63 +54,127 @@ const protectedRoutes = [
 ];
 
 /**
+ * Admin-only routes
+ *
+ * Routes requiring elevated permissions.
+ */
+const adminRoutes = ["/admin"];
+
+/**
  * Public routes that should be accessible without auth
  */
 const publicRoutes = ["/", "/login", "/api/auth"];
 
-export default async function middleware(req: NextRequest): Promise<NextResponse> {
+/**
+ * Check if a pathname matches a protected route pattern
+ */
+function isProtectedPath(pathname: string): boolean {
+  return protectedRoutes.some((route) => {
+    return pathname === route || pathname.startsWith(route + "/");
+  });
+}
+
+/**
+ * Check if a pathname is an admin route
+ */
+function isAdminPath(pathname: string): boolean {
+  return adminRoutes.some((route) => {
+    return pathname === route || pathname.startsWith(route + "/");
+  });
+}
+
+/**
+ * Check if a pathname is a public route
+ */
+function isPublicPath(pathname: string): boolean {
+  return publicRoutes.some((route) => {
+    if (route === "/") return pathname === "/";
+    if (route === "/api/auth") return pathname === "/api/auth" || pathname.startsWith("/api/auth/");
+    return pathname === route;
+  });
+}
+
+/**
+ * Next.js Proxy function
+ *
+ * Performs lightweight authentication checks using JWT token from cookie.
+ * Heavy authorization logic should be in Server Components/Actions.
+ */
+export default async function proxy(req: NextRequest): Promise<NextResponse> {
   const { pathname } = req.nextUrl;
 
-  // Get JWT token (edge-compatible, doesn't require Prisma)
-  // Note: AUTH_SECRET is required for production
+  // --- Security guardrails (belt + suspenders) ---
+  // These mitigate abuse patterns against RSC/Server Actions transport.
+  // Primary fix is upgrading Next.js to patched versions.
+  const isApiRoute = pathname === "/api" || pathname.startsWith("/api/");
+  const method = req.method.toUpperCase();
+  const contentLength = parseContentLength(req.headers.get("content-length"));
+
+  // Server Actions are not used in this repo; block action-shaped requests.
+  if (!isApiRoute && isServerActionRequest(req)) {
+    return new NextResponse("Forbidden", { status: 403 });
+  }
+
+  // Pages/RSC endpoints should not receive state-changing HTTP methods.
+  if (!isApiRoute && method !== "GET" && method !== "HEAD" && method !== "OPTIONS") {
+    return new NextResponse("Method Not Allowed", { status: 405 });
+  }
+
+  // RSC fetches should be GET/HEAD with no body; reject abnormal payloads early.
+  if (!isApiRoute && isRscRequest(req)) {
+    if (method !== "GET" && method !== "HEAD") {
+      return new NextResponse("Method Not Allowed", { status: 405 });
+    }
+
+    if (contentLength !== null && contentLength > MAX_RSC_REQUEST_CONTENT_LENGTH_BYTES) {
+      return new NextResponse("Payload Too Large", { status: 413 });
+    }
+
+    const contentType = req.headers.get("content-type");
+    if (contentType) {
+      return new NextResponse("Bad Request", { status: 400 });
+    }
+  }
+
+  // Get JWT token (edge-compatible, optimistic check from cookie only)
+  // SECURITY: AUTH_SECRET must be set - empty secret would allow JWT forgery
+  const authSecret = process.env.AUTH_SECRET;
+  if (!authSecret) {
+    console.error("[Proxy] CRITICAL: AUTH_SECRET environment variable is not set");
+    return NextResponse.redirect(new URL("/login?error=configuration", req.url));
+  }
+
   const token = await getToken({
     req,
-    secret: process.env.AUTH_SECRET ?? "",
+    secret: authSecret,
   });
 
   const isAuthenticated = !!token;
 
   // Allow public routes
-  const isPublicRoute = publicRoutes.some((route) => {
-    if (route === "/") return pathname === "/";
-    if (route === "/api/auth") return pathname === "/api/auth" || pathname.startsWith("/api/auth/");
-    return pathname === route;
-  });
-
-  if (isPublicRoute) {
-    // If user is logged in and trying to access login page, redirect to dashboard
+  if (isPublicPath(pathname)) {
+    // Redirect authenticated users away from login page
     if (pathname === "/login" && isAuthenticated) {
       return NextResponse.redirect(new URL("/dashboard", req.url));
     }
     return NextResponse.next();
   }
 
-  // Check if route requires authentication
-  const isProtectedRoute = protectedRoutes.some((route) => {
-    // Handle wildcard patterns like /admin/:path*
-    if (route.includes(":path*")) {
-      const baseRoute = route.replace("/:path*", "");
-      return pathname === baseRoute || pathname.startsWith(baseRoute + "/");
-    }
-    return pathname === route;
-  });
-
   // Redirect unauthenticated users to login
-  if (isProtectedRoute && !isAuthenticated) {
+  if (isProtectedPath(pathname) && !isAuthenticated) {
     const loginUrl = new URL("/login", req.url);
     loginUrl.searchParams.set("callbackUrl", pathname);
     return NextResponse.redirect(loginUrl);
   }
 
-  // Check admin routes for admin role
-  if (pathname.startsWith("/admin")) {
+  // Optimistic admin check (full authorization in Server Components)
+  if (isAdminPath(pathname) && isAuthenticated) {
     const userRole = token?.role as string | undefined;
     const isTrusted = token?.isTrusted as boolean | undefined;
 
     const hasAdminAccess = userRole === "ADMIN" || userRole === "OWNER" || isTrusted === true;
 
     if (!hasAdminAccess) {
-      // Redirect non-admins to dashboard with error
       return NextResponse.redirect(new URL("/dashboard?error=unauthorized", req.url));
     }
   }
@@ -97,12 +183,12 @@ export default async function middleware(req: NextRequest): Promise<NextResponse
 }
 
 /**
- * Middleware configuration
+ * Proxy configuration
  *
  * Match all routes except:
- * - API routes (handled by tRPC)
  * - Static files
  * - Next.js internals
+ * - API routes (handled by tRPC/route handlers)
  */
 export const config = {
   matcher: [
