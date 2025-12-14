@@ -16,8 +16,10 @@ export const dynamic = "force-dynamic";
 import Link from "next/link";
 import type { JSX } from "react";
 import { prisma } from "@/lib/db";
+import { DbUnavailableBanner } from "@/components/db-unavailable-banner";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { getDatabaseUnavailableMessage, isDatabaseUnavailableError } from "@/lib/db-errors";
 
 /**
  * Fetch dashboard data on the server.
@@ -27,41 +29,59 @@ async function getDashboardData(): Promise<{
   user: Awaited<ReturnType<typeof prisma.user.findFirst>>;
   recentApplications: Awaited<ReturnType<typeof prisma.application.findMany>>;
   stats: { total: number; saved: number; applied: number; interviewing: number };
+  dbError: string | null;
 }> {
-  const user = await prisma.user.findFirst();
+  try {
+    const user = await prisma.user.findFirst();
 
-  if (!user) {
+    if (!user) {
+      return {
+        user: null,
+        recentApplications: [],
+        stats: { total: 0, saved: 0, applied: 0, interviewing: 0 },
+        dbError: null,
+      };
+    }
+
+    // Run queries in parallel for efficiency
+    const [recentApplications, total, saved, applied, interviewing] = await Promise.all([
+      // Get recent applications for display
+      prisma.application.findMany({
+        where: { userId: user.id },
+        orderBy: { createdAt: "desc" },
+        take: 5,
+      }),
+      // Get accurate counts for stats (not limited to 5)
+      prisma.application.count({ where: { userId: user.id } }),
+      prisma.application.count({ where: { userId: user.id, status: "saved" } }),
+      prisma.application.count({ where: { userId: user.id, status: "applied" } }),
+      prisma.application.count({ where: { userId: user.id, status: "interviewing" } }),
+    ]);
+
+    return {
+      user,
+      recentApplications,
+      stats: { total, saved, applied, interviewing },
+      dbError: null,
+    };
+  } catch (error) {
+    console.error("[Dashboard] Failed to load data from DB", error);
+
+    if (!isDatabaseUnavailableError(error)) {
+      throw error;
+    }
+
     return {
       user: null,
       recentApplications: [],
       stats: { total: 0, saved: 0, applied: 0, interviewing: 0 },
+      dbError: getDatabaseUnavailableMessage(error),
     };
   }
-
-  // Run queries in parallel for efficiency
-  const [recentApplications, total, saved, applied, interviewing] = await Promise.all([
-    // Get recent applications for display
-    prisma.application.findMany({
-      where: { userId: user.id },
-      orderBy: { createdAt: "desc" },
-      take: 5,
-    }),
-    // Get accurate counts for stats (not limited to 5)
-    prisma.application.count({ where: { userId: user.id } }),
-    prisma.application.count({ where: { userId: user.id, status: "saved" } }),
-    prisma.application.count({ where: { userId: user.id, status: "applied" } }),
-    prisma.application.count({ where: { userId: user.id, status: "interviewing" } }),
-  ]);
-
-  return {
-    user,
-    recentApplications,
-    stats: { total, saved, applied, interviewing },
-  };
 }
 
 export default async function DashboardPage(): Promise<JSX.Element> {
-  const { user, recentApplications, stats } = await getDashboardData();
+  const { user, recentApplications, stats, dbError } = await getDashboardData();
 
   // Check profile completion
   const isProfileComplete =
@@ -85,6 +105,8 @@ export default async function DashboardPage(): Promise<JSX.Element> {
   return (
     <div className="min-h-screen bg-nordic-neutral-50 py-8">
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+        {dbError ? <DbUnavailableBanner message={dbError} /> : null}
+
         {/* Header */}
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-nordic-neutral-900 mb-2">

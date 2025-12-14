@@ -15,6 +15,7 @@ import {
   getUserFriendlyMessage,
   toSocialError,
 } from "@/lib/social";
+import { getDatabaseUnavailableMessage, isDatabaseUnavailableError } from "@/lib/db-errors";
 
 export const dynamic = "force-dynamic";
 
@@ -134,6 +135,11 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
     return NextResponse.redirect(`${baseUrl}/settings?connected=linkedin&success=true`);
   } catch (error) {
     console.error("[LinkedIn Callback] Error:", error);
+
+    if (isDatabaseUnavailableError(error)) {
+      return redirectWithError(request, getDatabaseUnavailableMessage(error));
+    }
+
     const socialError = toSocialError(error, "linkedin");
     return redirectWithError(request, getUserFriendlyMessage(socialError));
   }

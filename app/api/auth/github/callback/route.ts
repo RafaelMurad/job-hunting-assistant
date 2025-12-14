@@ -10,6 +10,7 @@ import { NextResponse, type NextRequest } from "next/server";
 import { cookies } from "next/headers";
 import { prisma } from "@/lib/db";
 import { githubProvider, encryptToken, getUserFriendlyMessage, toSocialError } from "@/lib/social";
+import { getDatabaseUnavailableMessage, isDatabaseUnavailableError } from "@/lib/db-errors";
 
 export const dynamic = "force-dynamic";
 
@@ -129,6 +130,11 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
     return NextResponse.redirect(`${baseUrl}/settings?connected=github&success=true`);
   } catch (error) {
     console.error("[GitHub Callback] Error:", error);
+
+    if (isDatabaseUnavailableError(error)) {
+      return redirectWithError(request, getDatabaseUnavailableMessage(error));
+    }
+
     const socialError = toSocialError(error, "github");
     return redirectWithError(request, getUserFriendlyMessage(socialError));
   }

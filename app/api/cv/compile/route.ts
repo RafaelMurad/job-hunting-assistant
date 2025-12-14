@@ -13,6 +13,7 @@ import { compileLatexToPdf, validateLatexSource, LaTeXCompilationError } from "@
 import { uploadCVPdf, uploadCVLatex } from "@/lib/storage";
 import { prisma } from "@/lib/db";
 import { auth } from "@/lib/auth";
+import { getDatabaseUnavailableMessage, isDatabaseUnavailableError } from "@/lib/db-errors";
 
 /**
  * POST /api/cv/compile
@@ -101,6 +102,14 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     }
   } catch (error) {
     console.error("[CV Compile] Error:", error);
+    if (isDatabaseUnavailableError(error)) {
+      return NextResponse.json(
+        {
+          error: getDatabaseUnavailableMessage(error),
+        },
+        { status: 503 }
+      );
+    }
     return NextResponse.json(
       {
         error: error instanceof Error ? error.message : "Compilation failed",

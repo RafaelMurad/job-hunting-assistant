@@ -26,6 +26,7 @@ import {
 import { type CVTemplateId } from "@/lib/cv-templates";
 import { uploadCVPdf, uploadCVLatex, deleteCVFiles } from "@/lib/storage";
 import { parseAIError } from "@/lib/utils";
+import { getDatabaseUnavailableMessage, isDatabaseUnavailableError } from "@/lib/db-errors";
 
 /**
  * POST /api/cv/store
@@ -172,6 +173,9 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     }
   } catch (error) {
     console.error("[CV Store] Unexpected error:", error);
+    if (isDatabaseUnavailableError(error)) {
+      return NextResponse.json({ error: getDatabaseUnavailableMessage(error) }, { status: 503 });
+    }
     return NextResponse.json(
       { error: "An unexpected error occurred. Please try again." },
       { status: 500 }
@@ -243,6 +247,9 @@ export async function GET(_request: NextRequest): Promise<NextResponse> {
     });
   } catch (error) {
     console.error("[CV Store] GET error:", error);
+    if (isDatabaseUnavailableError(error)) {
+      return NextResponse.json({ error: getDatabaseUnavailableMessage(error) }, { status: 503 });
+    }
     return NextResponse.json({ error: "Failed to retrieve CV data." }, { status: 500 });
   }
 }
@@ -282,6 +289,9 @@ export async function DELETE(_request: NextRequest): Promise<NextResponse> {
     });
   } catch (error) {
     console.error("[CV Store] DELETE error:", error);
+    if (isDatabaseUnavailableError(error)) {
+      return NextResponse.json({ error: getDatabaseUnavailableMessage(error) }, { status: 503 });
+    }
     return NextResponse.json({ error: "Failed to delete CV." }, { status: 500 });
   }
 }
