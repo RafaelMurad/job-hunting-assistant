@@ -32,6 +32,8 @@ const mockUser: User = {
   cvLatexUrl: null,
   cvFilename: null,
   cvUploadedAt: null,
+  passwordHash: null,
+  passwordUpdatedAt: null,
   role: UserRole.USER,
   isTrusted: false,
   isVerified: false,

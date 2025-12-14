@@ -15,6 +15,10 @@ model User {
   phone    String?
   location String
 
+  // Credentials auth (email/password)
+  passwordHash      String?   @db.Text
+  passwordUpdatedAt DateTime?
+
   // CV content stored as text
   summary    String // Professional summary
   experience String // Formatted text of work experience

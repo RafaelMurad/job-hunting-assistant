@@ -41,7 +41,7 @@ Or see **[SETUP.md](./SETUP.md)** for complete setup instructions.
 ```bash
 # Get free Gemini API key from: https://aistudio.google.com/app/apikey
 npm install
-npx prisma migrate dev --name init
+npm run db:push
 # Add GEMINI_API_KEY to .env.local
 npm run dev
 ```

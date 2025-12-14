@@ -5,6 +5,9 @@ import { useSearchParams } from "next/navigation";
 import { Suspense, useState, type JSX } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { trpc } from "@/lib/trpc/client";
 
 /**
  * OAuth Provider Button
@@ -135,9 +138,50 @@ function LoginContent(): JSX.Element {
 
   const [loadingProvider, setLoadingProvider] = useState<string | null>(null);
 
+  const [mode, setMode] = useState<"signin" | "signup">("signin");
+  const [email, setEmail] = useState<string>("");
+  const [password, setPassword] = useState<string>("");
+  const [name, setName] = useState<string>("");
+
+  const [credentialsError, setCredentialsError] = useState<string | null>(null);
+
+  const signUpMutation = trpc.user.signUpWithCredentials.useMutation();
+
   const handleSignIn = (provider: string): void => {
     setLoadingProvider(provider);
     void signIn(provider, { callbackUrl });
+  };
+
+  const handleCredentialsSignIn = (): void => {
+    setCredentialsError(null);
+    setLoadingProvider("credentials");
+    void signIn("credentials", {
+      callbackUrl,
+      email,
+      password,
+    });
+  };
+
+  const handleCredentialsSignUp = async (): Promise<void> => {
+    setCredentialsError(null);
+    setLoadingProvider("credentials");
+    try {
+      await signUpMutation.mutateAsync({
+        email,
+        password,
+        name,
+      });
+      await signIn("credentials", {
+        callbackUrl,
+        email,
+        password,
+      });
+    } catch (e) {
+      const message = e instanceof Error ? e.message : "Failed to create account.";
+      setCredentialsError(message);
+    } finally {
+      setLoadingProvider(null);
+    }
   };
 
   return (
@@ -152,6 +196,104 @@ function LoginContent(): JSX.Element {
         <CardContent>
           <ErrorBanner error={error} />
 
+          {credentialsError ? (
+            <div className="mb-6 rounded-lg border border-red-300 bg-red-50 p-4">
+              <div className="flex items-center gap-2">
+                <svg
+                  className="h-5 w-5 shrink-0 text-red-600"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  strokeWidth={1.5}
+                  stroke="currentColor"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    d="M12 9v3.75m9-.75a9 9 0 11-18 0 9 9 0 0118 0zm-9 3.75h.008v.008H12v-.008z"
+                  />
+                </svg>
+                <span className="text-sm font-medium text-red-800">{credentialsError}</span>
+              </div>
+            </div>
+          ) : null}
+
+          <div className="space-y-3">
+            {mode === "signup" ? (
+              <div className="space-y-2">
+                <Label htmlFor="name">Name</Label>
+                <Input
+                  id="name"
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                  placeholder="Your name"
+                  autoComplete="name"
+                />
+              </div>
+            ) : null}
+
+            <div className="space-y-2">
+              <Label htmlFor="email">Email</Label>
+              <Input
+                id="email"
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                placeholder="you@example.com"
+                autoComplete="email"
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="password">Password</Label>
+              <Input
+                id="password"
+                type="password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                placeholder="At least 10 characters"
+                autoComplete={mode === "signup" ? "new-password" : "current-password"}
+              />
+            </div>
+
+            {mode === "signin" ? (
+              <Button
+                className="w-full h-12"
+                onClick={handleCredentialsSignIn}
+                disabled={loadingProvider === "credentials"}
+              >
+                {loadingProvider === "credentials" ? "Signing in..." : "Sign in"}
+              </Button>
+            ) : (
+              <Button
+                className="w-full h-12"
+                onClick={() => void handleCredentialsSignUp()}
+                disabled={loadingProvider === "credentials"}
+              >
+                {loadingProvider === "credentials" ? "Creating account..." : "Create account"}
+              </Button>
+            )}
+
+            <Button
+              variant="ghost"
+              className="w-full"
+              onClick={() => {
+                setCredentialsError(null);
+                setMode(mode === "signin" ? "signup" : "signin");
+              }}
+            >
+              {mode === "signin" ? "Create an account" : "Back to sign in"}
+            </Button>
+          </div>
+
+          <div className="relative my-6">
+            <div className="absolute inset-0 flex items-center">
+              <div className="w-full border-t border-slate-200" />
+            </div>
+            <div className="relative flex justify-center text-sm">
+              <span className="bg-white px-2 text-slate-500">or continue with</span>
+            </div>
+          </div>
+
           <div className="space-y-3">
             <OAuthButton
               label="Continue with LinkedIn"
@@ -159,15 +301,6 @@ function LoginContent(): JSX.Element {
               loading={loadingProvider === "linkedin"}
               onClick={() => handleSignIn("linkedin")}
             />
-
-            <div className="relative my-4">
-              <div className="absolute inset-0 flex items-center">
-                <div className="w-full border-t border-slate-200" />
-              </div>
-              <div className="relative flex justify-center text-sm">
-                <span className="bg-white px-2 text-slate-500">or</span>
-              </div>
-            </div>
 
             <OAuthButton
               label="Continue with GitHub"

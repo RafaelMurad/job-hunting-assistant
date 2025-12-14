@@ -12,14 +12,58 @@ import { encryptToken } from "@/lib/social";
 import { type UserRole } from "@/types";
 import { PrismaAdapter } from "@auth/prisma-adapter";
 import NextAuth from "next-auth";
+import Credentials from "next-auth/providers/credentials";
 import GitHub from "next-auth/providers/github";
 import Google from "next-auth/providers/google";
 import LinkedIn from "next-auth/providers/linkedin";
+import bcrypt from "bcryptjs";
 
 export const { handlers, signIn, signOut, auth } = NextAuth({
   adapter: PrismaAdapter(prisma),
 
   providers: [
+    Credentials({
+      name: "Email and Password",
+      credentials: {
+        email: { label: "Email", type: "email" },
+        password: { label: "Password", type: "password" },
+      },
+      async authorize(credentials) {
+        const email = String(credentials?.email ?? "")
+          .trim()
+          .toLowerCase();
+        const password = String(credentials?.password ?? "");
+
+        if (!email || !password) return null;
+
+        const user = await prisma.user.findUnique({
+          where: { email },
+          select: {
+            id: true,
+            email: true,
+            name: true,
+            image: true,
+            passwordHash: true,
+            role: true,
+            isTrusted: true,
+          },
+        });
+
+        if (!user?.passwordHash) return null;
+
+        const ok = await bcrypt.compare(password, user.passwordHash);
+        if (!ok) return null;
+
+        return {
+          id: user.id,
+          email: user.email,
+          name: user.name,
+          image: user.image,
+          role: user.role,
+          isTrusted: user.isTrusted,
+        };
+      },
+    }),
     LinkedIn({
       clientId: process.env.AUTH_LINKEDIN_ID!,
       clientSecret: process.env.AUTH_LINKEDIN_SECRET!,
@@ -66,6 +110,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
       // On sign in, add user data to token
       if (user?.id) {
         token.id = user.id;
+        token.email = user.email ?? null;
         token.role = user.role ?? "USER";
         token.isTrusted = user.isTrusted ?? false;
       }
@@ -104,6 +149,11 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
      * Creates/updates SocialProfile for GitHub users to enable data sync
      */
     async signIn({ user, account, profile: _profile }) {
+      // Credentials sign-ins should not run OAuth linking/creation logic.
+      if (account?.provider === "credentials") {
+        return !!user.email;
+      }
+
       // Reject if no email
       if (!user.email) {
         return false;

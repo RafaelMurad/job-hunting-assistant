@@ -34,7 +34,7 @@ GEMINI_API_KEY="..."
 ### 3. Set Up Database
 
 ```bash
-npx prisma migrate dev
+npm run db:push
 ```
 
 ### 4. Start Development Server
@@ -89,7 +89,9 @@ Open http://localhost:3000
 ## Troubleshooting
 
 **Issue**: Prisma errors
-**Fix**: Run `npx prisma generate && npx prisma migrate dev`
+**Fix**: Run `npx prisma generate && npm run db:push`
+
+**Note on migrations**: `prisma migrate dev` currently fails in this repo if you have the legacy SQLite migration history checked in under `prisma/migrations/`. If you want a migration-based workflow, we should do a one-time reset of the migration history to PostgreSQL and then use `npm run db:migrate` / `npm run db:migrate:deploy` going forward.
 
 **Issue**: API errors during analysis
 **Fix**: Verify your selected AI provider key is set in `.env.local` (e.g., `GEMINI_API_KEY`)
