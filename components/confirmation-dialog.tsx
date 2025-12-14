@@ -36,8 +36,12 @@ export function ConfirmationDialog({
   isLoading = false,
 }: ConfirmationDialogProps): JSX.Element {
   const handleConfirm = async (): Promise<void> => {
-    await onConfirm();
-    onOpenChange(false);
+    try {
+      await onConfirm();
+      onOpenChange(false);
+    } catch {
+      // Keep the dialog open so the caller can surface the error.
+    }
   };
 
   return (

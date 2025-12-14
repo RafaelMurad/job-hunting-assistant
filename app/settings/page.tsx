@@ -1,9 +1,11 @@
 "use client";
 
+import { ConfirmationDialog } from "@/components/confirmation-dialog";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { useFeatureFlag } from "@/lib/feature-flags/hooks";
 import { trpc } from "@/lib/trpc/client";
+import { signOut } from "next-auth/react";
 import { useSearchParams } from "next/navigation";
 import { Suspense, useState, type JSX } from "react";
 
@@ -112,6 +114,10 @@ function SettingsPageContent(): JSX.Element {
   // Get user
   const { data: userData, isLoading: userLoading } = trpc.user.get.useQuery();
 
+  // Account management
+  const { data: signInMethods, refetch: refetchSignInMethods } =
+    trpc.account.getSignInMethods.useQuery();
+
   // Get configured providers
   const { data: configuredProviders } = trpc.social.getConfiguredProviders.useQuery();
 
@@ -126,6 +132,20 @@ function SettingsPageContent(): JSX.Element {
     },
   });
 
+  const unlinkProviderMutation = trpc.account.unlinkProvider.useMutation({
+    onSuccess: () => {
+      void refetchSignInMethods();
+    },
+  });
+
+  const exportDataMutation = trpc.account.exportData.useMutation();
+
+  const deleteAccountMutation = trpc.account.deleteAccount.useMutation({
+    onSuccess: () => {
+      void signOut({ callbackUrl: "/login" });
+    },
+  });
+
   const syncMutation = trpc.social.sync.useMutation({
     onSuccess: () => {
       void refetchIntegrations();
@@ -134,6 +154,17 @@ function SettingsPageContent(): JSX.Element {
 
   // Local state
   const [syncingProvider, setSyncingProvider] = useState<string | null>(null);
+  const [unlinkDialogOpen, setUnlinkDialogOpen] = useState(false);
+  const [providerToUnlink, setProviderToUnlink] = useState<string | null>(null);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+
+  const formatProviderLabel = (provider: string): string => {
+    const normalized = provider.toLowerCase();
+    if (normalized === "github") return "GitHub";
+    if (normalized === "google") return "Google";
+    if (normalized === "linkedin") return "LinkedIn";
+    return provider;
+  };
 
   const handleConnect = (provider: "github" | "linkedin"): void => {
     // Redirect to OAuth endpoint (NextAuth handles user session)
@@ -153,6 +184,40 @@ function SettingsPageContent(): JSX.Element {
     }
   };
 
+  const handleExportData = async (): Promise<void> => {
+    try {
+      const payload = await exportDataMutation.mutateAsync();
+      const json = JSON.stringify(payload, null, 2);
+
+      const blob = new Blob([json], { type: "application/json" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `job-hunting-assistant-export-${new Date().toISOString().slice(0, 10)}.json`;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      URL.revokeObjectURL(url);
+    } catch {
+      // Error message is surfaced via exportDataMutation.error
+    }
+  };
+
+  const openUnlinkDialog = (provider: string): void => {
+    setProviderToUnlink(provider);
+    setUnlinkDialogOpen(true);
+  };
+
+  const confirmUnlinkProvider = async (): Promise<void> => {
+    if (!providerToUnlink) return;
+    await unlinkProviderMutation.mutateAsync({ provider: providerToUnlink });
+    setProviderToUnlink(null);
+  };
+
+  const confirmDeleteAccount = async (): Promise<void> => {
+    await deleteAccountMutation.mutateAsync();
+  };
+
   if (userLoading) {
     return (
       <div className="flex min-h-screen items-center justify-center">
@@ -163,6 +228,9 @@ function SettingsPageContent(): JSX.Element {
 
   const githubStatus = integrations?.find((i) => i.provider === "github");
   const linkedInStatus = integrations?.find((i) => i.provider === "linkedin");
+  const oauthProviders = signInMethods?.providers ?? [];
+  const hasPassword = signInMethods?.hasPassword ?? false;
+  const canUnlinkOAuthProvider = oauthProviders.length > 1 || hasPassword;
 
   return (
     <div className="min-h-screen bg-gray-50 py-12">
@@ -358,7 +426,116 @@ function SettingsPageContent(): JSX.Element {
                   Edit Profile
                 </Button>
               </div>
+
+              <div className="rounded-lg border border-gray-200 p-4">
+                <div className="flex items-start justify-between gap-4">
+                  <div>
+                    <h3 className="font-semibold text-gray-900">Sign-in Methods</h3>
+                    <p className="text-sm text-gray-500">Manage how you sign in to your account</p>
+                  </div>
+                </div>
+
+                <div className="mt-4 space-y-3">
+                  <div className="flex items-center justify-between rounded-lg border border-gray-100 p-3">
+                    <div>
+                      <p className="font-medium text-gray-900">Password</p>
+                      <p className="text-sm text-gray-500">
+                        {hasPassword ? "Password is set" : "No password set"}
+                      </p>
+                    </div>
+                  </div>
+
+                  {oauthProviders.length > 0 ? (
+                    oauthProviders.map((provider) => (
+                      <div
+                        key={provider}
+                        className="flex items-center justify-between rounded-lg border border-gray-100 p-3"
+                      >
+                        <div>
+                          <p className="font-medium text-gray-900">
+                            {formatProviderLabel(provider)}
+                          </p>
+                          <p className="text-sm text-gray-500">Connected</p>
+                        </div>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => openUnlinkDialog(provider)}
+                          disabled={!canUnlinkOAuthProvider || unlinkProviderMutation.isPending}
+                          className="text-red-600 hover:bg-red-50"
+                        >
+                          Unlink
+                        </Button>
+                      </div>
+                    ))
+                  ) : (
+                    <p className="text-sm text-gray-500">No OAuth providers connected.</p>
+                  )}
+
+                  {!canUnlinkOAuthProvider && oauthProviders.length > 0 && !hasPassword ? (
+                    <p className="text-sm text-gray-500">
+                      You can’t unlink your only sign-in method.
+                    </p>
+                  ) : null}
+
+                  {unlinkProviderMutation.error ? (
+                    <p className="text-sm text-red-600">{unlinkProviderMutation.error.message}</p>
+                  ) : null}
+                </div>
+              </div>
+
+              <div className="rounded-lg border border-gray-200 p-4">
+                <div>
+                  <h3 className="font-semibold text-gray-900">Data</h3>
+                  <p className="text-sm text-gray-500">Export or delete your account data</p>
+                </div>
+
+                <div className="mt-4 flex flex-col gap-3 sm:flex-row sm:items-center">
+                  <Button
+                    variant="outline"
+                    onClick={() => void handleExportData()}
+                    disabled={exportDataMutation.isPending}
+                  >
+                    {exportDataMutation.isPending ? "Exporting..." : "Export Data"}
+                  </Button>
+                  <Button variant="destructive" onClick={() => setDeleteDialogOpen(true)}>
+                    Delete Account
+                  </Button>
+                </div>
+
+                {exportDataMutation.error ? (
+                  <p className="mt-2 text-sm text-red-600">{exportDataMutation.error.message}</p>
+                ) : null}
+                {deleteAccountMutation.error ? (
+                  <p className="mt-2 text-sm text-red-600">{deleteAccountMutation.error.message}</p>
+                ) : null}
+              </div>
             </div>
+
+            <ConfirmationDialog
+              open={unlinkDialogOpen}
+              onOpenChange={(open) => {
+                setUnlinkDialogOpen(open);
+                if (!open) setProviderToUnlink(null);
+              }}
+              title={`Unlink ${providerToUnlink ? formatProviderLabel(providerToUnlink) : "provider"}?`}
+              description="You won’t be able to sign in with this provider after unlinking."
+              variant="destructive"
+              confirmText="Unlink"
+              isLoading={unlinkProviderMutation.isPending}
+              onConfirm={confirmUnlinkProvider}
+            />
+
+            <ConfirmationDialog
+              open={deleteDialogOpen}
+              onOpenChange={setDeleteDialogOpen}
+              title="Delete your account?"
+              description="This permanently deletes your account and uploaded CV files. This action cannot be undone."
+              variant="destructive"
+              confirmText="Delete"
+              isLoading={deleteAccountMutation.isPending}
+              onConfirm={confirmDeleteAccount}
+            />
           </CardContent>
         </Card>
       </div>

@@ -12,6 +12,7 @@ import { applicationsRouter } from "./routers/applications";
 import { uxRouter } from "./routers/ux";
 import { socialRouter } from "./routers/social";
 import { adminRouter } from "./routers/admin";
+import { accountRouter } from "./routers/account";
 
 /**
  * Main application router.
@@ -19,6 +20,7 @@ import { adminRouter } from "./routers/admin";
  */
 export const appRouter = router({
   user: userRouter,
+  account: accountRouter,
   analyze: analyzeRouter,
   applications: applicationsRouter,
   ux: uxRouter,
