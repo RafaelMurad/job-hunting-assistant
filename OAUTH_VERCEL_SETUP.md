@@ -11,12 +11,16 @@ This guide walks through configuring GitHub, Google, and LinkedIn OAuth for your
 3. Update "Authorization callback URL":
    - **From:** `http://localhost:3000/api/auth/callback/github`
    - **To:** `https://job-hunting-assistant.vercel.app/api/auth/callback/github`
-4. **Keep localhost for local dev** - you can add multiple URLs, separated by commas or newlines
 
-After updating, your callback URLs should be:
+4. **Important (GitHub limitation):** GitHub OAuth Apps only support **one** callback URL per app.
+
+   Recommended options:
+   - **Best:** Create **separate OAuth Apps** for local dev and production.
+   - **OK for quick testing:** Temporarily switch the callback URL when testing prod, then switch it back for local dev.
+
+After updating, your callback URL should be:
 
 ```
-http://localhost:3000/api/auth/callback/github
 https://job-hunting-assistant.vercel.app/api/auth/callback/github
 ```
 
@@ -100,6 +104,8 @@ Make sure these are set in Vercel (same values as your `.env`):
 - `DATABASE_URL` ✓
 - `NEXTAUTH_URL` (new)
 
+Tip: Keep `AUTH_SECRET` stable across deploys. If it changes, existing sessions become invalid.
+
 ---
 
 ## Testing
@@ -123,6 +129,16 @@ Make sure these are set in Vercel (same values as your `.env`):
 - ✓ Set `NEXTAUTH_URL` in Vercel environment
 - ✓ Redeploy after changing environment variables
 - ✓ Wait 1-2 minutes for Vercel to fully deploy
+
+### Stuck on /login after successful sign-in (production)
+
+If `/api/auth/session` returns `200` but navigating to `/dashboard`/`/profile` redirects back to `/login`, the route-protection proxy may not be reading the secure session cookie.
+
+Checklist:
+
+- ✓ Confirm `AUTH_SECRET` and `NEXTAUTH_URL` are set correctly in Vercel (Production)
+- ✓ Confirm you are using the correct HTTPS URL in `NEXTAUTH_URL`
+- ✓ Deploy the latest `proxy.ts` changes (the proxy forces secure-cookie parsing in production)
 
 ### Local dev broken after changes
 

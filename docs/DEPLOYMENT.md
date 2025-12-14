@@ -88,6 +88,19 @@ vercel env add GEMINI_API_KEY production
 # Optional: Add other AI providers
 vercel env add OPENAI_API_KEY production
 vercel env add ANTHROPIC_API_KEY production
+
+# Authentication (required)
+vercel env add AUTH_SECRET production
+vercel env add NEXTAUTH_URL production
+
+# OAuth providers (at least one required for sign-in)
+vercel env add AUTH_GITHUB_ID production
+vercel env add AUTH_GITHUB_SECRET production
+# Optional:
+vercel env add AUTH_GOOGLE_ID production
+vercel env add AUTH_GOOGLE_SECRET production
+vercel env add AUTH_LINKEDIN_ID production
+vercel env add AUTH_LINKEDIN_SECRET production
 ```
 
 **Option B: Via Vercel Dashboard**
@@ -164,8 +177,8 @@ After first deployment, run migrations:
 vercel env pull .env.production  # Download production env vars
 DATABASE_URL="your-production-url" npx prisma migrate deploy
 
-# Option B: Migrations run automatically during build
-# (Already configured in build:production script)
+# Note: Migrations are not run automatically during Vercel builds.
+# `build:production` currently runs `prisma generate && next build`.
 ```
 
 ---
@@ -208,7 +221,7 @@ DATABASE_URL="your-production-url" npx prisma migrate deploy
 ## 🛠️ Production Scripts Reference
 
 ```bash
-# Build for production (with migrations)
+# Build for production
 npm run build:production
 
 # Database commands

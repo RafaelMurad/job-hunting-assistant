@@ -53,7 +53,7 @@ Open http://localhost:3000
 ## 🚀 Tech Stack
 
 - **Frontend:** Next.js 16, TypeScript, TailwindCSS, Shadcn/ui
-- **Backend:** Next.js API Routes, Prisma ORM, PostgreSQL (Neon)
+- **Backend:** App Router route handlers + tRPC, Prisma ORM, PostgreSQL (Neon)
 - **AI:** Multi-provider support
   - Google Gemini 2.0 Flash (FREE - 1,500 requests/day) ⭐ Recommended
   - OpenAI GPT-4o-mini (Paid - ~$0.0005/analysis)
@@ -65,6 +65,7 @@ Open http://localhost:3000
 
 - **[SETUP.md](./SETUP.md)** - Quick start guide and local setup
 - **[DEPLOYMENT.md](./docs/DEPLOYMENT.md)** - Production deployment to Vercel 🚀
+- **[Docs Index](./docs/README.md)** - Central index (less doc sprawl)
 - **[STRICT_RULES.md](./docs/STRICT_RULES.md)** - Code quality and validation rules
 - **[Roadmap](./docs/ROADMAP.md)** - What’s next (v1.2+ milestones)
 - **[Implementation Plan (Archived)](./docs/archive/IMPLEMENTATION_PLAN.md)** - MVP build notes (historical)
@@ -81,6 +82,8 @@ This app is production-ready with:
 - ✅ **Pre-Deployment Validation** - Automated checks before every deploy
 - ✅ **Multi-Layer Quality Gates** - Pre-commit, pre-push, and CI checks
 - ✅ **Security Headers** - XSS protection, frame-deny, CSP
+
+Note: Route protection uses the Next.js proxy pattern (`proxy.ts`) (middleware is not used).
 
 **Deploy now:** See [DEPLOYMENT.md](./docs/DEPLOYMENT.md) for step-by-step guide.
 

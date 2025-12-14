@@ -106,6 +106,9 @@ Every deployment goes through 4 validation layers:
 **Required (Production):**
 
 - `DATABASE_URL` - PostgreSQL connection string
+- `AUTH_SECRET` - NextAuth JWT secret (required for route protection)
+- `NEXTAUTH_URL` - Production URL (recommended; helps cookie/redirect correctness)
+- `AUTH_GITHUB_ID` / `AUTH_GITHUB_SECRET` - OAuth sign-in (or Google/LinkedIn)
 - `AI_PROVIDER` - `gemini`, `openai`, or `claude`
 - `GEMINI_API_KEY` - Your Gemini API key
 
@@ -113,6 +116,10 @@ Every deployment goes through 4 validation layers:
 
 - `OPENAI_API_KEY` - If using OpenAI
 - `ANTHROPIC_API_KEY` - If using Claude
+- `AUTH_GOOGLE_ID` / `AUTH_GOOGLE_SECRET` - Google sign-in
+- `AUTH_LINKEDIN_ID` / `AUTH_LINKEDIN_SECRET` - LinkedIn sign-in
+- `SOCIAL_ENCRYPTION_KEY` - Required if using social integrations (GitHub/LinkedIn sync)
+- `OWNER_EMAIL` - Required for OWNER role assignment (admin features)
 
 **View current variables:**
 
@@ -130,7 +137,9 @@ vercel env pull .env.production
 
 ## Database Migrations
 
-Migrations run automatically during Vercel build (configured in `build:production` script).
+Migrations are **not** run automatically during Vercel builds.
+
+`build:production` currently runs `prisma generate && next build` (no `prisma migrate deploy`).
 
 **Manual migration:**
 
