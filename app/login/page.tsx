@@ -1,7 +1,7 @@
 "use client";
 
 import { signIn } from "next-auth/react";
-import { useSearchParams } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { Suspense, useState, type JSX } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -132,6 +132,7 @@ function ErrorBanner({ error }: { error: string | null }): JSX.Element | null {
  * Login Page Content - uses searchParams
  */
 function LoginContent(): JSX.Element {
+  const router = useRouter();
   const searchParams = useSearchParams();
   const error = searchParams.get("error");
   const callbackUrl = searchParams.get("callbackUrl") ?? "/dashboard";
@@ -146,6 +147,62 @@ function LoginContent(): JSX.Element {
   const [credentialsError, setCredentialsError] = useState<string | null>(null);
 
   const signUpMutation = trpc.user.signUpWithCredentials.useMutation();
+
+  const passwordTooShort = password.trim().length > 0 && password.trim().length < 10;
+
+  const clearAuthErrorQueryParams = (): void => {
+    // Clear stale NextAuth `error` / `code` params when switching modes.
+    // Keep callbackUrl intact if present.
+    const href = globalThis.location?.href;
+    if (!href) return;
+    const url = new URL(href);
+    url.searchParams.delete("error");
+    url.searchParams.delete("code");
+    router.replace(url.pathname + url.search);
+  };
+
+  const formatTrpcErrorMessage = (err: unknown): string => {
+    const fallback = "Failed to create account.";
+    if (!err) return fallback;
+
+    // tRPC v11 often exposes Zod errors on `shape.data.zodError`.
+    const anyErr = err as {
+      message?: unknown;
+      data?: { zodError?: { fieldErrors?: Record<string, string[]>; formErrors?: string[] } };
+      shape?: {
+        data?: { zodError?: { fieldErrors?: Record<string, string[]>; formErrors?: string[] } };
+      };
+    };
+
+    const zodError = anyErr.data?.zodError ?? anyErr.shape?.data?.zodError;
+    const fieldErrors = zodError?.fieldErrors;
+    if (fieldErrors) {
+      const firstField = Object.keys(fieldErrors)[0];
+      const firstMessage = firstField ? fieldErrors[firstField]?.[0] : undefined;
+      if (firstMessage) return firstMessage;
+    }
+
+    const msg = typeof anyErr.message === "string" ? anyErr.message : fallback;
+
+    // If server serialized Zod issues into a JSON string, extract the first message.
+    try {
+      const parsed = JSON.parse(msg) as unknown;
+      if (Array.isArray(parsed) && parsed.length > 0) {
+        const first = parsed[0] as { message?: unknown; path?: unknown };
+        if (typeof first.message === "string") {
+          const path = Array.isArray(first.path) ? String(first.path[0] ?? "") : "";
+          if (path === "password") return first.message;
+          if (path === "email") return first.message;
+          if (path === "name") return first.message;
+          return first.message;
+        }
+      }
+    } catch {
+      // ignore
+    }
+
+    return msg;
+  };
 
   const handleSignIn = (provider: string): void => {
     setLoadingProvider(provider);
@@ -164,6 +221,20 @@ function LoginContent(): JSX.Element {
 
   const handleCredentialsSignUp = async (): Promise<void> => {
     setCredentialsError(null);
+
+    if (!name.trim()) {
+      setCredentialsError("Name is required.");
+      return;
+    }
+    if (!email.trim()) {
+      setCredentialsError("Email is required.");
+      return;
+    }
+    if (passwordTooShort) {
+      setCredentialsError("Password must be at least 10 characters.");
+      return;
+    }
+
     setLoadingProvider("credentials");
     try {
       await signUpMutation.mutateAsync({
@@ -177,8 +248,7 @@ function LoginContent(): JSX.Element {
         password,
       });
     } catch (e) {
-      const message = e instanceof Error ? e.message : "Failed to create account.";
-      setCredentialsError(message);
+      setCredentialsError(formatTrpcErrorMessage(e));
     } finally {
       setLoadingProvider(null);
     }
@@ -190,11 +260,11 @@ function LoginContent(): JSX.Element {
         <CardHeader className="text-center">
           <CardTitle className="text-2xl font-bold text-slate-900">Welcome Back</CardTitle>
           <CardDescription className="text-slate-600">
-            Sign in to continue to Job Hunt AI
+            {mode === "signup" ? "Create your account" : "Sign in to continue to Job Hunt AI"}
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <ErrorBanner error={error} />
+          {mode === "signin" ? <ErrorBanner error={error} /> : null}
 
           {credentialsError ? (
             <div className="mb-6 rounded-lg border border-red-300 bg-red-50 p-4">
@@ -253,6 +323,9 @@ function LoginContent(): JSX.Element {
                 placeholder="At least 10 characters"
                 autoComplete={mode === "signup" ? "new-password" : "current-password"}
               />
+              {mode === "signup" && passwordTooShort ? (
+                <p className="text-sm text-red-700">Password must be at least 10 characters.</p>
+              ) : null}
             </div>
 
             {mode === "signin" ? (
@@ -279,6 +352,7 @@ function LoginContent(): JSX.Element {
               onClick={() => {
                 setCredentialsError(null);
                 setMode(mode === "signin" ? "signup" : "signin");
+                clearAuthErrorQueryParams();
               }}
             >
               {mode === "signin" ? "Create an account" : "Back to sign in"}
