@@ -8,6 +8,7 @@ import { TRPCProvider } from "@/lib/trpc/provider";
 import { AuthProvider } from "@/components/auth-provider";
 import { UserMenu } from "@/components/user-menu";
 import { MobileMenu } from "@/components/mobile-menu";
+import { auth } from "@/lib/auth";
 
 const inter = Inter({
   subsets: ["latin"],
@@ -19,11 +20,14 @@ export const metadata: Metadata = {
   description: "Analyze jobs, generate cover letters, and track applications with AI",
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: ReactNode;
-}>): JSX.Element {
+}>): Promise<JSX.Element> {
+  const session = await auth();
+  const isOwner = session?.user?.role === "OWNER";
+
   return (
     <html lang="en">
       <body className={`${inter.variable} font-sans antialiased bg-slate-50`}>
@@ -80,12 +84,14 @@ export default function RootLayout({
                         >
                           Settings
                         </Link>
-                        <Link
-                          href="/admin/flags"
-                          className="text-slate-400 hover:text-slate-600 transition-colors text-sm"
-                        >
-                          Admin
-                        </Link>
+                        {isOwner ? (
+                          <Link
+                            href="/admin/flags"
+                            className="text-slate-400 hover:text-slate-600 transition-colors text-sm"
+                          >
+                            Admin
+                          </Link>
+                        ) : null}
                       </div>
                     </div>
                     {/* User Menu */}

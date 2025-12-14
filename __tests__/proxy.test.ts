@@ -130,7 +130,7 @@ describe("Middleware - Route Protection", () => {
       expect(response.headers.get("location")).toContain("error=unauthorized");
     });
 
-    it("allows ADMIN role to access admin pages", async () => {
+    it("blocks ADMIN role from admin pages", async () => {
       mockGetToken.mockResolvedValue({
         id: "admin-123",
         email: "admin@example.com",
@@ -141,7 +141,9 @@ describe("Middleware - Route Protection", () => {
       const req = new NextRequest(new URL("http://localhost:3000/admin/flags"));
       const response = await proxy(req);
 
-      expect(response.status).toBe(200);
+      expect(response.status).toBe(307);
+      expect(response.headers.get("location")).toContain("/dashboard");
+      expect(response.headers.get("location")).toContain("error=unauthorized");
     });
 
     it("allows OWNER role to access admin pages", async () => {
@@ -158,7 +160,7 @@ describe("Middleware - Route Protection", () => {
       expect(response.status).toBe(200);
     });
 
-    it("allows trusted users to access admin pages", async () => {
+    it("blocks trusted users from admin pages", async () => {
       mockGetToken.mockResolvedValue({
         id: "trusted-123",
         email: "trusted@example.com",
@@ -169,7 +171,9 @@ describe("Middleware - Route Protection", () => {
       const req = new NextRequest(new URL("http://localhost:3000/admin/ux-planner"));
       const response = await proxy(req);
 
-      expect(response.status).toBe(200);
+      expect(response.status).toBe(307);
+      expect(response.headers.get("location")).toContain("/dashboard");
+      expect(response.headers.get("location")).toContain("error=unauthorized");
     });
 
     it("blocks unauthenticated users from admin pages", async () => {

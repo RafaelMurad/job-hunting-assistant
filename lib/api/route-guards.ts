@@ -192,10 +192,10 @@ export function withAdminAuth<T = unknown>(
         return unauthorized();
       }
 
-      // Check for admin role
+      // Owner-only admin surface
       const userRole = session.user.role;
-      if (userRole !== "ADMIN" && userRole !== "OWNER") {
-        return forbidden("Admin access required");
+      if (userRole !== "OWNER") {
+        return forbidden("Owner access required");
       }
 
       return await handler(request, {

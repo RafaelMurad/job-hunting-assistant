@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, type JSX } from "react";
+import { useSession } from "next-auth/react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
@@ -12,6 +13,7 @@ interface MobileMenuProps {
 export function MobileMenu({ className }: MobileMenuProps): JSX.Element {
   const [isOpen, setIsOpen] = useState(false);
   const pathname = usePathname();
+  const { data: session } = useSession();
 
   // Prevent body scroll when menu is open
   useEffect(() => {
@@ -25,6 +27,8 @@ export function MobileMenu({ className }: MobileMenuProps): JSX.Element {
     };
   }, [isOpen]);
 
+  const isOwner = session?.user?.role === "OWNER";
+
   const navigationLinks = [
     { href: "/dashboard", label: "Dashboard" },
     { href: "/profile", label: "Profile" },
@@ -32,7 +36,7 @@ export function MobileMenu({ className }: MobileMenuProps): JSX.Element {
     { href: "/analyze", label: "Analyze Job" },
     { href: "/tracker", label: "Tracker" },
     { href: "/settings", label: "Settings" },
-    { href: "/admin/flags", label: "Admin", secondary: true },
+    ...(isOwner ? [{ href: "/admin/flags", label: "Admin", secondary: true }] : []),
   ];
 
   return (

@@ -83,8 +83,8 @@ const enforceAuth = t.middleware(async ({ ctx, next }) => {
 export const protectedProcedure = t.procedure.use(enforceAuth);
 
 /**
- * Middleware to enforce admin role.
- * Must be used after enforceAuth.
+ * Middleware to enforce admin access.
+ * Admin surfaces in this repo are OWNER-only.
  */
 const enforceAdmin = t.middleware(async ({ ctx, next }) => {
   if (!ctx.session?.user) {
@@ -94,10 +94,10 @@ const enforceAdmin = t.middleware(async ({ ctx, next }) => {
     });
   }
 
-  if (ctx.session.user.role !== "ADMIN" && ctx.session.user.role !== "OWNER") {
+  if (ctx.session.user.role !== "OWNER") {
     throw new TRPCError({
       code: "FORBIDDEN",
-      message: "You must be an admin to access this resource",
+      message: "Only the owner can access this resource",
     });
   }
 
@@ -111,7 +111,7 @@ const enforceAdmin = t.middleware(async ({ ctx, next }) => {
 });
 
 /**
- * Admin procedure - requires admin role.
+ * Admin procedure - OWNER-only.
  * Use this for admin-only endpoints.
  */
 export const adminProcedure = t.procedure.use(enforceAdmin);

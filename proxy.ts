@@ -176,9 +176,9 @@ export default async function proxy(req: NextRequest): Promise<NextResponse> {
   // Optimistic admin check (full authorization in Server Components)
   if (isAdminPath(pathname) && isAuthenticated) {
     const userRole = token?.role as string | undefined;
-    const isTrusted = token?.isTrusted as boolean | undefined;
 
-    const hasAdminAccess = userRole === "ADMIN" || userRole === "OWNER" || isTrusted === true;
+    // Owner-only admin surface
+    const hasAdminAccess = userRole === "OWNER";
 
     if (!hasAdminAccess) {
       return NextResponse.redirect(new URL("/dashboard?error=unauthorized", req.url));

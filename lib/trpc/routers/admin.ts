@@ -48,7 +48,7 @@ async function hasAdminAccess(
   // Get user
   const user = await prisma.user.findUnique({
     where: { id: userId },
-    select: { email: true, role: true, isTrusted: true },
+    select: { email: true, role: true },
   });
 
   if (!user) {
@@ -60,26 +60,11 @@ async function hasAdminAccess(
     return { hasAccess: true, role: "OWNER" };
   }
 
-  // Check if user has admin or owner role
-  if (user.role === "ADMIN" || user.role === "OWNER") {
-    return { hasAccess: true, role: user.role };
+  if (user.role === "OWNER") {
+    return { hasAccess: true, role: "OWNER" };
   }
 
-  // Check if user's email is in trusted list
-  const trustedEntry = await prisma.trustedEmail.findUnique({
-    where: { email: user.email },
-  });
-
-  if (trustedEntry) {
-    return { hasAccess: true, role: trustedEntry.role };
-  }
-
-  // Check if user is marked as trusted
-  if (user.isTrusted) {
-    return { hasAccess: true, role: "USER" };
-  }
-
-  return { hasAccess: false, role: "USER", reason: "Not authorized for admin access" };
+  return { hasAccess: false, role: "USER", reason: "Owner access required" };
 }
 
 // =============================================================================
