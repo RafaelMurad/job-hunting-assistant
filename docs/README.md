@@ -1,40 +1,30 @@
-# Learning Docs
+# Docs Index
 
-Quick-read guides (3-5 min each) documenting what I learned building this.
+This folder contains both **project documentation** (setup/deploy/security) and **learning notes** captured while building.
 
----
+## Start Here
 
-## 📚 Guides
+- Local setup: ../SETUP.md
+- Production deploy: ./DEPLOYMENT.md (quick reference also available at ../DEPLOY.md)
+- OAuth/Vercel configuration: ../OAUTH_VERCEL_SETUP.md
 
-**AI Integration:**
+## Project Docs
 
-- [ai-debugging.md](./ai-debugging.md) - Gemini API, defensive coding, multi-provider architecture
+- Security audit: ./SECURITY_AUDIT.md
+- Roadmap: ./ROADMAP.md
+- PRD: ./PRD.md
+- Testing: ./TESTING_SETUP.md
+- Strict rules / quality gates: ./STRICT_RULES.md
 
-**Next.js Patterns:**
+## Learning Docs (3–5 min reads)
 
-- [nextjs-patterns.md](./nextjs-patterns.md) - Server vs Client Components, API routes, file structure
+- AI integration: ./ai-debugging.md
+- Next.js patterns: ./nextjs-patterns.md
+- Database decisions: ./database-decisions.md
+- Code quality notes: ./code-quality.md
 
-**Database:**
+## Archive
 
-- [database-decisions.md](./database-decisions.md) - Prisma + PostgreSQL decisions (includes historical SQLite → Postgres notes)
+Historical documents live in ./archive/.
 
-**Code Quality:**
-
-- [code-quality.md](./code-quality.md) - ESLint cleanup, technical debt decisions, .env patterns
-
----
-
-## 🎯 Philosophy
-
-Each doc is:
-
-- **Focused** - One topic, one file
-- **Quick** - 3-5 min read max
-- **Practical** - Real problems, real solutions
-- **Honest** - Includes mistakes and trade-offs
-
-No fluff, no AI-generated filler. Just what I actually learned.
-
----
-
-**Last updated:** Dec 12, 2025
+**Last updated:** Dec 14, 2025

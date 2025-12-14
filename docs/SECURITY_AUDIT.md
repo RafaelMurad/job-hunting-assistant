@@ -28,7 +28,7 @@ This document identifies security vulnerabilities, data storage concerns, and ar
 **Current State:**
 
 - NextAuth.js v5 implemented with JWT strategy
-- Protected routes enforced via Next.js middleware
+- Protected routes enforced via Next.js proxy (`proxy.ts`) using `next-auth/jwt` `getToken()`
 - tRPC context includes session and protected procedures are available
 
 **Evidence:**
@@ -56,14 +56,14 @@ This document identifies security vulnerabilities, data storage concerns, and ar
 
 **Current State:**
 
-- `/admin/*` routes are protected in middleware
+- `/admin/*` routes are protected in the proxy (`proxy.ts`)
 - Non-admin users are redirected away from admin routes
 
 **Evidence:**
 
-- Admin pages have client-side guards only
-- No middleware.ts protecting `/admin/*` routes
-- Guards rely on user being in database with correct role
+- Admin pages include a client-side guard component
+- Route entry is additionally blocked/redirected by `proxy.ts` for non-admin roles
+- There is no `middleware.ts` file; the proxy is the edge gate
 
 **Risk:** Unauthorized access to admin functionality.
 
@@ -112,9 +112,11 @@ const OWNER_EMAIL = process.env.OWNER_EMAIL || "rafael@example.com";
 ```typescript
 // lib/social/token-manager.ts
 if (process.env.NODE_ENV === "development") {
-  console.warn("[TokenManager] Warning: Using development encryption key...");
-  return Buffer.alloc(KEY_LENGTH, "dev-key-do-not-use-in-production!");
+  // Uses a random key per process if SOCIAL_ENCRYPTION_KEY is not set.
+  // Tokens won't persist across restarts in dev.
 }
+
+// In production, SOCIAL_ENCRYPTION_KEY must be set or token encryption fails.
 ```
 
 **Risk:**
@@ -125,7 +127,7 @@ if (process.env.NODE_ENV === "development") {
 
 **Remediation:**
 
-1. Never use fallback key - fail hard in production
+1. Fail hard in production if `SOCIAL_ENCRYPTION_KEY` is not set (current behavior)
 2. Implement key rotation strategy
 3. Consider using HSM or KMS for key management
 4. Add token refresh mechanism for LinkedIn
