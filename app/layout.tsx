@@ -80,12 +80,6 @@ export default function RootLayout({
                         >
                           Settings
                         </Link>
-                        <Link
-                          href="/admin/flags"
-                          className="text-slate-400 hover:text-slate-600 transition-colors text-sm"
-                        >
-                          Admin
-                        </Link>
                       </div>
                     </div>
                     {/* User Menu */}
