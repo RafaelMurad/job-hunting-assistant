@@ -32,7 +32,6 @@ export function MobileMenu({ className }: MobileMenuProps): JSX.Element {
     { href: "/analyze", label: "Analyze Job" },
     { href: "/tracker", label: "Tracker" },
     { href: "/settings", label: "Settings" },
-    { href: "/admin/flags", label: "Admin", secondary: true },
   ];
 
   return (
@@ -127,9 +126,7 @@ export function MobileMenu({ className }: MobileMenuProps): JSX.Element {
                   "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-fjord-500 focus-visible:ring-offset-2",
                   isActive
                     ? "bg-fjord-50 text-fjord-700 border-l-4 border-fjord-600"
-                    : link.secondary
-                      ? "text-slate-400 hover:text-slate-600 hover:bg-nordic-neutral-50"
-                      : "text-nordic-neutral-700 hover:bg-nordic-neutral-50 hover:text-nordic-neutral-900"
+                    : "text-nordic-neutral-700 hover:bg-nordic-neutral-50 hover:text-nordic-neutral-900"
                 )}
                 onClick={() => setIsOpen(false)}
               >
