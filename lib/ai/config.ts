@@ -53,34 +53,6 @@ export const LATEX_MODELS: ModelInfo[] = [
     description: "Google's open Gemma model via OpenRouter",
     openrouterModel: "google/gemma-3-27b-it:free",
   },
-  {
-    id: "gemini-2.5-pro",
-    name: "Gemini 2.5 Pro",
-    provider: "gemini",
-    cost: "Paid",
-    description: "Best reasoning (requires billing enabled)",
-  },
-  {
-    id: "gemini-3-pro-preview",
-    name: "Gemini 3 Pro (Preview)",
-    provider: "gemini",
-    cost: "Paid",
-    description: "Best multimodal (requires billing enabled)",
-  },
-  {
-    id: "gpt-4o",
-    name: "GPT-4o",
-    provider: "openai",
-    cost: "~$0.01",
-    description: "OpenAI vision model",
-  },
-  {
-    id: "claude-sonnet",
-    name: "Claude Sonnet",
-    provider: "claude",
-    cost: "~$0.05",
-    description: "Anthropic vision model",
-  },
 ];
 
 // =============================================================================
@@ -93,18 +65,11 @@ export const AI_CONFIG = {
 
   apiKeys: {
     gemini: process.env.GEMINI_API_KEY,
-    geminiGcp: process.env.GEMINI_GCP_API_KEY, // GCP billed (uses cloud credits)
-    openai: process.env.OPENAI_API_KEY,
-    claude: process.env.ANTHROPIC_API_KEY,
     openrouter: process.env.OPENROUTER_API_KEY,
   },
 
   models: {
     gemini: "gemini-2.5-flash", // Free tier: Stable 2.5 Flash model
-    geminiPro: "gemini-2.5-pro", // Free tier: Best reasoning
-    gemini3Pro: "gemini-3-pro-preview", // Free preview: Best multimodal
-    openai: "gpt-4o", // Paid: ~$2.50 per 1M input tokens (vision)
-    claude: "claude-sonnet-4-5-20250929", // Paid: $3 per 1M input tokens
   },
 
   // Default model for LaTeX extraction
@@ -146,14 +111,6 @@ export function getModelInfo(model: LatexExtractionModel): ModelInfo | undefined
 /**
  * Get the actual model name for a given model ID
  */
-export function getModelName(modelId: LatexExtractionModel): string {
-  switch (modelId) {
-    case "gemini-2.5-pro":
-      return AI_CONFIG.models.geminiPro;
-    case "gemini-3-pro-preview":
-      return AI_CONFIG.models.gemini3Pro;
-    case "gemini-2.5-flash":
-    default:
-      return AI_CONFIG.models.gemini;
-  }
+export function getModelName(_modelId: LatexExtractionModel): string {
+  return AI_CONFIG.models.gemini;
 }

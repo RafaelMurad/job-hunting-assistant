@@ -148,20 +148,19 @@ If suggesting actions, be concrete about what to do.
 // =============================================================================
 
 /**
- * Get Gemini model using GCP API key (for paid usage with credits)
+ * Get Gemini model using API key
  */
 async function getGeminiModel(): Promise<import("@google/generative-ai").GenerativeModel> {
   const { GoogleGenerativeAI } = await import("@google/generative-ai");
 
-  // Use GCP key for paid tier (uses cloud credits)
-  const apiKey = AI_CONFIG.apiKeys.geminiGcp || AI_CONFIG.apiKeys.gemini;
+  const apiKey = AI_CONFIG.apiKeys.gemini;
   if (!apiKey) {
     throw new Error("No Gemini API key configured");
   }
 
   const genAI = new GoogleGenerativeAI(apiKey);
-  // Use Gemini 2.5 Pro for best reasoning
-  return genAI.getGenerativeModel({ model: "gemini-2.5-pro" });
+  // Use Gemini 2.5 Flash for free tier
+  return genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
 }
 
 /**
