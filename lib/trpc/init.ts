@@ -12,7 +12,7 @@
  * - Great DX with autocomplete
  */
 
-import { auth } from "@/lib/auth";
+import { auth } from "@/lib/auth-legacy";
 import { prisma } from "@/lib/db";
 import { initTRPC, TRPCError } from "@trpc/server";
 import type { Session } from "next-auth";

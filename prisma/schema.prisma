@@ -16,6 +16,10 @@ model User {
   phone    String?
   location String
 
+  // Neon Auth integration
+  // Links this User to a Neon Auth user (neon_auth.user.id)
+  neonAuthId String? @unique
+
   // CV content stored as text
   summary    String // Professional summary
   experience String // Formatted text of work experience

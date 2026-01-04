@@ -14,18 +14,18 @@
  * 5. Return the URLs for immediate use
  */
 
-import { type NextRequest, NextResponse } from "next/server";
-import { prisma } from "@/lib/db";
-import { auth } from "@/lib/auth";
 import {
+  AI_CONFIG,
   extractLatexWithModel,
   extractWithTemplate,
   type LatexExtractionModel,
-  AI_CONFIG,
 } from "@/lib/ai";
+import { auth } from "@/lib/auth-legacy";
 import { type CVTemplateId } from "@/lib/cv-templates";
-import { uploadCVPdf, uploadCVLatex, deleteCVFiles } from "@/lib/storage";
+import { prisma } from "@/lib/db";
+import { deleteCVFiles, uploadCVLatex, uploadCVPdf } from "@/lib/storage";
 import { parseAIError } from "@/lib/utils";
+import { type NextRequest, NextResponse } from "next/server";
 
 /**
  * POST /api/cv/store

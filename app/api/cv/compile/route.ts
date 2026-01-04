@@ -8,11 +8,11 @@
  * HOW: Uses lib/latex.ts for compilation, optionally stores result in Blob.
  */
 
-import { type NextRequest, NextResponse } from "next/server";
-import { compileLatexToPdf, validateLatexSource, LaTeXCompilationError } from "@/lib/latex";
-import { uploadCVPdf, uploadCVLatex } from "@/lib/storage";
+import { auth } from "@/lib/auth-legacy";
 import { prisma } from "@/lib/db";
-import { auth } from "@/lib/auth";
+import { compileLatexToPdf, LaTeXCompilationError, validateLatexSource } from "@/lib/latex";
+import { uploadCVLatex, uploadCVPdf } from "@/lib/storage";
+import { type NextRequest, NextResponse } from "next/server";
 
 /**
  * POST /api/cv/compile

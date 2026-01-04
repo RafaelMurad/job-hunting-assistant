@@ -26,6 +26,7 @@ const mockUser: User = {
   password: null, // OAuth user, no password
   phone: "+1234567890",
   location: "New York, NY",
+  neonAuthId: null, // Not yet linked to Neon Auth
   summary: "Experienced software engineer with 5+ years in full-stack development",
   experience: "Senior Engineer at Acme Corp (2020-present)\nJunior Dev at StartupX (2018-2020)",
   skills: "TypeScript, React, Node.js, PostgreSQL, AWS",

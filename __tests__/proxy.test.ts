@@ -57,14 +57,14 @@ describe("Middleware - Route Protection", () => {
   });
 
   describe("Protected Routes", () => {
-    it("redirects unauthenticated users to login", async () => {
+    it("redirects unauthenticated users to sign-in", async () => {
       mockGetToken.mockResolvedValue(null);
 
       const req = new NextRequest(new URL("http://localhost:3000/dashboard"));
       const response = await proxy(req);
 
       expect(response.status).toBe(307);
-      expect(response.headers.get("location")).toContain("/login");
+      expect(response.headers.get("location")).toContain("/auth/sign-in");
       expect(response.headers.get("location")).toContain("callbackUrl");
     });
 
@@ -89,7 +89,7 @@ describe("Middleware - Route Protection", () => {
       const response = await proxy(req);
 
       expect(response.status).toBe(307);
-      expect(response.headers.get("location")).toContain("/login");
+      expect(response.headers.get("location")).toContain("/auth/sign-in");
     });
 
     it("protects profile page", async () => {
@@ -99,7 +99,7 @@ describe("Middleware - Route Protection", () => {
       const response = await proxy(req);
 
       expect(response.status).toBe(307);
-      expect(response.headers.get("location")).toContain("/login");
+      expect(response.headers.get("location")).toContain("/auth/sign-in");
     });
 
     it("protects CV editor page", async () => {
@@ -109,7 +109,7 @@ describe("Middleware - Route Protection", () => {
       const response = await proxy(req);
 
       expect(response.status).toBe(307);
-      expect(response.headers.get("location")).toContain("/login");
+      expect(response.headers.get("location")).toContain("/auth/sign-in");
     });
   });
 
@@ -179,7 +179,7 @@ describe("Middleware - Route Protection", () => {
       const response = await proxy(req);
 
       expect(response.status).toBe(307);
-      expect(response.headers.get("location")).toContain("/login");
+      expect(response.headers.get("location")).toContain("/auth/sign-in");
     });
   });
 
