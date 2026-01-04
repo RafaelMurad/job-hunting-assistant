@@ -1,10 +1,12 @@
 "use client";
 
-import { signIn } from "next-auth/react";
-import { useSearchParams } from "next/navigation";
-import { Suspense, useState, type JSX } from "react";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { signIn } from "next-auth/react";
+import { useRouter, useSearchParams } from "next/navigation";
+import { Suspense, useState, type FormEvent, type JSX } from "react";
 
 /**
  * OAuth Provider Button
@@ -59,7 +61,7 @@ function ErrorBanner({ error }: { error: string | null }): JSX.Element | null {
     OAuthAccountNotLinked:
       "This email is already associated with another account. Please sign in with your original provider.",
     EmailSignin: "Error sending sign in email.",
-    CredentialsSignin: "Sign in failed. Check your credentials.",
+    CredentialsSignin: "Invalid email or password. Please try again.",
     SessionRequired: "Please sign in to access this page.",
     Default: "An error occurred during sign in.",
   };
@@ -89,6 +91,74 @@ function ErrorBanner({ error }: { error: string | null }): JSX.Element | null {
 }
 
 /**
+ * Email/Password Sign In Form
+ */
+function EmailSignInForm({
+  callbackUrl,
+  loading,
+  setLoading,
+}: {
+  callbackUrl: string;
+  loading: boolean;
+  setLoading: (loading: boolean) => void;
+}): JSX.Element {
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const router = useRouter();
+
+  const handleSubmit = async (e: FormEvent): Promise<void> => {
+    e.preventDefault();
+    setLoading(true);
+
+    const result = await signIn("credentials", {
+      email,
+      password,
+      redirect: false,
+    });
+
+    if (result?.error) {
+      setLoading(false);
+      // Redirect to login with error (shows error banner)
+      router.push(`/login?error=CredentialsSignin&callbackUrl=${encodeURIComponent(callbackUrl)}`);
+    } else if (result?.ok) {
+      router.push(callbackUrl);
+    }
+  };
+
+  return (
+    <form onSubmit={(e) => void handleSubmit(e)} className="space-y-4">
+      <div className="space-y-2">
+        <Label htmlFor="email">Email</Label>
+        <Input
+          id="email"
+          type="email"
+          placeholder="you@example.com"
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+          required
+          disabled={loading}
+        />
+      </div>
+      <div className="space-y-2">
+        <Label htmlFor="password">Password</Label>
+        <Input
+          id="password"
+          type="password"
+          placeholder="••••••••"
+          value={password}
+          onChange={(e) => setPassword(e.target.value)}
+          required
+          disabled={loading}
+        />
+      </div>
+      <Button type="submit" className="w-full h-12" disabled={loading}>
+        {loading ? "Signing in..." : "Sign in with Email"}
+      </Button>
+    </form>
+  );
+}
+
+/**
  * Login Page Content - uses searchParams
  */
 function LoginContent(): JSX.Element {
@@ -97,11 +167,14 @@ function LoginContent(): JSX.Element {
   const callbackUrl = searchParams.get("callbackUrl") ?? "/dashboard";
 
   const [loadingProvider, setLoadingProvider] = useState<string | null>(null);
+  const [emailLoading, setEmailLoading] = useState(false);
 
-  const handleSignIn = (provider: string): void => {
+  const handleOAuthSignIn = (provider: string): void => {
     setLoadingProvider(provider);
     void signIn(provider, { callbackUrl });
   };
+
+  const isLoading = loadingProvider !== null || emailLoading;
 
   return (
     <div className="min-h-screen bg-slate-50 flex items-center justify-center py-12 px-4">
@@ -115,16 +188,44 @@ function LoginContent(): JSX.Element {
         <CardContent>
           <ErrorBanner error={error} />
 
+          {/* Email/Password Form */}
+          <EmailSignInForm
+            callbackUrl={callbackUrl}
+            loading={isLoading}
+            setLoading={setEmailLoading}
+          />
+
+          {/* Divider */}
+          <div className="relative my-6">
+            <div className="absolute inset-0 flex items-center">
+              <span className="w-full border-t border-slate-200" />
+            </div>
+            <div className="relative flex justify-center text-xs uppercase">
+              <span className="bg-white px-2 text-slate-500">Or continue with</span>
+            </div>
+          </div>
+
+          {/* OAuth Buttons */}
           <div className="space-y-3">
             <OAuthButton
               label="Continue with GitHub"
               icon={<GitHubIcon />}
               loading={loadingProvider === "github"}
-              onClick={() => handleSignIn("github")}
+              onClick={() => handleOAuthSignIn("github")}
             />
           </div>
 
-          <div className="mt-6 text-center text-sm text-slate-500">
+          {/* Sign Up Link */}
+          <div className="mt-6 text-center text-sm text-slate-600">
+            <p>
+              Don&apos;t have an account?{" "}
+              <a href="/signup" className="font-medium text-blue-600 hover:underline">
+                Sign up
+              </a>
+            </p>
+          </div>
+
+          <div className="mt-4 text-center text-xs text-slate-500">
             <p>
               By signing in, you agree to our{" "}
               <a href="#" className="text-blue-600 hover:underline">
@@ -154,8 +255,9 @@ function LoginLoadingSkeleton(): JSX.Element {
           <div className="h-5 w-64 bg-slate-200 rounded animate-pulse mx-auto" />
         </CardHeader>
         <CardContent>
-          <div className="space-y-3">
-            <div className="h-12 bg-slate-100 rounded animate-pulse" />
+          <div className="space-y-4">
+            <div className="h-10 bg-slate-100 rounded animate-pulse" />
+            <div className="h-10 bg-slate-100 rounded animate-pulse" />
             <div className="h-12 bg-slate-100 rounded animate-pulse" />
           </div>
         </CardContent>
@@ -167,7 +269,7 @@ function LoginLoadingSkeleton(): JSX.Element {
 /**
  * Login Page
  *
- * Provides OAuth sign-in options for users.
+ * Provides OAuth and email/password sign-in options.
  * Wrapped in Suspense for SSR compatibility with useSearchParams.
  */
 export default function LoginPage(): JSX.Element {

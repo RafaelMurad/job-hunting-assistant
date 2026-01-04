@@ -23,6 +23,7 @@ const mockUser: User = {
   id: "user-123",
   name: "John Doe",
   email: "john@example.com",
+  password: null, // OAuth user, no password
   phone: "+1234567890",
   location: "New York, NY",
   summary: "Experienced software engineer with 5+ years in full-stack development",
