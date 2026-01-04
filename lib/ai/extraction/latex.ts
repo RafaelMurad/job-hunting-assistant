@@ -8,8 +8,6 @@ import { AI_CONFIG, isModelAvailable, getModelInfo } from "../config";
 import type { LatexExtractionModel, LatexExtractionResult, ATSAnalysisResult } from "../types";
 import { atsAnalysisSchema } from "../schemas";
 import { extractLatexWithGemini } from "../providers/gemini";
-import { extractLatexWithOpenAI } from "../providers/openai";
-import { extractLatexWithClaude } from "../providers/claude";
 import { extractLatexWithOpenRouter } from "../providers/openrouter";
 import { ATS_ANALYSIS_PROMPT, LATEX_MODIFY_PROMPT } from "../prompts";
 import { cleanAndValidateLatex, extractJsonFromText, parseJsonOrThrow } from "../utils";
@@ -73,9 +71,7 @@ export async function extractLatexWithModel(
     let latex: string;
 
     switch (model) {
-      case "gemini-2.5-pro":
       case "gemini-2.5-flash":
-      case "gemini-3-pro-preview":
         latex = await extractLatexWithGemini(base64Data, mimeType, model);
         break;
       case "nova-2-lite":
@@ -89,12 +85,6 @@ export async function extractLatexWithModel(
         latex = await extractLatexWithOpenRouter(base64Data, mimeType, modelInfo.openrouterModel);
         break;
       }
-      case "gpt-4o":
-        latex = await extractLatexWithOpenAI(base64Data, mimeType);
-        break;
-      case "claude-sonnet":
-        latex = await extractLatexWithClaude(base64Data, mimeType);
-        break;
       default:
         throw new Error(`Unsupported model: ${model}`);
     }

@@ -155,9 +155,7 @@ export async function extractWithTemplate(
     let content: ExtractedCVContent;
 
     switch (model) {
-      case "gemini-2.5-pro":
-      case "gemini-2.5-flash":
-      case "gemini-3-pro-preview": {
+      case "gemini-2.5-flash": {
         const rawContent = await extractContentWithGemini(base64Data, mimeType, model);
         content = parseExtractedContent(JSON.stringify(rawContent));
         break;
@@ -175,13 +173,6 @@ export async function extractWithTemplate(
           mimeType,
           modelInfo.openrouterModel
         );
-        content = parseExtractedContent(JSON.stringify(rawContent));
-        break;
-      }
-      case "gpt-4o":
-      case "claude-sonnet": {
-        // For now, fall back to Gemini for these - can add dedicated functions later
-        const rawContent = await extractContentWithGemini(base64Data, mimeType, "gemini-2.5-flash");
         content = parseExtractedContent(JSON.stringify(rawContent));
         break;
       }

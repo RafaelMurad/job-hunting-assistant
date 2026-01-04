@@ -50,20 +50,6 @@ export {
   extractContentWithGemini,
 } from "./providers/gemini";
 
-// OpenAI
-export {
-  analyzeWithOpenAI,
-  generateCoverLetterWithOpenAI,
-  extractLatexWithOpenAI,
-} from "./providers/openai";
-
-// Claude
-export {
-  analyzeWithClaude,
-  generateCoverLetterWithClaude,
-  extractLatexWithClaude,
-} from "./providers/claude";
-
 // OpenRouter
 export { extractLatexWithOpenRouter, extractContentWithOpenRouter } from "./providers/openrouter";
 

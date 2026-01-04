@@ -214,26 +214,14 @@ export async function extractLatexTwoPass(
 export async function extractLatexWithGemini(
   base64Data: string,
   mimeType: string,
-  modelId: "gemini-2.5-pro" | "gemini-2.5-flash" | "gemini-3-pro-preview"
+  modelId: LatexExtractionModel
 ): Promise<string> {
   const { GoogleGenerativeAI } = await import("@google/generative-ai");
 
   const genAI = new GoogleGenerativeAI(AI_CONFIG.apiKeys.gemini!);
   const modelName = getModelName(modelId);
 
-  // Use two-pass extraction for Pro models (better style preservation)
-  const isProModel = modelId === "gemini-2.5-pro" || modelId === "gemini-3-pro-preview";
-
-  if (isProModel) {
-    try {
-      return await extractLatexTwoPass(base64Data, mimeType, modelName, genAI);
-    } catch (error) {
-      console.warn(`[${modelId}] Two-pass extraction failed, falling back to single-pass:`, error);
-      // Fall through to single-pass
-    }
-  }
-
-  // Single-pass extraction (for Flash or as fallback)
+  // Single-pass extraction for free tier
   // Escalating token limits for long CVs
   const tokenLimits = [16384, 32768];
 

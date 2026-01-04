@@ -8,7 +8,7 @@
 // PROVIDER TYPES
 // =============================================================================
 
-export type AIProvider = "gemini" | "openai" | "claude" | "openrouter";
+export type AIProvider = "gemini" | "openrouter";
 
 /**
  * Available models for LaTeX CV extraction
@@ -16,14 +16,10 @@ export type AIProvider = "gemini" | "openai" | "claude" | "openrouter";
  */
 export type LatexExtractionModel =
   | "gemini-2.5-flash" // Free, fast (default)
-  | "gemini-2.5-pro" // Paid, best reasoning
-  | "gemini-3-pro-preview" // Paid, best multimodal
   | "gemini-2.0-flash-or" // Free via OpenRouter, different rate limits
   | "nova-2-lite" // Free via OpenRouter, Amazon vision model
   | "mistral-small-3.1" // Free via OpenRouter, Mistral vision model
-  | "gemma-3-27b" // Free via OpenRouter, Google Gemma
-  | "gpt-4o" // Paid ~$0.01/CV
-  | "claude-sonnet"; // Paid ~$0.05/CV
+  | "gemma-3-27b"; // Free via OpenRouter, Google Gemma
 
 /**
  * Model metadata for UI display and availability checks

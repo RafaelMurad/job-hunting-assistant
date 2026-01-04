@@ -16,8 +16,8 @@ import {
 
 describe("AI Config", () => {
   describe("LATEX_MODELS", () => {
-    it("should have 9 models defined", () => {
-      expect(LATEX_MODELS).toHaveLength(9);
+    it("should have 5 free models defined", () => {
+      expect(LATEX_MODELS).toHaveLength(5);
     });
 
     it("should have required properties for all models", () => {
@@ -44,6 +44,12 @@ describe("AI Config", () => {
       const freeGemini = LATEX_MODELS.filter((m) => m.provider === "gemini" && m.cost === "Free");
       expect(freeGemini.length).toBeGreaterThan(0);
     });
+
+    it("should only have free models", () => {
+      for (const model of LATEX_MODELS) {
+        expect(model.cost).toBe("Free");
+      }
+    });
   });
 
   describe("AI_CONFIG", () => {
@@ -52,19 +58,15 @@ describe("AI Config", () => {
       expect(AI_CONFIG.provider).toBe("gemini");
     });
 
-    it("should have all provider API key slots", () => {
+    it("should have free provider API key slots only", () => {
       expect(AI_CONFIG.apiKeys).toHaveProperty("gemini");
-      expect(AI_CONFIG.apiKeys).toHaveProperty("openai");
-      expect(AI_CONFIG.apiKeys).toHaveProperty("claude");
       expect(AI_CONFIG.apiKeys).toHaveProperty("openrouter");
+      expect(AI_CONFIG.apiKeys).not.toHaveProperty("openai");
+      expect(AI_CONFIG.apiKeys).not.toHaveProperty("claude");
     });
 
-    it("should have model names configured", () => {
+    it("should have model name configured", () => {
       expect(AI_CONFIG.models.gemini).toBe("gemini-2.5-flash");
-      expect(AI_CONFIG.models.geminiPro).toBe("gemini-2.5-pro");
-      expect(AI_CONFIG.models.gemini3Pro).toBe("gemini-3-pro-preview");
-      expect(AI_CONFIG.models.openai).toBe("gpt-4o");
-      expect(AI_CONFIG.models.claude).toBe("claude-sonnet-4-5-20250929");
     });
 
     it("should have default LaTeX model set", () => {
@@ -96,22 +98,8 @@ describe("AI Config", () => {
   });
 
   describe("getModelName", () => {
-    it("should return correct model name for gemini-2.5-flash", () => {
+    it("should return gemini model name", () => {
       expect(getModelName("gemini-2.5-flash")).toBe("gemini-2.5-flash");
-    });
-
-    it("should return correct model name for gemini-2.5-pro", () => {
-      expect(getModelName("gemini-2.5-pro")).toBe("gemini-2.5-pro");
-    });
-
-    it("should return correct model name for gemini-3-pro-preview", () => {
-      expect(getModelName("gemini-3-pro-preview")).toBe("gemini-3-pro-preview");
-    });
-
-    it("should return default gemini model for other models", () => {
-      // Non-Gemini models fall through to default
-      expect(getModelName("gpt-4o")).toBe("gemini-2.5-flash");
-      expect(getModelName("claude-sonnet")).toBe("gemini-2.5-flash");
     });
   });
 
