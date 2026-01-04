@@ -2,91 +2,95 @@
 
 This roadmap is the execution-focused companion to the PRD.
 
-- Current release: **v1.1** (shipped)
-- Next release target: **v1.2** (draft)
+- Current release: **v1.2** (in progress)
+- Focus: Portfolio polish and simplification
 
 ---
 
-## v1.2 (Draft) — Privacy, Reliability, Polish
+## v1.2 — Portfolio Polish
 
-### Milestone 1 — Replace LaTeX Third-Party Compiler (GDPR)
+### Milestone 1 — Auth Simplification ✅
 
-**Goal:** Stop sending CV LaTeX to `latexonline.cc` by default.
+**Goal:** Simplify authentication to GitHub OAuth only.
 
 **Deliverables:**
 
-- Deploy a self-hosted LaTeX compiler service (e.g., Docker on Cloud Run)
-- Configure the app to use an environment variable for the compiler base URL
-- Document data flow + retention expectations for compilation
+- Remove Google and LinkedIn OAuth providers
+- Keep GitHub OAuth for developer-friendly sign-in
+- Email/password auth (planned)
 
-**Definition of Done:**
-
-- The compiler endpoint is controlled by us (self-hosted) in production
-- Compilation works with the existing CV templates and common CV sizes
-- A rollback switch exists (env var) if the self-hosted service is degraded
+**Status:** Complete
 
 ---
 
-### Milestone 2 — Storage Privacy (CV Files)
+### Milestone 2 — AI Simplification ✅
 
-**Goal:** Reduce accidental exposure risk for CV uploads/compiled PDFs.
+**Goal:** Use only free-tier AI models.
 
 **Deliverables:**
 
-- Move sensitive CV blobs to private access (or equivalent)
-- Provide time-limited signed URLs for downloads/previews
+- Remove OpenAI and Claude (paid) providers
+- Keep Gemini 2.5 Flash (free)
+- Keep OpenRouter free models (Gemma, Nova, Mistral)
 
-**Definition of Done:**
-
-- CV files are not publicly accessible by default
-- Users can still view/download their CV from the UI without regressions
+**Status:** Complete
 
 ---
 
-### Milestone 3 — Security & Abuse Hardening
+### Milestone 3 — UI Cleanup ✅
 
-**Goal:** Ensure the app is safe to expose beyond a single-user portfolio.
+**Goal:** Clean navigation for portfolio demo.
 
 **Deliverables:**
 
-- Review all `publicProcedure` usage and lock down anything user-scoped
-- Improve rate limiting strategy for distributed/serverless execution (if needed)
-- Confirm production fails fast without required secrets (no insecure fallbacks)
+- Hide Admin from navigation (accessible by URL)
+- Simplify Settings page (account only)
+- Remove integrations UI
 
-**Definition of Done:**
-
-- All user data routes require auth + are scoped to the authenticated user
-- Rate limiting is enforced for AI + upload paths in production
-- Missing production secrets cause startup/runtime failures rather than insecure defaults
+**Status:** Complete
 
 ---
 
-### Milestone 4 — UX + Performance Polish
+### Milestone 4 — CV Editor Polish (Planned)
 
-**Goal:** Make the core flow feel effortless on repeat usage.
+**Goal:** Make the LaTeX CV editor the star feature.
 
 **Deliverables:**
 
-- Reduce friction in the “upload → extract → edit → analyze” loop
-- Tighten UI consistency across pages (design-system audit)
-- Bundle size / client JS audit to keep navigation snappy
+- Add syntax highlighting (Monaco or CodeMirror)
+- Improve error messages for LaTeX compilation
+- Better mobile experience
 
-**Definition of Done:**
-
-- Primary user journey feels consistent and fast on mobile + desktop
-- No regressions to existing v1.1 features
+**Status:** Planned
 
 ---
 
-## v1.3 (Draft) — Enhancements
+### Milestone 5 — Documentation (In Progress)
 
-- Calendar integration for interviews
-- Follow-up reminders
-- Premium CV editor gating (requires v1.2 LaTeX migration)
+**Goal:** Portfolio-focused documentation.
+
+**Deliverables:**
+
+- Updated README with skills showcase
+- Simplified PRD
+- Screenshots of key flows
+
+**Status:** In Progress
+
+---
+
+## Future Considerations
+
+These features are out of scope for the portfolio but could be added later:
+
+- Email/password authentication
+- PDF export improvements
+- Interview calendar integration
+- Job board integrations
 
 ---
 
 ## Notes
 
 - For context and rationale, see the PRD: `docs/PRD.md`.
-- For security backlog framing, see: `docs/SECURITY_AUDIT.md`.
+- This is a portfolio project, not a production SaaS.
