@@ -16,6 +16,7 @@
 
 "use client";
 
+import { DiffView } from "@/components/cv/diff-view";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -29,6 +30,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
+import { useHistory } from "@/lib/hooks/useHistory";
 import { useCallback, useEffect, useState, type ChangeEvent, type JSX } from "react";
 
 // ============================================
@@ -87,14 +89,29 @@ type ViewMode = "pdf" | "latex" | "split";
 // ============================================
 
 export default function CVEditorPage(): JSX.Element {
+  // History hook for undo/redo functionality
+  const {
+    content: latexContent,
+    previousContent,
+    canUndo,
+    canRedo,
+    historyPosition,
+    historyLength,
+    setContent: setLatexContent,
+    pushToHistory,
+    undo,
+    redo,
+    reset: resetHistory,
+  } = useHistory({ initialContent: "", enableKeyboardShortcuts: true });
+
   // State
   const [cvData, setCvData] = useState<CVData | null>(null);
-  const [latexContent, setLatexContent] = useState<string>("");
   const [previewPdfUrl, setPreviewPdfUrl] = useState<string | null>(null);
   const [viewMode, setViewMode] = useState<ViewMode>("split");
   const [atsAnalysis, setAtsAnalysis] = useState<ATSAnalysis | null>(null);
   const [aiInstruction, setAiInstruction] = useState<string>("");
   const [toast, setToast] = useState<Toast | null>(null);
+  const [showDiff, setShowDiff] = useState<boolean>(false);
 
   // Advanced Mode toggle - hides LaTeX editor and AI tools by default
   const [advancedMode, setAdvancedMode] = useState<boolean>(false);
@@ -125,11 +142,12 @@ export default function CVEditorPage(): JSX.Element {
   // EFFECTS
   // ============================================
 
-  // Load existing CV data on mount
+  // Load existing CV data on mount only (not on dependency changes)
   useEffect(() => {
     void loadCVData();
     void loadAvailableModels();
     void loadAvailableTemplates();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   // ============================================
@@ -220,7 +238,8 @@ export default function CVEditorPage(): JSX.Element {
 
           if (response.ok) {
             const result = await response.json();
-            setLatexContent(result.data.latexContent);
+            // Push new content to history (previous content is auto-saved)
+            pushToHistory(result.data.latexContent);
             showToast("success", `Switched to ${newTemplateId.replace("-", " ")} template`);
 
             // Clear preview to force recompile
@@ -235,7 +254,7 @@ export default function CVEditorPage(): JSX.Element {
       }
       // If no extracted content yet, the template will be used on next upload
     },
-    [extractedContent]
+    [extractedContent, pushToHistory]
   );
 
   const handleUpload = useCallback(
@@ -275,7 +294,8 @@ export default function CVEditorPage(): JSX.Element {
         }
 
         setCvData(result.data);
-        setLatexContent(result.data.latexContent || "");
+        // Reset history with new content (fresh start after upload)
+        resetHistory(result.data.latexContent || "");
         setPreviewPdfUrl(result.data.pdfUrl);
         setAtsAnalysis(null); // Clear old analysis
 
@@ -315,7 +335,7 @@ export default function CVEditorPage(): JSX.Element {
         }, 2000);
       }
     },
-    [selectedModel, selectedTemplate]
+    [selectedModel, selectedTemplate, resetHistory]
   );
 
   // Handler for FileUpload component (drag-and-drop)
@@ -419,9 +439,11 @@ export default function CVEditorPage(): JSX.Element {
         return;
       }
 
-      setLatexContent(result.latexContent);
+      // Push new content to history (previous state is preserved for undo)
+      pushToHistory(result.latexContent);
       setAiInstruction("");
-      showToast("success", "CV modified! Click 'Preview' to see changes.");
+      setShowDiff(true); // Show diff after AI modification
+      showToast("success", "CV modified! Review changes below or click 'Preview'.");
     } catch (error) {
       console.error("Modify error:", error);
       showToast("error", "Modification failed. Please try again.");
@@ -668,6 +690,51 @@ export default function CVEditorPage(): JSX.Element {
               </Select>
             </div>
 
+            {/* Undo/Redo Controls - Always visible when there's content */}
+            {latexContent && (
+              <div className="flex items-center gap-1 w-full sm:w-auto">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={undo}
+                  disabled={!canUndo}
+                  title="Undo (Cmd+Z)"
+                  className="h-11 sm:h-9 px-2"
+                >
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6"
+                    />
+                  </svg>
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={redo}
+                  disabled={!canRedo}
+                  title="Redo (Cmd+Shift+Z)"
+                  className="h-11 sm:h-9 px-2"
+                >
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M21 10h-10a8 8 0 00-8 8v2M21 10l-6 6m6-6l-6-6"
+                    />
+                  </svg>
+                </Button>
+                {historyLength > 1 && (
+                  <span className="text-xs text-muted-foreground ml-1 hidden sm:inline">
+                    {historyPosition}/{historyLength}
+                  </span>
+                )}
+              </div>
+            )}
+
             {/* Model Selector - Only in Advanced Mode */}
             {advancedMode && (
               <div className="flex items-center gap-2 w-full sm:w-auto">
@@ -716,6 +783,17 @@ export default function CVEditorPage(): JSX.Element {
                 className="w-full sm:w-auto h-11 sm:h-9"
               >
                 ⬇️ Download PDF
+              </Button>
+            )}
+
+            {/* Show Changes Button - Visible when there's history to compare */}
+            {previousContent !== null && (
+              <Button
+                variant={showDiff ? "default" : "outline"}
+                onClick={() => setShowDiff(!showDiff)}
+                className="w-full sm:w-auto h-11 sm:h-9"
+              >
+                {showDiff ? "Hide Changes" : "Show Changes"}
               </Button>
             )}
 
@@ -901,6 +979,18 @@ export default function CVEditorPage(): JSX.Element {
             </div>
           </CardContent>
         </Card>
+      )}
+
+      {/* Diff View - Shows changes after AI modification */}
+      {showDiff && previousContent !== null && (
+        <div className="mb-6">
+          <DiffView
+            before={previousContent}
+            after={latexContent}
+            onClose={() => setShowDiff(false)}
+            title="AI Modification Changes"
+          />
+        </div>
       )}
 
       {/* ATS Analysis - Only in Advanced Mode */}
