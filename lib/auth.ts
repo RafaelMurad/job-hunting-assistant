@@ -13,19 +13,11 @@ import { type UserRole } from "@/types";
 import { PrismaAdapter } from "@auth/prisma-adapter";
 import NextAuth from "next-auth";
 import GitHub from "next-auth/providers/github";
-import Google from "next-auth/providers/google";
-import LinkedIn from "next-auth/providers/linkedin";
 
 export const { handlers, signIn, signOut, auth } = NextAuth({
   adapter: PrismaAdapter(prisma),
 
   providers: [
-    LinkedIn({
-      clientId: process.env.AUTH_LINKEDIN_ID!,
-      clientSecret: process.env.AUTH_LINKEDIN_SECRET!,
-      // SECURITY: Removed allowDangerousEmailAccountLinking to prevent account takeover
-      // Users must link accounts manually through settings if they want multiple providers
-    }),
     GitHub({
       clientId: process.env.AUTH_GITHUB_ID!,
       clientSecret: process.env.AUTH_GITHUB_SECRET!,
@@ -35,12 +27,6 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
           scope: "read:user user:email",
         },
       },
-      // SECURITY: Removed allowDangerousEmailAccountLinking to prevent account takeover
-    }),
-    Google({
-      clientId: process.env.AUTH_GOOGLE_ID!,
-      clientSecret: process.env.AUTH_GOOGLE_SECRET!,
-      // SECURITY: Removed allowDangerousEmailAccountLinking to prevent account takeover
     }),
   ],
 
