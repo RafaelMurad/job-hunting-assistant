@@ -104,27 +104,27 @@ This project showcases modern full-stack development with cutting-edge technolog
 
 <table>
 <tr>
-<td align="center" width="96">
+<td align="center" valign="top" width="96">
 <img src="https://skillicons.dev/icons?i=nextjs" width="48" height="48" alt="Next.js" />
 <br>Next.js 16
 </td>
-<td align="center" width="96">
+<td align="center" valign="top" width="96">
 <img src="https://skillicons.dev/icons?i=react" width="48" height="48" alt="React" />
 <br>React 19
 </td>
-<td align="center" width="96">
+<td align="center" valign="top" width="96">
 <img src="https://skillicons.dev/icons?i=ts" width="48" height="48" alt="TypeScript" />
 <br>TypeScript
 </td>
-<td align="center" width="96">
+<td align="center" valign="top" width="96">
 <img src="https://skillicons.dev/icons?i=tailwind" width="48" height="48" alt="Tailwind" />
 <br>Tailwind 4
 </td>
-<td align="center" width="96">
+<td align="center" valign="top" width="96">
 <img src="https://skillicons.dev/icons?i=postgres" width="48" height="48" alt="PostgreSQL" />
 <br>PostgreSQL
 </td>
-<td align="center" width="96">
+<td align="center" valign="top" width="96">
 <img src="https://skillicons.dev/icons?i=prisma" width="48" height="48" alt="Prisma" />
 <br>Prisma
 </td>
