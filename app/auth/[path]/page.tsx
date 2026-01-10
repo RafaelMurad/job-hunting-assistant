@@ -13,19 +13,6 @@
 import { AuthView } from "@neondatabase/auth/react";
 import type { ReactElement } from "react";
 
-// Pre-render only known auth paths
-export const dynamicParams = false;
-
-export function generateStaticParams(): { path: string }[] {
-  return [
-    { path: "sign-in" },
-    { path: "sign-up" },
-    { path: "sign-out" },
-    { path: "forgot-password" },
-    { path: "reset-password" },
-  ];
-}
-
 interface AuthPageProps {
   params: Promise<{ path: string }>;
 }
@@ -34,7 +21,7 @@ export default async function AuthPage({ params }: AuthPageProps): Promise<React
   const { path } = await params;
 
   return (
-    <main className="container mx-auto flex min-h-[calc(100vh-4rem)] flex-col items-center justify-center gap-3 p-4 md:p-6">
+    <main className="container mx-auto flex min-h-[calc(100vh-4rem)] grow flex-col items-center justify-center gap-3 self-center p-4 md:p-6">
       <AuthView path={path} />
     </main>
   );

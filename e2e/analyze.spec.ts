@@ -10,7 +10,8 @@ import { expect, test } from "@playwright/test";
 test.describe("Analyze Page", () => {
   test("redirects unauthenticated users to login", async ({ page }) => {
     await page.goto("/analyze");
-    await expect(page).toHaveURL(/\/auth\/sign-in.*callbackUrl/);
+    // neonAuthMiddleware redirects to sign-in without callbackUrl
+    await expect(page).toHaveURL(/\/auth\/sign-in/);
   });
 
   test("analyze route exists (no 404)", async ({ page }) => {

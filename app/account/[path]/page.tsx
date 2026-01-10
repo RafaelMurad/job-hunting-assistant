@@ -12,13 +12,6 @@
 import { AccountView } from "@neondatabase/auth/react";
 import type { ReactElement } from "react";
 
-// Pre-render only known account paths
-export const dynamicParams = false;
-
-export function generateStaticParams(): { path: string }[] {
-  return [{ path: "settings" }, { path: "security" }];
-}
-
 interface AccountPageProps {
   params: Promise<{ path: string }>;
 }
@@ -27,7 +20,7 @@ export default async function AccountPage({ params }: AccountPageProps): Promise
   const { path } = await params;
 
   return (
-    <main className="container mx-auto flex min-h-[calc(100vh-4rem)] flex-col items-center justify-center gap-3 p-4 md:p-6">
+    <main className="container mx-auto flex min-h-[calc(100vh-4rem)] grow flex-col items-center justify-center gap-3 self-center p-4 md:p-6">
       <AccountView path={path} />
     </main>
   );

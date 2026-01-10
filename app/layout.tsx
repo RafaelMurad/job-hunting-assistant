@@ -25,7 +25,7 @@ export default function RootLayout({
   children: ReactNode;
 }>): JSX.Element {
   return (
-    <html lang="en">
+    <html lang="en" suppressHydrationWarning>
       <body className={`${inter.variable} font-sans antialiased bg-slate-50`}>
         <AuthProvider>
           <TRPCProvider>
