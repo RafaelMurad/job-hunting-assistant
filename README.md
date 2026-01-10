@@ -42,7 +42,7 @@ Job hunting shouldn't feel like a second full-time job. This project tackles the
 
 <table>
 <tr>
-<td width="50%">
+<td width="50%" valign="top">
 
 ### 📝 LaTeX CV Editor
 
@@ -55,7 +55,7 @@ Job hunting shouldn't feel like a second full-time job. This project tackles the
 - **ATS Optimized** — Designed to pass Applicant Tracking Systems
 
 </td>
-<td width="50%">
+<td width="50%" valign="top">
 
 ### 🤖 AI Job Analysis
 
@@ -69,7 +69,7 @@ Job hunting shouldn't feel like a second full-time job. This project tackles the
 </td>
 </tr>
 <tr>
-<td width="50%">
+<td width="50%" valign="top">
 
 ### 💌 Cover Letter Generation
 
@@ -81,7 +81,7 @@ Job hunting shouldn't feel like a second full-time job. This project tackles the
 - **Easy Editing** — Fine-tune before sending
 
 </td>
-<td width="50%">
+<td width="50%" valign="top">
 
 ### 📊 Application Tracker
 
@@ -317,7 +317,7 @@ This is a portfolio project, but feedback and suggestions are welcome! Feel free
 <a href="https://github.com/RafaelMurad">
 <img src="https://img.shields.io/badge/GitHub-181717?style=for-the-badge&logo=github" alt="GitHub" />
 </a>
-<a href="https://linkedin.com/in/rafaelmurad">
+<a href="https://www.linkedin.com/in/rflmurad">
 <img src="https://img.shields.io/badge/LinkedIn-0A66C2?style=for-the-badge&logo=linkedin" alt="LinkedIn" />
 </a>
 </td>
