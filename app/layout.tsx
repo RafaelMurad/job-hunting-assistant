@@ -1,4 +1,5 @@
 import { AuthProvider } from "@/components/auth-provider";
+import { CommandPalette } from "@/components/command-palette";
 import { MobileMenu } from "@/components/mobile-menu";
 import { UserMenu } from "@/components/user-menu";
 import { FeatureFlagProvider } from "@/lib/feature-flags/provider";
@@ -88,6 +89,9 @@ export default function RootLayout({
 
               {/* Main Content */}
               <main>{children}</main>
+
+              {/* Command Palette (⌘K) */}
+              <CommandPalette />
             </FeatureFlagProvider>
           </TRPCProvider>
         </AuthProvider>
