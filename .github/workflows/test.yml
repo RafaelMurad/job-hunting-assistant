@@ -19,7 +19,7 @@ jobs:
         with:
           script: |
             let files = [];
-            
+
             if (context.eventName === 'pull_request') {
               const before = context.payload.before;
               const after = context.payload.after;
@@ -51,9 +51,9 @@ jobs:
               });
               files = compare.data.files.map(f => f.filename);
             }
-            
+
             console.log('Changed files:', files);
-            
+
             const skipPatterns = [
               /\.md$/,
               /^docs\//,
@@ -61,14 +61,37 @@ jobs:
               /^LICENSE$/,
               /^\.gitignore$/
             ];
-            
+
             const codeFiles = files.filter(f => !skipPatterns.some(p => p.test(f)));
             
-            if (codeFiles.length === 0 && files.length > 0) {
-              console.log('📝 Only docs/config changed - skipping tests');
+            if (codeFiles.length > 0) {
+              console.log('💻 Code files changed:', codeFiles);
+              core.setOutput('should_skip', 'false');
+              return;
+            }
+            
+            console.log('📝 Only docs/config changed, checking previous run...');
+            
+            const runs = await github.rest.actions.listWorkflowRuns({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              workflow_id: 'test.yml',
+              branch: context.eventName === 'pull_request' 
+                ? context.payload.pull_request.head.ref 
+                : context.ref.replace('refs/heads/', ''),
+              per_page: 5,
+              status: 'completed'
+            });
+            
+            const previousSuccess = runs.data.workflow_runs.find(run => 
+              run.id !== context.runId && run.conclusion === 'success'
+            );
+            
+            if (previousSuccess) {
+              console.log(`✅ Previous run #${previousSuccess.run_number} passed - skipping`);
               core.setOutput('should_skip', 'true');
             } else {
-              console.log('💻 Code files changed:', codeFiles);
+              console.log('⚠️ No previous successful run - running tests');
               core.setOutput('should_skip', 'false');
             }
 

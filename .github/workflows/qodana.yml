@@ -13,7 +13,7 @@ jobs:
     outputs:
       should_skip: ${{ steps.check.outputs.should_skip }}
     steps:
-      - name: Check if only docs changed
+      - name: Check if can skip (docs-only + previous passed)
         id: check
         uses: actions/github-script@v7
         with:
@@ -32,15 +32,10 @@ jobs:
                   head: after
                 });
                 files = compare.data.files.map(f => f.filename);
-                console.log(`PR synchronize: comparing ${before.slice(0,7)}..${after.slice(0,7)}`);
               } else {
-                const prFiles = await github.rest.pulls.listFiles({
-                  owner: context.repo.owner,
-                  repo: context.repo.repo,
-                  pull_number: context.payload.pull_request.number
-                });
-                files = prFiles.data.map(f => f.filename);
-                console.log(`PR opened/reopened: checking all ${files.length} files`);
+                console.log('PR opened - running full Qodana');
+                core.setOutput('should_skip', 'false');
+                return;
               }
             } else {
               const compare = await github.rest.repos.compareCommits({
@@ -52,8 +47,6 @@ jobs:
               files = compare.data.files.map(f => f.filename);
             }
             
-            console.log('Changed files:', files);
-            
             const skipPatterns = [
               /\.md$/,
               /^docs\//,
@@ -64,11 +57,34 @@ jobs:
             
             const codeFiles = files.filter(f => !skipPatterns.some(p => p.test(f)));
             
-            if (codeFiles.length === 0 && files.length > 0) {
-              console.log('📝 Only docs/config changed - skipping Qodana');
+            if (codeFiles.length > 0) {
+              console.log('💻 Code files changed:', codeFiles);
+              core.setOutput('should_skip', 'false');
+              return;
+            }
+            
+            console.log('📝 Only docs/config changed, checking previous run...');
+            
+            const runs = await github.rest.actions.listWorkflowRuns({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              workflow_id: 'qodana.yml',
+              branch: context.eventName === 'pull_request' 
+                ? context.payload.pull_request.head.ref 
+                : context.ref.replace('refs/heads/', ''),
+              per_page: 5,
+              status: 'completed'
+            });
+            
+            const previousSuccess = runs.data.workflow_runs.find(run => 
+              run.id !== context.runId && run.conclusion === 'success'
+            );
+            
+            if (previousSuccess) {
+              console.log(`✅ Previous run #${previousSuccess.run_number} passed - skipping`);
               core.setOutput('should_skip', 'true');
             } else {
-              console.log('💻 Code files changed:', codeFiles);
+              console.log('⚠️ No previous successful run - running Qodana');
               core.setOutput('should_skip', 'false');
             }
 

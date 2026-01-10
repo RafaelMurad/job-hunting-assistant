@@ -13,20 +13,19 @@ jobs:
     outputs:
       should_skip: ${{ steps.check.outputs.should_skip }}
     steps:
-      - name: Check if only docs changed
+      - name: Check if can skip (docs-only + previous passed)
         id: check
         uses: actions/github-script@v7
         with:
           script: |
             let files = [];
 
+            // Get changed files
             if (context.eventName === 'pull_request') {
-              // For PRs, get files changed in the latest push (compare before/after)
               const before = context.payload.before;
               const after = context.payload.after;
               
               if (before && after && before !== '0000000000000000000000000000000000000000') {
-                // synchronize event - get commits between before and after
                 const compare = await github.rest.repos.compareCommits({
                   owner: context.repo.owner,
                   repo: context.repo.repo,
@@ -34,19 +33,14 @@ jobs:
                   head: after
                 });
                 files = compare.data.files.map(f => f.filename);
-                console.log(`PR synchronize: comparing ${before.slice(0,7)}..${after.slice(0,7)}`);
+                console.log(`Comparing ${before.slice(0,7)}..${after.slice(0,7)}`);
               } else {
-                // opened/reopened - check all PR files (can't skip on open)
-                const prFiles = await github.rest.pulls.listFiles({
-                  owner: context.repo.owner,
-                  repo: context.repo.repo,
-                  pull_number: context.payload.pull_request.number
-                });
-                files = prFiles.data.map(f => f.filename);
-                console.log(`PR opened/reopened: checking all ${files.length} files`);
+                // PR opened - can't skip on first commit
+                console.log('PR opened - running full validation');
+                core.setOutput('should_skip', 'false');
+                return;
               }
             } else {
-              // Push event - use before/after from push payload
               const compare = await github.rest.repos.compareCommits({
                 owner: context.repo.owner,
                 repo: context.repo.repo,
@@ -68,11 +62,37 @@ jobs:
 
             const codeFiles = files.filter(f => !skipPatterns.some(p => p.test(f)));
 
-            if (codeFiles.length === 0 && files.length > 0) {
-              console.log('📝 Only docs/config changed - skipping validation');
+            if (codeFiles.length > 0) {
+              console.log('💻 Code files changed:', codeFiles);
+              core.setOutput('should_skip', 'false');
+              return;
+            }
+
+            // Only docs/config changed - check if previous run passed
+            console.log('📝 Only docs/config changed, checking previous run...');
+
+            const runs = await github.rest.actions.listWorkflowRuns({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              workflow_id: 'ci.yml',
+              branch: context.eventName === 'pull_request' 
+                ? context.payload.pull_request.head.ref 
+                : context.ref.replace('refs/heads/', ''),
+              per_page: 5,
+              status: 'completed'
+            });
+
+            // Find a previous successful run (not the current one)
+            const currentRunId = context.runId;
+            const previousSuccess = runs.data.workflow_runs.find(run => 
+              run.id !== currentRunId && run.conclusion === 'success'
+            );
+
+            if (previousSuccess) {
+              console.log(`✅ Previous run #${previousSuccess.run_number} passed - skipping`);
               core.setOutput('should_skip', 'true');
             } else {
-              console.log('💻 Code files changed:', codeFiles);
+              console.log('⚠️ No previous successful run found - running validation');
               core.setOutput('should_skip', 'false');
             }
 

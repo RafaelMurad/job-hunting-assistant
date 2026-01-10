@@ -7,9 +7,92 @@ on:
     branches: [main]
 
 jobs:
+  check-changes:
+    name: Check for code changes
+    runs-on: ubuntu-latest
+    outputs:
+      should_skip: ${{ steps.check.outputs.should_skip }}
+    steps:
+      - name: Check if can skip (docs-only + previous passed)
+        id: check
+        uses: actions/github-script@v7
+        with:
+          script: |
+            let files = [];
+            
+            if (context.eventName === 'pull_request') {
+              const before = context.payload.before;
+              const after = context.payload.after;
+              
+              if (before && after && before !== '0000000000000000000000000000000000000000') {
+                const compare = await github.rest.repos.compareCommits({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  base: before,
+                  head: after
+                });
+                files = compare.data.files.map(f => f.filename);
+              } else {
+                console.log('PR opened - running full validation');
+                core.setOutput('should_skip', 'false');
+                return;
+              }
+            } else {
+              const compare = await github.rest.repos.compareCommits({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                base: context.payload.before,
+                head: context.payload.after
+              });
+              files = compare.data.files.map(f => f.filename);
+            }
+            
+            const skipPatterns = [
+              /\.md$/,
+              /^docs\//,
+              /^\.github\/workflows\/.*\.yml$/,
+              /^LICENSE$/,
+              /^\.gitignore$/
+            ];
+            
+            const codeFiles = files.filter(f => !skipPatterns.some(p => p.test(f)));
+            
+            if (codeFiles.length > 0) {
+              console.log('💻 Code files changed:', codeFiles);
+              core.setOutput('should_skip', 'false');
+              return;
+            }
+            
+            console.log('📝 Only docs/config changed, checking previous run...');
+            
+            const runs = await github.rest.actions.listWorkflowRuns({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              workflow_id: 'production-ready.yml',
+              branch: context.eventName === 'pull_request' 
+                ? context.payload.pull_request.head.ref 
+                : context.ref.replace('refs/heads/', ''),
+              per_page: 5,
+              status: 'completed'
+            });
+            
+            const previousSuccess = runs.data.workflow_runs.find(run => 
+              run.id !== context.runId && run.conclusion === 'success'
+            );
+            
+            if (previousSuccess) {
+              console.log(`✅ Previous run #${previousSuccess.run_number} passed - skipping`);
+              core.setOutput('should_skip', 'true');
+            } else {
+              console.log('⚠️ No previous successful run - running validation');
+              core.setOutput('should_skip', 'false');
+            }
+
   production-ready-check:
     name: Production Readiness Validation
     runs-on: ubuntu-latest
+    needs: check-changes
+    if: needs.check-changes.outputs.should_skip != 'true'
 
     steps:
       - name: Checkout code
