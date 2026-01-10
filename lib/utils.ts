@@ -38,13 +38,14 @@ export function parseAIError(error: unknown): string {
     return "Selected AI model is not available. Please try a different model.";
   }
 
-  // Content/safety filters
+  // Content/safety filters - be more specific to avoid false positives
   if (
-    errorMessage.includes("safety") ||
-    errorMessage.includes("blocked") ||
-    errorMessage.includes("content")
+    errorMessage.includes("safety filter") ||
+    errorMessage.includes("blocked by safety") ||
+    errorMessage.includes("SAFETY") ||
+    errorMessage.includes("BLOCK_REASON")
   ) {
-    return "The document couldn't be processed due to content restrictions. Please try a different file.";
+    return "The document was blocked by AI safety filters. This can happen with certain content. Please try a different file or remove any potentially sensitive information.";
   }
 
   // Timeout errors

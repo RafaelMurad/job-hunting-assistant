@@ -93,13 +93,13 @@ describe("parseAIError", () => {
 
   describe("content/safety errors", () => {
     it("detects safety filter triggers", () => {
-      const result = parseAIError(new Error("Content blocked by safety filters"));
-      expect(result).toContain("content restrictions");
+      const result = parseAIError(new Error("Content blocked by safety filter"));
+      expect(result).toContain("blocked by AI safety filters");
     });
 
     it("detects blocked content", () => {
-      const result = parseAIError(new Error("Request blocked due to content policy"));
-      expect(result).toContain("content restrictions");
+      const result = parseAIError(new Error("SAFETY: Request blocked"));
+      expect(result).toContain("blocked by AI safety filters");
     });
   });
 
