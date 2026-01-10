@@ -3,6 +3,9 @@
  *
  * Handles CRUD operations for CV documents.
  * Users can have up to 5 CVs, with one marked as "active" for job analysis.
+ *
+ * NOTE: Prisma accessor is `ctx.prisma.cV` (not `cv`) because the model is named `CV`.
+ * TODO: Consider renaming model to `Cv` for cleaner `prisma.cv` accessor.
  */
 
 import { protectedProcedure, router } from "@/lib/trpc/init";

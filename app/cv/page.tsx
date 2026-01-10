@@ -30,7 +30,6 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { useCV, type CVItem } from "@/lib/hooks/useCV";
-import { useSearchParams } from "next/navigation";
 import { useCallback, useEffect, useState, type ChangeEvent, type JSX } from "react";
 
 // ============================================
@@ -77,12 +76,8 @@ type ViewMode = "pdf" | "latex" | "split";
 // ============================================
 
 export default function CVEditorPage(): JSX.Element {
-  const searchParams = useSearchParams();
-  const cvIdParam = searchParams.get("id");
-
   // CV hook for data management
   const {
-    cvs,
     activeCV,
     loading: cvsLoading,
     updating: cvUpdating,
@@ -129,25 +124,15 @@ export default function CVEditorPage(): JSX.Element {
   // EFFECTS
   // ============================================
 
-  // Load CV data when hook data is ready or when cvIdParam changes
+  // Load active CV when hook data is ready
   useEffect(() => {
     if (cvsLoading) return;
 
-    // Determine which CV to load
-    let cvToLoad: CVItem | null = null;
-
-    if (cvIdParam) {
-      // Load specific CV by ID from query param
-      cvToLoad = cvs.find((cv) => cv.id === cvIdParam) ?? null;
-    } else if (activeCV) {
-      // Load active CV
-      cvToLoad = activeCV;
-    }
-
-    if (cvToLoad) {
-      setCurrentCV(cvToLoad);
-      setLatexContent(cvToLoad.latexContent ?? "");
-      setPreviewPdfUrl(cvToLoad.pdfUrl);
+    // Load active CV if available
+    if (activeCV) {
+      setCurrentCV(activeCV);
+      setLatexContent(activeCV.latexContent ?? "");
+      setPreviewPdfUrl(activeCV.pdfUrl);
       setHasUnsavedChanges(false);
     } else {
       // No CV to load - fresh state for new upload
@@ -155,7 +140,7 @@ export default function CVEditorPage(): JSX.Element {
       setLatexContent("");
       setPreviewPdfUrl(null);
     }
-  }, [cvsLoading, cvIdParam, cvs, activeCV]);
+  }, [cvsLoading, activeCV]);
 
   // Load models and templates on mount
   useEffect(() => {

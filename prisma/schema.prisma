@@ -50,6 +50,9 @@ model User {
 // ============================================
 // CV Management Model
 // ============================================
+// TODO: Consider renaming to `model Cv` for cleaner Prisma client accessor.
+// Currently `CV` → `prisma.cV` (awkward). Renaming to `Cv` → `prisma.cv` (cleaner).
+// Use `@@map("CV")` to preserve table name if renamed.
 
 model CV {
   id           String    @id @default(cuid())

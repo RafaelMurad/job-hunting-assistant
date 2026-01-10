@@ -608,7 +608,12 @@ export default function ProfilePage(): JSX.Element {
                         <Button
                           variant="outline"
                           size="sm"
-                          onClick={() => router.push(`/cv?id=${cv.id}`)}
+                          onClick={() => {
+                            // Set as active and navigate to CV editor
+                            void handleSetActive(cv.id).then(() => {
+                              router.push("/cv");
+                            });
+                          }}
                         >
                           Edit
                         </Button>
