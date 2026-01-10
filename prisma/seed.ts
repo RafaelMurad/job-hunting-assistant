@@ -117,7 +117,7 @@ async function main(): Promise<void> {
     where: { email: "long.johnson@example.com" },
     update: {},
     create: {
-      id: "6f010d61-6ccf-4aff-9e58-38c8f8453f38", // Neon Auth ID
+      id: "e265c6a5-bbc9-438b-84d6-bc823c980246", // Neon Auth ID
       email: "long.johnson@example.com",
       name: "Long Johnson",
       phone: "+1 (555) 123-4567",
