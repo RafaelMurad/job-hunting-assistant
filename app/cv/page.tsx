@@ -7,7 +7,7 @@
  * WHAT: PDF viewer + LaTeX editor with AI assistance + ATS compliance checking.
  *
  * HOW:
- * 1. Upload PDF → AI extracts LaTeX
+ * 1. Upload PDF → AI extracts LaTeX → Creates CV record
  * 2. View PDF preview + edit LaTeX in textarea
  * 3. AI-assisted modifications via natural language
  * 4. Compile LaTeX → Download or save
@@ -29,6 +29,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { useCV, type CVItem } from "@/lib/hooks/useCV";
+import { useSearchParams } from "next/navigation";
 import { useCallback, useEffect, useState, type ChangeEvent, type JSX } from "react";
 
 // ============================================
@@ -49,18 +51,6 @@ interface TemplateInfo {
   name: string;
   description: string;
   usage: string;
-}
-
-interface CVData {
-  pdfUrl: string | null;
-  latexUrl: string | null;
-  latexContent: string | null;
-  filename: string | null;
-  uploadedAt: string | null;
-  modelUsed?: string | null;
-  fallbackUsed?: boolean;
-  templateId?: string | null;
-  extractedContent?: unknown; // JSON content for template switching
 }
 
 interface ATSIssue {
@@ -87,14 +77,29 @@ type ViewMode = "pdf" | "latex" | "split";
 // ============================================
 
 export default function CVEditorPage(): JSX.Element {
-  // State
-  const [cvData, setCvData] = useState<CVData | null>(null);
+  const searchParams = useSearchParams();
+  const cvIdParam = searchParams.get("id");
+
+  // CV hook for data management
+  const {
+    cvs,
+    activeCV,
+    loading: cvsLoading,
+    updating: cvUpdating,
+    update: updateCV,
+    refetch: refetchCVs,
+    canAddMore,
+  } = useCV();
+
+  // Current CV being edited
+  const [currentCV, setCurrentCV] = useState<CVItem | null>(null);
   const [latexContent, setLatexContent] = useState<string>("");
   const [previewPdfUrl, setPreviewPdfUrl] = useState<string | null>(null);
   const [viewMode, setViewMode] = useState<ViewMode>("split");
   const [atsAnalysis, setAtsAnalysis] = useState<ATSAnalysis | null>(null);
   const [aiInstruction, setAiInstruction] = useState<string>("");
   const [toast, setToast] = useState<Toast | null>(null);
+  const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
 
   // Advanced Mode toggle - hides LaTeX editor and AI tools by default
   const [advancedMode, setAdvancedMode] = useState<boolean>(false);
@@ -111,7 +116,6 @@ export default function CVEditorPage(): JSX.Element {
   const [extractedContent, setExtractedContent] = useState<unknown>(null);
 
   // Loading states
-  const [loading, setLoading] = useState(true);
   const [uploading, setUploading] = useState(false);
   const [compiling, setCompiling] = useState(false);
   const [modifying, setModifying] = useState(false);
@@ -125,12 +129,46 @@ export default function CVEditorPage(): JSX.Element {
   // EFFECTS
   // ============================================
 
-  // Load existing CV data on mount
+  // Load CV data when hook data is ready or when cvIdParam changes
   useEffect(() => {
-    void loadCVData();
+    if (cvsLoading) return;
+
+    // Determine which CV to load
+    let cvToLoad: CVItem | null = null;
+
+    if (cvIdParam) {
+      // Load specific CV by ID from query param
+      cvToLoad = cvs.find((cv) => cv.id === cvIdParam) ?? null;
+    } else if (activeCV) {
+      // Load active CV
+      cvToLoad = activeCV;
+    }
+
+    if (cvToLoad) {
+      setCurrentCV(cvToLoad);
+      setLatexContent(cvToLoad.latexContent ?? "");
+      setPreviewPdfUrl(cvToLoad.pdfUrl);
+      setHasUnsavedChanges(false);
+    } else {
+      // No CV to load - fresh state for new upload
+      setCurrentCV(null);
+      setLatexContent("");
+      setPreviewPdfUrl(null);
+    }
+  }, [cvsLoading, cvIdParam, cvs, activeCV]);
+
+  // Load models and templates on mount
+  useEffect(() => {
     void loadAvailableModels();
     void loadAvailableTemplates();
   }, []);
+
+  // Track unsaved changes
+  useEffect(() => {
+    if (currentCV && latexContent !== (currentCV.latexContent ?? "")) {
+      setHasUnsavedChanges(true);
+    }
+  }, [latexContent, currentCV]);
 
   // ============================================
   // HELPERS
@@ -173,24 +211,6 @@ export default function CVEditorPage(): JSX.Element {
       }
     } catch (error) {
       console.error("Failed to load available templates:", error);
-    }
-  };
-
-  const loadCVData = async (): Promise<void> => {
-    try {
-      setLoading(true);
-      const response = await fetch("/api/cv/store");
-
-      if (response.ok) {
-        const result = await response.json();
-        setCvData(result.data);
-        setLatexContent(result.data.latexContent || "");
-        setPreviewPdfUrl(result.data.pdfUrl);
-      }
-    } catch (error) {
-      console.error("Failed to load CV data:", error);
-    } finally {
-      setLoading(false);
     }
   };
 
@@ -243,6 +263,15 @@ export default function CVEditorPage(): JSX.Element {
       const file = e.target.files?.[0];
       if (!file) return;
 
+      // Check if user can add more CVs
+      if (!currentCV && !canAddMore) {
+        showToast(
+          "error",
+          "Maximum of 5 CVs reached. Please delete one before uploading a new CV."
+        );
+        return;
+      }
+
       // Validate file type - now supports PDF, DOCX, TEX
       const validTypes = [
         "application/pdf",
@@ -262,6 +291,11 @@ export default function CVEditorPage(): JSX.Element {
         formData.append("model", selectedModel);
         formData.append("template", selectedTemplate);
 
+        // If editing existing CV, include the ID
+        if (currentCV) {
+          formData.append("cvId", currentCV.id);
+        }
+
         const response = await fetch("/api/cv/store", {
           method: "POST",
           body: formData,
@@ -274,15 +308,19 @@ export default function CVEditorPage(): JSX.Element {
           return;
         }
 
-        setCvData(result.data);
+        // Update state with new CV data
         setLatexContent(result.data.latexContent || "");
         setPreviewPdfUrl(result.data.pdfUrl);
         setAtsAnalysis(null); // Clear old analysis
+        setHasUnsavedChanges(false);
 
         // Store extracted content for template switching
         if (result.data.extractedContent) {
           setExtractedContent(result.data.extractedContent);
         }
+
+        // Refetch CVs to get the new/updated CV record
+        refetchCVs();
 
         // Track which model was used
         if (result.data.modelUsed) {
@@ -315,7 +353,7 @@ export default function CVEditorPage(): JSX.Element {
         }, 2000);
       }
     },
-    [selectedModel, selectedTemplate]
+    [selectedModel, selectedTemplate, currentCV, canAddMore, refetchCVs]
   );
 
   // Handler for FileUpload component (drag-and-drop)
@@ -469,7 +507,7 @@ export default function CVEditorPage(): JSX.Element {
 
     const link = document.createElement("a");
     link.href = previewPdfUrl;
-    link.download = cvData?.filename || "cv.pdf";
+    link.download = currentCV?.name || "cv.pdf";
     link.click();
   };
 
@@ -488,37 +526,20 @@ export default function CVEditorPage(): JSX.Element {
     showToast("info", "Opening in Overleaf. You can compile and download the PDF there.");
   };
 
-  const handleDelete = async (): Promise<void> => {
-    if (!cvData?.pdfUrl) {
-      showToast("error", "No CV to delete.");
-      return;
-    }
+  // Save current CV to database
+  const handleSaveCV = async (): Promise<void> => {
+    if (!currentCV || !hasUnsavedChanges) return;
 
-    // Confirm deletion
-    if (!window.confirm("Are you sure you want to delete your CV? This cannot be undone.")) {
-      return;
-    }
+    const result = await updateCV({
+      id: currentCV.id,
+      latexContent,
+    });
 
-    try {
-      const response = await fetch("/api/cv/store", {
-        method: "DELETE",
-      });
-
-      if (!response.ok) {
-        const result = await response.json();
-        showToast("error", result.error || "Failed to delete CV.");
-        return;
-      }
-
-      // Clear local state
-      setCvData(null);
-      setLatexContent("");
-      setPreviewPdfUrl(null);
-      setAtsAnalysis(null);
-      showToast("success", "CV deleted successfully.");
-    } catch (error) {
-      console.error("Delete error:", error);
-      showToast("error", "Failed to delete CV. Please try again.");
+    if (result) {
+      setHasUnsavedChanges(false);
+      showToast("success", "CV saved successfully!");
+    } else {
+      showToast("error", "Failed to save CV.");
     }
   };
 
@@ -526,7 +547,7 @@ export default function CVEditorPage(): JSX.Element {
   // RENDER
   // ============================================
 
-  if (loading) {
+  if (cvsLoading) {
     return (
       <div className="container mx-auto py-8 px-4 max-w-7xl">
         <div className="flex items-center justify-center h-64">
@@ -750,12 +771,22 @@ export default function CVEditorPage(): JSX.Element {
             )}
           </div>
 
-          {/* Row 2: File info (only shows when file is loaded) */}
-          {cvData?.filename && (
+          {/* Row 2: File info (only shows when CV is loaded) */}
+          {currentCV && (
             <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2 sm:gap-3 pt-2 border-t">
               <div className="flex items-center gap-2 flex-wrap">
                 <span className="text-sm font-medium">Current:</span>
-                <span className="text-sm text-muted-foreground">{cvData.filename}</span>
+                <span className="text-sm text-muted-foreground">{currentCV.name}</span>
+                {currentCV.isActive && (
+                  <Badge variant="default" className="bg-green-600 text-white text-xs">
+                    Active
+                  </Badge>
+                )}
+                {hasUnsavedChanges && (
+                  <Badge variant="secondary" className="text-xs">
+                    Unsaved changes
+                  </Badge>
+                )}
                 {modelUsed && (
                   <Badge variant={fallbackUsed ? "secondary" : "outline"} className="text-xs">
                     {modelUsed}
@@ -764,14 +795,17 @@ export default function CVEditorPage(): JSX.Element {
                 )}
               </div>
               <div className="hidden sm:block flex-1" />
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={handleDelete}
-                className="text-red-600 hover:text-red-700 hover:bg-red-50 h-9 sm:h-7 w-full sm:w-auto"
-              >
-                Delete CV
-              </Button>
+              {hasUnsavedChanges && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => void handleSaveCV()}
+                  disabled={cvUpdating}
+                  className="h-9 sm:h-7 w-full sm:w-auto"
+                >
+                  {cvUpdating ? "Saving..." : "Save Changes"}
+                </Button>
+              )}
             </div>
           )}
         </CardContent>

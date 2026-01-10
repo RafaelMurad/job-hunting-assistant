@@ -6,12 +6,13 @@
  */
 
 import { router } from "@/lib/trpc/init";
-import { userRouter } from "./routers/user";
+import { adminRouter } from "./routers/admin";
 import { analyzeRouter } from "./routers/analyze";
 import { applicationsRouter } from "./routers/applications";
-import { uxRouter } from "./routers/ux";
+import { cvRouter } from "./routers/cv";
 import { socialRouter } from "./routers/social";
-import { adminRouter } from "./routers/admin";
+import { userRouter } from "./routers/user";
+import { uxRouter } from "./routers/ux";
 
 /**
  * Main application router.
@@ -21,6 +22,7 @@ export const appRouter = router({
   user: userRouter,
   analyze: analyzeRouter,
   applications: applicationsRouter,
+  cv: cvRouter,
   ux: uxRouter,
   social: socialRouter,
   admin: adminRouter,

@@ -44,6 +44,29 @@ model User {
   applications   Application[]
   socialProfiles SocialProfile[]
   socialSyncs    SocialSync[]
+  cvs            CV[] // Multiple CVs per user
+}
+
+// ============================================
+// CV Management Model
+// ============================================
+
+model CV {
+  id           String    @id @default(cuid())
+  userId       String
+  user         User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  name         String    // Display name (from filename)
+  pdfUrl       String?   // Vercel Blob URL for PDF
+  latexUrl     String?   // Vercel Blob URL for LaTeX
+  latexContent String?   @db.Text // Raw LaTeX content for editing
+  isActive     Boolean   @default(false) // One active CV per user for job analysis
+  
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  @@index([userId])
+  @@index([userId, isActive])
 }
 
 enum UserRole {
