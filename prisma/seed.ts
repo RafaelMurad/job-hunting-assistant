@@ -111,11 +111,13 @@ async function main(): Promise<void> {
 
   // ============================================
   // USER 1: Primary test user (experienced engineer)
+  // NOTE: ID must match Neon Auth user ID for authenticated sessions
   // ============================================
   const user1 = await prisma.user.upsert({
     where: { email: "rafael.murad@example.com" },
     update: {},
     create: {
+      id: "6f010d61-6ccf-4aff-9e58-38c8f8453f38", // Neon Auth ID
       email: "rafael.murad@example.com",
       name: "Rafael Murad",
       phone: "+1 (555) 123-4567",
@@ -142,11 +144,13 @@ Junior Developer at WebAgency (2017-2019)
 
   // ============================================
   // USER 2: Junior developer (different persona)
+  // NOTE: ID must match Neon Auth user ID for authenticated sessions
   // ============================================
   const user2 = await prisma.user.upsert({
     where: { email: "sarah.chen@example.com" },
     update: {},
     create: {
+      id: "6efeb30d-9d86-49e4-9f7f-da523456cb75", // Neon Auth ID
       email: "sarah.chen@example.com",
       name: "Sarah Chen",
       phone: "+1 (555) 987-6543",
@@ -167,11 +171,13 @@ Freelance Web Developer (2023-2024)
 
   // ============================================
   // USER 3: Career changer (data scientist → SWE)
+  // NOTE: ID must match Neon Auth user ID for authenticated sessions
   // ============================================
   const user3 = await prisma.user.upsert({
     where: { email: "marcus.johnson@example.com" },
     update: {},
     create: {
+      id: "742b1a28-111f-4f1d-af6e-74287832cd96", // Neon Auth ID
       email: "marcus.johnson@example.com",
       name: "Marcus Johnson",
       phone: "+1 (555) 456-7890",
