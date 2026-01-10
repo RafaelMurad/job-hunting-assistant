@@ -70,7 +70,7 @@ Job hunting is fragmented, tedious, and hard to track:
 | **Database**  | PostgreSQL (Neon)                         |
 | **ORM**       | Prisma                                    |
 | **AI**        | Gemini 2.5 Flash + OpenRouter (free tier) |
-| **Auth**      | NextAuth.js v5 (GitHub OAuth)             |
+| **Auth**      | Neon Auth (email/password + social)       |
 | **Hosting**   | Vercel                                    |
 
 ### Data Models
@@ -96,7 +96,6 @@ Job hunting is fragmented, tedious, and hard to track:
 
 Features intentionally excluded from portfolio scope:
 
-- Multi-provider OAuth (Google, LinkedIn)
 - Social integrations (GitHub/LinkedIn data sync)
 - Paid AI providers (OpenAI, Claude)
 - Interview calendar integration

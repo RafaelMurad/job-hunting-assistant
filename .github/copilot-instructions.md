@@ -4,26 +4,26 @@
 
 A **learning-focused portfolio project** for AI-powered job hunting: CV analysis, cover letter generation, and application tracking. Built with Next.js 16 App Router.
 
-**Status:** v1.1 Complete - Auth & Social Integrations deployed to Vercel
+**Status:** v1.2 Complete - Neon Auth deployed to Vercel
 
 ## Tech Stack
 
 - **Frontend:** Next.js 16 (App Router), React 19, TypeScript, TailwindCSS 4, Shadcn/ui
 - **Backend:** tRPC v11 with React Query, Prisma ORM
 - **Database:** PostgreSQL (Neon) with connection pooling
-- **Auth:** NextAuth.js v5 (beta) with GitHub, Google, LinkedIn OAuth
+- **Auth:** Neon Auth (email/password + social OAuth)
 - **AI:** Multi-provider via `lib/ai/` — Gemini (free), OpenAI, Claude
 
 ## Architecture & Data Flow
 
 ```
-app/page.tsx (landing) → app/login/page.tsx (OAuth sign-in)
+app/page.tsx (landing) → app/auth/[path]/page.tsx (Neon Auth sign-in/up)
                        → app/dashboard/page.tsx (stats overview)
                        → app/profile/page.tsx (CV form)
                        → app/analyze/page.tsx (job analysis)
                        → app/cv/page.tsx (LaTeX editor)
                        → app/tracker/page.tsx (applications list)
-                       → app/settings/page.tsx (integrations)
+                       → app/account/[path]/page.tsx (Neon Auth account settings)
                        → app/admin/* (feature flags, UX planner)
 
 Custom Hooks (lib/hooks/):
@@ -35,14 +35,12 @@ tRPC Routers (lib/trpc/routers/):
   user.ts         → get, upsert, uploadCV
   analyze.ts      → analyzeJob, generateCoverLetter
   applications.ts → list, create, update, delete
-  social.ts       → OAuth integrations, profile sync
   admin.ts        → trusted user management
   ux.ts           → UX research platform
 
-Social Integration (lib/social/):
-  providers/github.ts   → GitHub OAuth + API (repos, contributions)
-  providers/linkedin.ts → LinkedIn OAuth + API
-  token-manager.ts      → AES-256-GCM token encryption
+Neon Auth (lib/auth/):
+  neon-client.ts    → Client-side auth (useNeonSession, neonSignIn/Out)
+  neon-server.ts    → Server-side auth (getNeonSession)
 ```
 
 ## Key Patterns
@@ -81,17 +79,24 @@ export type UserInput = z.infer<typeof userSchema>;
 
 ### Authentication Pattern
 
-NextAuth.js v5 with JWT strategy. Use `auth()` in Server Components, `getToken()` in Edge middleware:
+Neon Auth with cookie-based sessions. Use `getNeonSession()` in Server Components, `useNeonSession()` in client:
 
 ```typescript
-// Server Component - use auth()
-import { auth } from "@/lib/auth";
-const session = await auth();
-if (!session) redirect("/login");
+// Server Component - use getNeonSession()
+import { getNeonSession } from "@/lib/auth/neon-server";
+const session = await getNeonSession();
+const user = session?.data?.user;
+if (!user) redirect("/auth/sign-in");
 
-// Middleware - use getToken() (edge-compatible, no Prisma)
-import { getToken } from "next-auth/jwt";
-const token = await getToken({ req, secret: process.env.AUTH_SECRET ?? "" });
+// Client Component - use useNeonSession()
+import { useNeonSession, neonSignOut } from "@/lib/auth/neon-client";
+const { data: session, isPending } = useNeonSession();
+if (!session?.user) return <SignInPrompt />;
+
+// API Route - use getNeonSession()
+import { getNeonSession } from "@/lib/auth/neon-server";
+const session = await getNeonSession();
+if (!session?.data?.user?.id) return unauthorized();
 ```
 
 ### Feature Flags (`lib/feature-flags/`)
@@ -276,20 +281,14 @@ GEMINI_API_KEY=         # Free tier: 1500 req/day
 OPENAI_API_KEY=         # Optional paid
 ANTHROPIC_API_KEY=      # Optional paid
 
-# Authentication (NextAuth.js v5)
-AUTH_SECRET=            # Random string for JWT signing
-AUTH_GITHUB_ID=         # GitHub OAuth App ID
-AUTH_GITHUB_SECRET=     # GitHub OAuth App Secret
-AUTH_GOOGLE_ID=         # Google OAuth Client ID
-AUTH_GOOGLE_SECRET=     # Google OAuth Client Secret
-AUTH_LINKEDIN_ID=       # LinkedIn OAuth App ID
-AUTH_LINKEDIN_SECRET=   # LinkedIn OAuth App Secret
+# Authentication (Neon Auth)
+NEON_AUTH_BASE_URL=     # Neon Auth endpoint (from Neon console)
+                        # Format: https://ep-xxx.neonauth.c-X.region.aws.neon.tech/dbname/auth
 
-# Social Integration (optional, for enhanced data sync)
-SOCIAL_ENCRYPTION_KEY=  # 32-byte hex key for token encryption
+# Admin
 OWNER_EMAIL=            # Email for OWNER role assignment
 ```
 
-## Out of Scope (v1.1)
+## Out of Scope (v1.2)
 
 Mark with `FUTURE:` — PDF CV export, email integration, job board scraping, mobile app, interview AI helper

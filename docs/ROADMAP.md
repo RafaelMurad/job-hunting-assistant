@@ -9,15 +9,17 @@ This roadmap is the execution-focused companion to the PRD.
 
 ## v1.2 — Portfolio Polish
 
-### Milestone 1 — Auth Simplification ✅
+### Milestone 1 — Neon Auth Migration ✅
 
-**Goal:** Simplify authentication to GitHub OAuth only.
+**Goal:** Replace NextAuth.js with Neon Auth for simpler, more powerful authentication.
 
 **Deliverables:**
 
-- Remove Google and LinkedIn OAuth providers
-- Keep GitHub OAuth for developer-friendly sign-in
-- Email/password auth (planned)
+- ✅ Migrate from NextAuth.js v5 to Neon Auth
+- ✅ Add email/password authentication (built-in)
+- ✅ Update auth UI pages (`/auth/sign-in`, `/auth/sign-up`)
+- ✅ Update proxy.ts for Neon Auth session cookies
+- ✅ Update tRPC context for Neon Auth sessions
 
 **Status:** Complete
 
