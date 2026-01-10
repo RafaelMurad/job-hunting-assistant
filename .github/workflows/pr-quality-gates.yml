@@ -39,6 +39,8 @@ jobs:
       
       - name: Verify build succeeds
         run: npm run build
+        env:
+          NEON_AUTH_BASE_URL: "https://auth.example.com"
       
       - name: Upload coverage reports
         if: always()
