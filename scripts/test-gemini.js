@@ -1,5 +1,4 @@
 // Test script to see what Gemini models are available
-/* eslint-disable @typescript-eslint/no-require-imports */
 // Diagnostic script uses CommonJS for simplicity (no build step needed)
 require("dotenv").config({ path: ".env.local" });
 const { GoogleGenerativeAI } = require("@google/generative-ai");

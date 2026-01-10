@@ -50,3 +50,6 @@ next-env.d.ts
 # Local Copilot instructions (private collaboration context)
 .copilot-local.md
 .env*.local
+
+*storybook.log
+storybook-static
