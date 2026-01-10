@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import type { JSX, ReactNode } from "react";
-import { Inter } from "next/font/google";
+import { GeistSans } from "geist/font/sans";
+import { GeistMono } from "geist/font/mono";
 import "./globals.css";
 import Link from "next/link";
 import { FeatureFlagProvider } from "@/lib/feature-flags/provider";
@@ -8,11 +9,6 @@ import { TRPCProvider } from "@/lib/trpc/provider";
 import { AuthProvider } from "@/components/auth-provider";
 import { UserMenu } from "@/components/user-menu";
 import { MobileMenu } from "@/components/mobile-menu";
-
-const inter = Inter({
-  subsets: ["latin"],
-  variable: "--font-inter",
-});
 
 export const metadata: Metadata = {
   title: "Job Hunt AI - AI-Powered Job Application Assistant",
@@ -26,7 +22,9 @@ export default function RootLayout({
 }>): JSX.Element {
   return (
     <html lang="en" suppressHydrationWarning>
-      <body className={`${inter.variable} font-sans antialiased bg-slate-50`}>
+      <body
+        className={`${GeistSans.variable} ${GeistMono.variable} font-sans antialiased bg-slate-50`}
+      >
         <AuthProvider>
           <TRPCProvider>
             <FeatureFlagProvider>
