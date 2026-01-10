@@ -14,34 +14,34 @@ jobs:
       pull-requests: write
       issues: write
       checks: write
-    
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
-      
+
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '20'
-          cache: 'npm'
-      
+          node-version: "20"
+          cache: "npm"
+
       - name: Install dependencies
         run: npm ci
-      
+
       - name: Run ESLint
         run: npm run lint
-      
+
       - name: Run TypeScript type checking
         run: npm run type-check
-      
+
       - name: Run tests with coverage
         run: npm run test:ci
-      
+
       - name: Verify build succeeds
         run: npm run build
         env:
           NEON_AUTH_BASE_URL: "https://ep-old-rain-adc804b7.neonauth.c-2.us-east-1.aws.neon.tech/neondb/auth"
-      
+
       - name: Upload coverage reports
         if: always()
         uses: codecov/codecov-action@v4
@@ -49,7 +49,7 @@ jobs:
           files: ./coverage/coverage-final.json
           flags: pr-checks
           fail_ci_if_error: false
-      
+
       - name: Comment PR with results
         if: always()
         uses: actions/github-script@v7
@@ -60,11 +60,11 @@ jobs:
               repo: context.repo.repo,
               ref: context.payload.pull_request.head.sha,
             });
-            
+
             const failedChecks = checks.check_runs.filter(check => check.conclusion === 'failure');
-            
+
             let comment = '## 🔍 PR Quality Gate Results\n\n';
-            
+
             if (failedChecks.length === 0) {
               comment += '✅ All quality checks passed!\n\n';
               comment += '- ✅ ESLint: No issues\n';
@@ -77,17 +77,17 @@ jobs:
                 comment += `- ❌ ${check.name}\n`;
               });
             }
-            
+
             const { data: comments } = await github.rest.issues.listComments({
               owner: context.repo.owner,
               repo: context.repo.repo,
               issue_number: context.payload.pull_request.number,
             });
-            
+
             const botComment = comments.find(comment => 
               comment.user.type === 'Bot' && comment.body.includes('PR Quality Gate Results')
             );
-            
+
             if (botComment) {
               await github.rest.issues.updateComment({
                 owner: context.repo.owner,

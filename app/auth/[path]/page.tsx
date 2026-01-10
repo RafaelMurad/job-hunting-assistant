@@ -11,6 +11,7 @@
  */
 
 import { AuthView } from "@neondatabase/auth/react";
+import type { ReactElement } from "react";
 
 // Pre-render only known auth paths
 export const dynamicParams = false;
@@ -29,7 +30,7 @@ interface AuthPageProps {
   params: Promise<{ path: string }>;
 }
 
-export default async function AuthPage({ params }: AuthPageProps): Promise<React.ReactElement> {
+export default async function AuthPage({ params }: AuthPageProps): Promise<ReactElement> {
   const { path } = await params;
 
   return (

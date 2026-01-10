@@ -10,6 +10,7 @@
  */
 
 import { AccountView } from "@neondatabase/auth/react";
+import type { ReactElement } from "react";
 
 // Pre-render only known account paths
 export const dynamicParams = false;
@@ -22,9 +23,7 @@ interface AccountPageProps {
   params: Promise<{ path: string }>;
 }
 
-export default async function AccountPage({
-  params,
-}: AccountPageProps): Promise<React.ReactElement> {
+export default async function AccountPage({ params }: AccountPageProps): Promise<ReactElement> {
   const { path } = await params;
 
   return (
