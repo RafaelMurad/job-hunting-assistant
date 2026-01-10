@@ -30,6 +30,28 @@ import {
 } from "../utils";
 
 // =============================================================================
+// HELPER TYPES AND FUNCTIONS
+// =============================================================================
+
+/**
+ * Result type for safe validation (no exceptions for control flow)
+ */
+type ValidationResult = { success: true; latex: string } | { success: false; error: string };
+
+/**
+ * Validate LaTeX without throwing - returns Result type
+ */
+function validateLatexSafely(text: string): ValidationResult {
+  try {
+    const latex = cleanAndValidateLatex(text);
+    return { success: true, latex };
+  } catch (error) {
+    const message = error instanceof Error ? error.message : "Unknown validation error";
+    return { success: false, error: message };
+  }
+}
+
+// =============================================================================
 // JOB ANALYSIS
 // =============================================================================
 
@@ -233,50 +255,48 @@ export async function extractLatexWithGemini(
       },
     });
 
-    try {
-      const result = await model.generateContent([
-        {
-          inlineData: {
-            mimeType,
-            data: base64Data,
-          },
+    const result = await model.generateContent([
+      {
+        inlineData: {
+          mimeType,
+          data: base64Data,
         },
-        LATEX_EXTRACTION_PROMPT,
-      ]);
+      },
+      LATEX_EXTRACTION_PROMPT,
+    ]);
 
-      // Check for blocked content
-      const candidate = result.response.candidates?.[0];
-      if (!candidate) {
-        const blockReason = result.response.promptFeedback?.blockReason;
-        console.error(`[${modelId}] No response candidate. Block reason:`, blockReason);
-        throw new Error(`Content blocked by safety filter: ${blockReason || "unknown reason"}`);
-      }
-
-      const finishReason = candidate.finishReason;
-      const wasTruncated = finishReason === "MAX_TOKENS";
-
-      // Check if response was blocked
-      if (finishReason === "SAFETY") {
-        const safetyRatings = candidate.safetyRatings;
-        console.error(`[${modelId}] Response blocked by safety filter:`, safetyRatings);
-        throw new Error("Content blocked by safety filter");
-      }
-
-      try {
-        return cleanAndValidateLatex(result.response.text());
-      } catch (error) {
-        // If truncated and we have more limits to try, continue
-        if (wasTruncated && maxTokens < tokenLimits[tokenLimits.length - 1]!) {
-          console.warn(`[${modelId}] Response truncated at ${maxTokens} tokens, retrying...`);
-          continue;
-        }
-        throw error;
-      }
-    } catch (error) {
-      // Log the actual error for debugging
-      console.error(`[${modelId}] Extraction error at ${maxTokens} tokens:`, error);
-      throw error;
+    // Check for blocked content
+    const candidate = result.response.candidates?.[0];
+    if (!candidate) {
+      const blockReason = result.response.promptFeedback?.blockReason;
+      console.error(`[${modelId}] No response candidate. Block reason:`, blockReason);
+      throw new Error(`Content blocked by safety filter: ${blockReason || "unknown reason"}`);
     }
+
+    const finishReason = candidate.finishReason;
+    const wasTruncated = finishReason === "MAX_TOKENS";
+
+    // Check if response was blocked
+    if (finishReason === "SAFETY") {
+      const safetyRatings = candidate.safetyRatings;
+      console.error(`[${modelId}] Response blocked by safety filter:`, safetyRatings);
+      throw new Error("Content blocked by safety filter");
+    }
+
+    // Try to validate and return, or retry if truncated
+    const validationResult = validateLatexSafely(result.response.text());
+    if (validationResult.success) {
+      return validationResult.latex;
+    }
+
+    // If truncated and we have more limits to try, continue to next iteration
+    if (wasTruncated && maxTokens < tokenLimits[tokenLimits.length - 1]!) {
+      console.warn(`[${modelId}] Response truncated at ${maxTokens} tokens, retrying...`);
+      continue;
+    }
+
+    // Not truncated or no more retries - throw the validation error
+    throw new Error(validationResult.error);
   }
 
   throw new Error("LaTeX extraction failed after all retry attempts.");
@@ -304,34 +324,29 @@ export async function extractContentWithGemini(
     },
   });
 
-  try {
-    const result = await model.generateContent([
-      {
-        inlineData: {
-          mimeType,
-          data: base64Data,
-        },
+  const result = await model.generateContent([
+    {
+      inlineData: {
+        mimeType,
+        data: base64Data,
       },
-      CV_CONTENT_EXTRACTION_PROMPT,
-    ]);
+    },
+    CV_CONTENT_EXTRACTION_PROMPT,
+  ]);
 
-    // Check for blocked content
-    const candidate = result.response.candidates?.[0];
-    if (!candidate) {
-      const blockReason = result.response.promptFeedback?.blockReason;
-      console.error(`[extractContentWithGemini] No response candidate. Block reason:`, blockReason);
-      throw new Error(`Content blocked by safety filter: ${blockReason || "unknown reason"}`);
-    }
-
-    if (candidate.finishReason === "SAFETY") {
-      console.error(`[extractContentWithGemini] Response blocked:`, candidate.safetyRatings);
-      throw new Error("Content blocked by safety filter");
-    }
-
-    const jsonText = cleanJsonResponse(result.response.text());
-    return parseJsonOrThrow(jsonText, extractedCVContentSchema, "Gemini CV content extraction");
-  } catch (error) {
-    console.error(`[extractContentWithGemini] Error:`, error);
-    throw error;
+  // Check for blocked content
+  const candidate = result.response.candidates?.[0];
+  if (!candidate) {
+    const blockReason = result.response.promptFeedback?.blockReason;
+    console.error(`[extractContentWithGemini] No response candidate. Block reason:`, blockReason);
+    throw new Error(`Content blocked by safety filter: ${blockReason || "unknown reason"}`);
   }
+
+  if (candidate.finishReason === "SAFETY") {
+    console.error(`[extractContentWithGemini] Response blocked:`, candidate.safetyRatings);
+    throw new Error("Content blocked by safety filter");
+  }
+
+  const jsonText = cleanJsonResponse(result.response.text());
+  return parseJsonOrThrow(jsonText, extractedCVContentSchema, "Gemini CV content extraction");
 }
