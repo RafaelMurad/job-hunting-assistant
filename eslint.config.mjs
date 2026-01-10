@@ -1,7 +1,7 @@
-import { defineConfig, globalIgnores } from "eslint/config";
 import nextVitals from "eslint-config-next/core-web-vitals";
 import nextTs from "eslint-config-next/typescript";
 import prettierConfig from "eslint-config-prettier";
+import { defineConfig, globalIgnores } from "eslint/config";
 
 const eslintConfig = defineConfig([
   ...nextVitals,
@@ -76,6 +76,14 @@ const eslintConfig = defineConfig([
       // JavaScript files: Less strict (no TypeScript-specific rules)
       "no-console": ["error", { allow: ["warn", "error"] }],
       "no-debugger": "error",
+    },
+  },
+  {
+    // Scripts are allowed to use console.log and require()
+    files: ["scripts/**/*.js"],
+    rules: {
+      "no-console": "off",
+      "@typescript-eslint/no-require-imports": "off",
     },
   },
 ]);

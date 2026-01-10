@@ -23,6 +23,8 @@
     "db:migrate": "prisma migrate dev",
     "db:migrate:deploy": "prisma migrate deploy",
     "db:studio": "prisma studio",
+    "env:pull": "vercel env pull .env.local --environment=development --yes",
+    "env:check": "node scripts/check-env.js",
     "vercel:deploy": ".husky/pre-deploy && vercel deploy",
     "vercel:deploy:production": ".husky/pre-deploy && vercel deploy --prod",
     "prepare": "husky"

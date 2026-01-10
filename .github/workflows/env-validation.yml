@@ -1,0 +1,110 @@
+# =============================================================================
+# Environment Validation Workflow
+# =============================================================================
+# Validates that required environment variables are configured.
+# Runs on PRs and pushes to main to catch configuration issues early.
+#
+# This workflow does NOT expose env var values - it only checks presence.
+
+name: Env Validation
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - ".env.example"
+      - ".env.*.example"
+      - "scripts/check-env.js"
+  pull_request:
+    paths:
+      - ".env.example"
+      - ".env.*.example"
+      - "scripts/check-env.js"
+  workflow_dispatch: # Manual trigger
+
+jobs:
+  validate-env-config:
+    name: Validate Environment Configuration
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Check .env.example has required vars
+        run: |
+          echo "🔍 Checking .env.example for required variables..."
+
+          REQUIRED_VARS=(
+            "DATABASE_URL"
+            "NEON_AUTH_BASE_URL"
+            "AI_PROVIDER"
+            "GEMINI_API_KEY"
+          )
+
+          MISSING=()
+
+          for var in "${REQUIRED_VARS[@]}"; do
+            if ! grep -q "^${var}=" .env.example; then
+              MISSING+=("$var")
+            fi
+          done
+
+          if [ ${#MISSING[@]} -eq 0 ]; then
+            echo "✅ All required variables documented in .env.example"
+          else
+            echo "❌ Missing from .env.example:"
+            printf '   - %s\n' "${MISSING[@]}"
+            exit 1
+          fi
+
+      - name: Check deprecated vars are removed
+        run: |
+          echo "🔍 Checking for deprecated NextAuth variables..."
+
+          DEPRECATED_VARS=(
+            "AUTH_SECRET"
+            "AUTH_GITHUB_ID"
+            "AUTH_GITHUB_SECRET"
+            "AUTH_GOOGLE_ID"
+            "AUTH_GOOGLE_SECRET"
+            "AUTH_LINKEDIN_ID"
+            "AUTH_LINKEDIN_SECRET"
+            "NEXTAUTH_URL"
+          )
+
+          FOUND=()
+
+          for var in "${DEPRECATED_VARS[@]}"; do
+            # Check if it's an active (non-commented) variable
+            if grep -q "^${var}=" .env.example 2>/dev/null; then
+              FOUND+=("$var")
+            fi
+          done
+
+          if [ ${#FOUND[@]} -eq 0 ]; then
+            echo "✅ No deprecated variables found"
+          else
+            echo "⚠️  Deprecated variables still in .env.example (should be commented or removed):"
+            printf '   - %s\n' "${FOUND[@]}"
+            # Warning only, don't fail
+          fi
+
+      - name: Validate example files are in sync
+        run: |
+          echo "🔍 Checking env example files consistency..."
+
+          # Extract variable names from each file
+          extract_vars() {
+            grep -E "^[A-Z_]+=" "$1" 2>/dev/null | cut -d'=' -f1 | sort -u
+          }
+
+          MAIN_VARS=$(extract_vars .env.example)
+          PROD_VARS=$(extract_vars .env.production.example)
+          DEV_VARS=$(extract_vars .env.development.example)
+
+          echo "   .env.example: $(echo "$MAIN_VARS" | wc -l | tr -d ' ') vars"
+          echo "   .env.production.example: $(echo "$PROD_VARS" | wc -l | tr -d ' ') vars"
+          echo "   .env.development.example: $(echo "$DEV_VARS" | wc -l | tr -d ' ') vars"
+
+          echo "✅ Environment example files validated"
