@@ -1,14 +1,14 @@
-import type { Metadata } from "next";
-import type { JSX, ReactNode } from "react";
-import { GeistSans } from "geist/font/sans";
-import { GeistMono } from "geist/font/mono";
-import "./globals.css";
-import Link from "next/link";
+import { AuthProvider } from "@/components/auth-provider";
+import { MobileMenu } from "@/components/mobile-menu";
+import { UserMenu } from "@/components/user-menu";
 import { FeatureFlagProvider } from "@/lib/feature-flags/provider";
 import { TRPCProvider } from "@/lib/trpc/provider";
-import { AuthProvider } from "@/components/auth-provider";
-import { UserMenu } from "@/components/user-menu";
-import { MobileMenu } from "@/components/mobile-menu";
+import { GeistMono } from "geist/font/mono";
+import { GeistSans } from "geist/font/sans";
+import type { Metadata } from "next";
+import Link from "next/link";
+import type { JSX, ReactNode } from "react";
+import "./globals.css";
 
 export const metadata: Metadata = {
   title: "Job Hunt AI - AI-Powered Job Application Assistant",

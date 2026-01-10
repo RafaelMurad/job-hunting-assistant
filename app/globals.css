@@ -38,6 +38,18 @@
   --color-forest-800: #166534;
   --color-forest-900: #14532d;
 
+  /* Nordic Yellow (Amber/Warning) */
+  --color-amber-50: #fffbeb;
+  --color-amber-100: #fef3c7;
+  --color-amber-200: #fde68a;
+  --color-amber-300: #fcd34d;
+  --color-amber-400: #fbbf24;
+  --color-amber-500: #f59e0b;
+  --color-amber-600: #d97706;
+  --color-amber-700: #b45309;
+  --color-amber-800: #92400e;
+  --color-amber-900: #78350f;
+
   /* Nordic Red (Clay) */
   --color-clay-50: #fef2f2;
   --color-clay-100: #fee2e2;
@@ -49,6 +61,13 @@
   --color-clay-700: #b91c1c;
   --color-clay-800: #991b1b;
   --color-clay-900: #7f1d1d;
+
+  /* Application Status Colors (Semantic) */
+  --color-status-applied: #3b82f6; /* Blue - Waiting for response */
+  --color-status-interviewing: #8b5cf6; /* Violet - In progress */
+  --color-status-offered: #22c55e; /* Green - Success */
+  --color-status-rejected: #f87171; /* Red (soft) - Unsuccessful */
+  --color-status-withdrawn: #94a3b8; /* Slate - Cancelled by user */
 
   /* Nordic Neutrals (Extended) */
   --color-nordic-neutral-50: #f9fafb;
@@ -63,10 +82,10 @@
   --color-nordic-neutral-900: #111827;
 
   /* Nordic Typography - Font Families (Geist) */
-  --font-family-sans: var(--font-geist-sans), system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI",
-    sans-serif;
-  --font-family-mono: var(--font-geist-mono), ui-monospace, "SF Mono", Menlo, Monaco, "Cascadia Code",
-    monospace;
+  --font-family-sans:
+    var(--font-geist-sans), system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  --font-family-mono:
+    var(--font-geist-mono), ui-monospace, "SF Mono", Menlo, Monaco, "Cascadia Code", monospace;
   --font-family-display: var(--font-geist-sans), system-ui, sans-serif;
 
   /* Geist Typography - Headings (single-line, display text) */
@@ -248,45 +267,53 @@ p {
 /* Shadcn UI CSS Variables */
 :root {
   --background: 0 0% 100%;
-  --foreground: 222.2 84% 4.9%;
+  --foreground: 222 47% 11%;
   --card: 0 0% 100%;
-  --card-foreground: 222.2 84% 4.9%;
+  --card-foreground: 222 47% 11%;
   --popover: 0 0% 100%;
-  --popover-foreground: 222.2 84% 4.9%;
-  --primary: 201 96% 32%;
+  --popover-foreground: 222 47% 11%;
+  --primary: 221 83% 53%;
   --primary-foreground: 210 40% 98%;
-  --secondary: 210 40% 96.1%;
-  --secondary-foreground: 222.2 47.4% 11.2%;
-  --muted: 210 40% 96.1%;
-  --muted-foreground: 215.4 16.3% 46.9%;
-  --accent: 210 40% 96.1%;
-  --accent-foreground: 222.2 47.4% 11.2%;
-  --destructive: 0 84.2% 60.2%;
+  --secondary: 210 40% 96%;
+  --secondary-foreground: 222 47% 11%;
+  --muted: 210 40% 96%;
+  --muted-foreground: 215 16% 47%;
+  --accent: 210 40% 96%;
+  --accent-foreground: 222 47% 11%;
+  --destructive: 0 84% 60%;
   --destructive-foreground: 210 40% 98%;
-  --border: 214.3 31.8% 91.4%;
-  --input: 214.3 31.8% 91.4%;
-  --ring: 201 96% 32%;
+  --warning: 38 92% 50%;
+  --warning-foreground: 222 47% 11%;
+  --success: 142 76% 36%;
+  --success-foreground: 210 40% 98%;
+  --border: 214 32% 91%;
+  --input: 214 32% 91%;
+  --ring: 221 83% 53%;
   --radius: 0.5rem;
 }
 
 .dark {
-  --background: 222.2 84% 4.9%;
+  --background: 222 47% 11%;
   --foreground: 210 40% 98%;
-  --card: 222.2 84% 4.9%;
+  --card: 217 33% 17%;
   --card-foreground: 210 40% 98%;
-  --popover: 222.2 84% 4.9%;
+  --popover: 217 33% 17%;
   --popover-foreground: 210 40% 98%;
-  --primary: 201 96% 32%;
-  --primary-foreground: 222.2 47.4% 11.2%;
-  --secondary: 217.2 32.6% 17.5%;
+  --primary: 217 91% 60%;
+  --primary-foreground: 222 47% 11%;
+  --secondary: 217 33% 17%;
   --secondary-foreground: 210 40% 98%;
-  --muted: 217.2 32.6% 17.5%;
-  --muted-foreground: 215 20.2% 65.1%;
-  --accent: 217.2 32.6% 17.5%;
+  --muted: 217 33% 17%;
+  --muted-foreground: 215 20% 65%;
+  --accent: 217 33% 17%;
   --accent-foreground: 210 40% 98%;
-  --destructive: 0 62.8% 30.6%;
+  --destructive: 0 63% 31%;
   --destructive-foreground: 210 40% 98%;
-  --border: 217.2 32.6% 17.5%;
-  --input: 217.2 32.6% 17.5%;
-  --ring: 212.7 26.8% 83.9%;
+  --warning: 38 92% 50%;
+  --warning-foreground: 222 47% 11%;
+  --success: 142 76% 36%;
+  --success-foreground: 210 40% 98%;
+  --border: 217 33% 17%;
+  --input: 217 33% 17%;
+  --ring: 213 27% 84%;
 }
