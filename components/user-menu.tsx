@@ -1,9 +1,9 @@
 "use client";
 
-import { useSession, signOut } from "next-auth/react";
+import { Button } from "@/components/ui/button";
+import { neonSignOut, useNeonSession } from "@/lib/auth/neon-client";
 import Link from "next/link";
 import { type JSX } from "react";
-import { Button } from "@/components/ui/button";
 
 /**
  * User Menu Component
@@ -12,17 +12,17 @@ import { Button } from "@/components/ui/button";
  * dropdown menu when authenticated.
  */
 export function UserMenu(): JSX.Element {
-  const { data: session, status } = useSession();
+  const { data: session, isPending } = useNeonSession();
 
   // Loading state
-  if (status === "loading") {
+  if (isPending) {
     return <div className="h-8 w-8 rounded-full bg-slate-200 animate-pulse" />;
   }
 
   // Unauthenticated - show login button
   if (!session?.user) {
     return (
-      <Link href="/login">
+      <Link href="/auth/sign-in">
         <Button variant="outline" size="sm">
           Sign In
         </Button>
@@ -53,7 +53,7 @@ export function UserMenu(): JSX.Element {
       <Button
         variant="ghost"
         size="sm"
-        onClick={() => void signOut({ callbackUrl: "/" })}
+        onClick={() => void neonSignOut()}
         className="text-slate-500 hover:text-slate-700"
       >
         Sign Out

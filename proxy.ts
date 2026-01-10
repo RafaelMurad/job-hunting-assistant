@@ -4,9 +4,7 @@
  * Replaces middleware.ts with the new proxy pattern.
  * Performs lightweight, optimistic authentication checks.
  *
- * Supports DUAL AUTH:
- * - NextAuth (legacy) via JWT cookie
- * - Neon Auth (new) via session cookie
+ * Uses Neon Auth for authentication via session cookie.
  *
  * IMPORTANT: In Next.js 16+, proxy is the recommended pattern for:
  * - Route protection (redirect unauthenticated users)
@@ -20,7 +18,6 @@
  * @see https://nextjs.org/docs/app/guides/authentication
  */
 
-import { getToken } from "next-auth/jwt";
 import { NextResponse, type NextRequest } from "next/server";
 
 const MAX_RSC_REQUEST_CONTENT_LENGTH_BYTES = 1_024;
@@ -45,7 +42,7 @@ function isServerActionRequest(req: NextRequest): boolean {
  * Protected route patterns
  *
  * Routes matching these patterns require authentication.
- * Unauthenticated users are redirected to /login (or /auth/sign-in for Neon).
+ * Unauthenticated users are redirected to /auth/sign-in.
  */
 const protectedRoutes = [
   "/admin",
@@ -70,9 +67,6 @@ const adminRoutes = ["/admin"];
  */
 const publicRoutes = [
   "/",
-  "/login",
-  "/signup",
-  "/api/auth",
   "/api/neon-auth",
   "/auth", // Neon Auth pages (sign-in, sign-up, etc.)
 ];
@@ -101,7 +95,6 @@ function isAdminPath(pathname: string): boolean {
 function isPublicPath(pathname: string): boolean {
   return publicRoutes.some((route) => {
     if (route === "/") return pathname === "/";
-    if (route === "/api/auth") return pathname === "/api/auth" || pathname.startsWith("/api/auth/");
     if (route === "/api/neon-auth")
       return pathname === "/api/neon-auth" || pathname.startsWith("/api/neon-auth/");
     if (route === "/auth") return pathname === "/auth" || pathname.startsWith("/auth/");
@@ -123,10 +116,7 @@ function hasNeonAuthSession(req: NextRequest): boolean {
 /**
  * Next.js Proxy function
  *
- * Performs lightweight authentication checks using:
- * 1. Neon Auth session cookie (new)
- * 2. NextAuth JWT token (legacy fallback)
- *
+ * Performs lightweight authentication checks using Neon Auth session cookie.
  * Heavy authorization logic should be in Server Components/Actions.
  */
 export default async function proxy(req: NextRequest): Promise<NextResponse> {
@@ -165,50 +155,20 @@ export default async function proxy(req: NextRequest): Promise<NextResponse> {
     }
   }
 
-  // --- DUAL AUTH CHECK ---
-  // Check Neon Auth first (new system), then fall back to NextAuth (legacy)
-  let isAuthenticated = false;
-  let token: { role?: string; isTrusted?: boolean } | null = null;
-
-  // 1. Check Neon Auth session
-  if (hasNeonAuthSession(req)) {
-    isAuthenticated = true;
-    // Note: For role/trust checks, we'd need to fetch from Neon Auth API
-    // For now, assume authenticated Neon users have basic access
-    token = { role: "USER", isTrusted: false };
-  }
-
-  // 2. Fall back to NextAuth JWT
-  if (!isAuthenticated) {
-    const authSecret = process.env.AUTH_SECRET;
-    if (authSecret) {
-      const secureCookie = process.env.NODE_ENV === "production";
-      const nextAuthToken = await getToken({
-        req,
-        secret: authSecret,
-        secureCookie,
-      });
-      if (nextAuthToken) {
-        isAuthenticated = true;
-        token = {
-          role: (nextAuthToken.role as string) ?? undefined,
-          isTrusted: (nextAuthToken.isTrusted as boolean) ?? undefined,
-        };
-      }
-    }
-  }
+  // --- AUTH CHECK ---
+  // Check Neon Auth session cookie
+  const isAuthenticated = hasNeonAuthSession(req);
 
   // Allow public routes
   if (isPublicPath(pathname)) {
-    // Redirect authenticated users away from login/auth pages
-    if ((pathname === "/login" || pathname.startsWith("/auth/sign-")) && isAuthenticated) {
+    // Redirect authenticated users away from auth pages
+    if (pathname.startsWith("/auth/sign-") && isAuthenticated) {
       return NextResponse.redirect(new URL("/dashboard", req.url));
     }
     return NextResponse.next();
   }
 
-  // Redirect unauthenticated users to login
-  // Use /auth/sign-in for Neon Auth as primary, with /login as callback param for legacy
+  // Redirect unauthenticated users to sign-in
   if (isProtectedPath(pathname) && !isAuthenticated) {
     const loginUrl = new URL("/auth/sign-in", req.url);
     loginUrl.searchParams.set("callbackUrl", pathname);
@@ -216,15 +176,12 @@ export default async function proxy(req: NextRequest): Promise<NextResponse> {
   }
 
   // Optimistic admin check (full authorization in Server Components)
-  if (isAdminPath(pathname) && isAuthenticated && token) {
-    const userRole = token.role;
-    const isTrusted = token.isTrusted;
-
-    const hasAdminAccess = userRole === "ADMIN" || userRole === "OWNER" || isTrusted === true;
-
-    if (!hasAdminAccess) {
-      return NextResponse.redirect(new URL("/dashboard?error=unauthorized", req.url));
-    }
+  // Note: With Neon Auth only, we can't check role in proxy - defer to server
+  // For now, allow access and let Server Components verify role
+  if (isAdminPath(pathname) && !isAuthenticated) {
+    const loginUrl = new URL("/auth/sign-in", req.url);
+    loginUrl.searchParams.set("callbackUrl", pathname);
+    return NextResponse.redirect(loginUrl);
   }
 
   return NextResponse.next();

@@ -8,7 +8,7 @@
  * HOW: Uses lib/latex.ts for compilation, optionally stores result in Blob.
  */
 
-import { auth } from "@/lib/auth-legacy";
+import { getNeonSession } from "@/lib/auth/neon-server";
 import { prisma } from "@/lib/db";
 import { compileLatexToPdf, LaTeXCompilationError, validateLatexSource } from "@/lib/latex";
 import { uploadCVLatex, uploadCVPdf } from "@/lib/storage";
@@ -22,15 +22,16 @@ import { type NextRequest, NextResponse } from "next/server";
  */
 export async function POST(request: NextRequest): Promise<NextResponse> {
   try {
-    // Verify authentication
-    const session = await auth();
-    if (!session?.user?.id) {
+    // Verify authentication via Neon Auth
+    const session = await getNeonSession();
+    const user = session?.data?.user;
+    if (!user?.id) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
     const body = await request.json();
     const { latexContent, save = false } = body;
-    const userId = session.user.id;
+    const userId = user.id;
 
     if (!latexContent || typeof latexContent !== "string") {
       return NextResponse.json({ error: "LaTeX content is required" }, { status: 400 });

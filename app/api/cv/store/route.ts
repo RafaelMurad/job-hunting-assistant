@@ -20,7 +20,7 @@ import {
   extractWithTemplate,
   type LatexExtractionModel,
 } from "@/lib/ai";
-import { auth } from "@/lib/auth-legacy";
+import { getNeonSession } from "@/lib/auth/neon-server";
 import { type CVTemplateId } from "@/lib/cv-templates";
 import { prisma } from "@/lib/db";
 import { deleteCVFiles, uploadCVLatex, uploadCVPdf } from "@/lib/storage";
@@ -35,15 +35,16 @@ import { type NextRequest, NextResponse } from "next/server";
  */
 export async function POST(request: NextRequest): Promise<NextResponse> {
   try {
-    // Verify authentication
-    const session = await auth();
-    if (!session?.user?.id) {
+    // Verify authentication via Neon Auth
+    const session = await getNeonSession();
+    const user = session?.data?.user;
+    if (!user?.id) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
     const formData = await request.formData();
     const file = formData.get("file") as File | null;
-    const userId = session.user.id;
+    const userId = user.id;
     const selectedModel =
       (formData.get("model") as LatexExtractionModel) || AI_CONFIG.defaultLatexModel;
     const selectedTemplate = formData.get("template") as CVTemplateId | null;
@@ -186,15 +187,16 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
  */
 export async function GET(_request: NextRequest): Promise<NextResponse> {
   try {
-    // Verify authentication
-    const session = await auth();
-    if (!session?.user?.id) {
+    // Verify authentication via Neon Auth
+    const session = await getNeonSession();
+    const neonUser = session?.data?.user;
+    if (!neonUser?.id) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const userId = session.user.id;
+    const userId = neonUser.id;
 
-    const user = await prisma.user.findUnique({
+    const appUser = await prisma.user.findUnique({
       where: { id: userId },
       select: {
         cvPdfUrl: true,
@@ -204,7 +206,7 @@ export async function GET(_request: NextRequest): Promise<NextResponse> {
       },
     });
 
-    if (!user || !user.cvPdfUrl) {
+    if (!appUser || !appUser.cvPdfUrl) {
       // Return empty data instead of 404 for better UX
       return NextResponse.json({
         success: true,
@@ -220,9 +222,9 @@ export async function GET(_request: NextRequest): Promise<NextResponse> {
 
     // Fetch LaTeX content if URL exists
     let latexContent: string | null = null;
-    if (user.cvLatexUrl) {
+    if (appUser.cvLatexUrl) {
       try {
-        const response = await fetch(user.cvLatexUrl);
+        const response = await fetch(appUser.cvLatexUrl);
         if (response.ok) {
           latexContent = await response.text();
         }
@@ -234,11 +236,11 @@ export async function GET(_request: NextRequest): Promise<NextResponse> {
     return NextResponse.json({
       success: true,
       data: {
-        pdfUrl: user.cvPdfUrl,
-        latexUrl: user.cvLatexUrl,
+        pdfUrl: appUser.cvPdfUrl,
+        latexUrl: appUser.cvLatexUrl,
         latexContent,
-        filename: user.cvFilename,
-        uploadedAt: user.cvUploadedAt,
+        filename: appUser.cvFilename,
+        uploadedAt: appUser.cvUploadedAt,
       },
     });
   } catch (error) {
@@ -254,13 +256,14 @@ export async function GET(_request: NextRequest): Promise<NextResponse> {
  */
 export async function DELETE(_request: NextRequest): Promise<NextResponse> {
   try {
-    // Verify authentication
-    const session = await auth();
-    if (!session?.user?.id) {
+    // Verify authentication via Neon Auth
+    const session = await getNeonSession();
+    const neonUser = session?.data?.user;
+    if (!neonUser?.id) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const userId = session.user.id;
+    const userId = neonUser.id;
 
     // Delete files from Blob storage
     await deleteCVFiles(userId);

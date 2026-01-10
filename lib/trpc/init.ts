@@ -12,10 +12,9 @@
  * - Great DX with autocomplete
  */
 
-import { auth } from "@/lib/auth-legacy";
+import { getNeonSession } from "@/lib/auth/neon-server";
 import { prisma } from "@/lib/db";
 import { initTRPC, TRPCError } from "@trpc/server";
-import type { Session } from "next-auth";
 import superjson from "superjson";
 import {
   aiRateLimitMiddleware,
@@ -24,14 +23,54 @@ import {
 } from "./middleware/rate-limit";
 
 /**
+ * Session type for Neon Auth
+ * Maps Neon Auth session to our app's user structure
+ */
+export interface NeonAuthSession {
+  user: {
+    id: string;
+    email: string;
+    name?: string | null | undefined;
+    image?: string | null | undefined;
+    role?: string;
+    isTrusted?: boolean;
+  };
+}
+
+/**
  * Context passed to every tRPC procedure.
  * Contains database client and auth session.
  */
 export const createTRPCContext = async (): Promise<{
   prisma: typeof prisma;
-  session: Session | null;
+  session: NeonAuthSession | null;
 }> => {
-  const session = await auth();
+  const neonSession = await getNeonSession();
+
+  // Map Neon Auth session to our app's session structure
+  // Neon Auth returns { data: { user: ... }, error: ... }
+  let session: NeonAuthSession | null = null;
+  const neonUser = neonSession?.data?.user;
+
+  if (neonUser) {
+    // Try to find linked app user to get role/trust status
+    const appUser = await prisma.user.findUnique({
+      where: { neonAuthId: neonUser.id },
+      select: { id: true, role: true, isTrusted: true },
+    });
+
+    session = {
+      user: {
+        id: appUser?.id ?? neonUser.id,
+        email: neonUser.email,
+        name: neonUser.name,
+        image: neonUser.image,
+        role: appUser?.role ?? "USER",
+        isTrusted: appUser?.isTrusted ?? false,
+      },
+    };
+  }
+
   return {
     prisma,
     session,
