@@ -1,0 +1,48 @@
+name: Chromatic
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+# Cancel in-progress runs for the same branch
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  chromatic:
+    name: Visual Regression Tests
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0 # Required for Chromatic to detect changes
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "npm"
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Generate Prisma Client
+        run: npx prisma generate
+
+      - name: Publish to Chromatic
+        uses: chromaui/action@latest
+        with:
+          projectToken: ${{ secrets.CHROMATIC_PROJECT_TOKEN }}
+          buildScriptName: build-storybook
+          # Skip builds for dependabot PRs
+          skip: ${{ github.actor == 'dependabot[bot]' }}
+          # Auto-accept changes on main (baseline)
+          autoAcceptChanges: main
+          # Exit once the build is completed (don't wait for review)
+          exitOnceUploaded: true
+          # Only run Chromatic on changed stories
+          onlyChanged: true

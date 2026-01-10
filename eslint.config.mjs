@@ -1,3 +1,6 @@
+// For more info, see https://github.com/storybookjs/eslint-plugin-storybook#configuration-flat-config-format
+import storybook from "eslint-plugin-storybook";
+
 import nextVitals from "eslint-config-next/core-web-vitals";
 import nextTs from "eslint-config-next/typescript";
 import prettierConfig from "eslint-config-prettier";
@@ -86,6 +89,15 @@ const eslintConfig = defineConfig([
       "@typescript-eslint/no-require-imports": "off",
     },
   },
+  // Storybook stories - allow non-explicit return types for render functions
+  {
+    files: ["**/*.stories.tsx", "**/*.stories.ts"],
+    rules: {
+      "@typescript-eslint/explicit-function-return-type": "off",
+      "no-console": "off", // Stories use console.log for action demos
+    },
+  },
+  ...storybook.configs["flat/recommended"],
 ]);
 
 export default eslintConfig;
