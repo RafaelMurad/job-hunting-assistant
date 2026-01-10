@@ -3,7 +3,9 @@
  * Environment Variable Checker
  *
  * Validates that all required environment variables are set.
- * Used in CI to catch missing env vars early without exposing values.
+ * Used locally and in CI to catch missing env vars early.
+ *
+ * SECURITY: This script NEVER logs env var values, only names.
  *
  * Usage:
  *   npm run env:check
@@ -14,9 +16,11 @@
  *   1 - Missing required vars
  */
 
-// Load .env.local for local development
-require("dotenv").config({ path: ".env.local" });
-require("dotenv").config({ path: ".env" });
+// Load .env.local for local development (not in CI)
+if (!process.env.CI) {
+  require("dotenv").config({ path: ".env.local" });
+  require("dotenv").config({ path: ".env" });
+}
 
 const required = [
   // Database
