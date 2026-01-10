@@ -47,6 +47,11 @@ next-env.d.ts
 *.db
 *.db-journal
 
+# Playwright
+/playwright-report/
+/test-results/
+/e2e/.auth/
+
 # Local Copilot instructions (private collaboration context)
 .copilot-local.md
 .env*.local

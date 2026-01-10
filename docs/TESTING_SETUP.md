@@ -2,20 +2,31 @@
 
 ## Overview
 
-This project uses a **Test Pyramid** approach with Unit and Integration tests implemented now, and E2E tests deferred until UI/UX stabilizes.
+This project uses a **Testing Trophy** approach with comprehensive test coverage at all levels.
 
 ```
-        /\
-       /  \       E2E (Deferred)
-      /----\      - Playwright (post-UI stabilization)
+        /\          E2E Tests (25 tests)
+       /  \         - Playwright with Chromium
+      /----\        - User journey smoke tests
      /      \
-    /--------\    Integration Tests
-   /          \   - tRPC routers with mocked Prisma
-  /------------\  - API routes
+    /--------\      Integration Tests (69 tests)
+   /          \     - tRPC routers with mocked Prisma
+  /------------\    - API route validation
  /              \
-/----------------\ Unit Tests
-                   - Utilities, validation schemas, pure functions
+/----------------\  Unit Tests (210+ tests)
+                    - Utilities, validation schemas, pure functions
+                    - Component behavior
 ```
+
+## Test Metrics
+
+| Type        | Tests | Tool          | Coverage |
+| ----------- | ----- | ------------- | -------- |
+| Unit        | 210+  | Vitest        | 80%+     |
+| Integration | 69    | Vitest + Mock | -        |
+| E2E         | 25    | Playwright    | -        |
+| Visual      | -     | Chromatic     | -        |
+| **Total**   | 309+  | -             | 80%+     |
 
 ## Test Structure
 
@@ -27,32 +38,49 @@ __tests__/
 │   └── prisma-mock.ts       # Prisma mocking utilities
 ├── unit/
 │   ├── utils.test.ts        # lib/utils.ts tests
-│   └── validations.test.ts  # lib/validations/* tests
+│   ├── validations.test.ts  # lib/validations/* tests
+│   ├── ai-config.test.ts    # AI provider config tests
+│   └── ...                  # Other unit tests
 ├── integration/
-│   └── user-router.test.ts  # tRPC router tests
-└── example.test.tsx         # Component test example
+│   ├── user-router.test.ts  # User tRPC router
+│   ├── applications-router.test.ts  # Applications CRUD
+│   ├── analyze-router.test.ts       # AI analysis
+│   ├── admin-router.test.ts         # Admin authorization
+│   └── ux-router.test.ts            # UX research entities
+├── components/
+│   ├── confirmation-dialog.test.tsx # Dialog component
+│   ├── mobile-menu.test.tsx         # Mobile navigation
+│   └── ui-components.test.tsx       # Input, Card, Badge
+└── example.test.tsx         # Button component example
+
+e2e/
+├── landing.spec.ts          # Landing page tests
+├── auth.spec.ts             # Authentication flows
+├── dashboard.spec.ts        # Dashboard routes
+├── profile.spec.ts          # Profile page
+├── analyze.spec.ts          # Job analyzer
+└── tracker.spec.ts          # Application tracker
 ```
 
 ## Running Tests
 
 ```bash
-# Run all tests once
-npm test
+# Unit & Integration Tests (Vitest)
+npm test                    # Run once
+npm run test:watch          # Watch mode
+npm run test:ui             # Interactive UI
+npm run test:coverage       # With coverage report
+npm run test:coverage:open  # Open coverage in browser
+npm run test:ci             # CI mode (verbose)
 
-# Watch mode (re-run on file changes)
-npm run test:watch
+# E2E Tests (Playwright)
+npm run test:e2e            # Run all E2E tests
+npm run test:e2e:ui         # Interactive Playwright UI
+npm run test:e2e:headed     # Run with visible browser
+npm run test:e2e:debug      # Debug mode with inspector
 
-# Interactive UI
-npm run test:ui
-
-# With coverage report
-npm run test:coverage
-
-# Open coverage in browser
-npm run test:coverage:open
-
-# CI mode (verbose output, GitHub Actions reporter)
-npm run test:ci
+# Full Validation
+npm run validate            # lint + type-check + format + test
 ```
 
 ## Writing Tests
@@ -135,6 +163,27 @@ describe("MyComponent", () => {
 });
 ```
 
+### E2E Tests (Playwright)
+
+Test user journeys in a real browser.
+
+```typescript
+// e2e/my-page.spec.ts
+import { expect, test } from "@playwright/test";
+
+test.describe("My Page", () => {
+  test("loads successfully", async ({ page }) => {
+    await page.goto("/my-page");
+    await expect(page).toHaveURL("/my-page");
+  });
+
+  test("displays content", async ({ page }) => {
+    await page.goto("/my-page");
+    await expect(page.getByRole("heading")).toBeVisible();
+  });
+});
+```
+
 ## CI Pipeline
 
 Tests run automatically on:
@@ -142,7 +191,14 @@ Tests run automatically on:
 - Every push to `main`
 - Every pull request to `main`
 
-See `.github/workflows/test.yml` for configuration.
+### Workflows
+
+| Workflow         | Trigger  | Tests               |
+| ---------------- | -------- | ------------------- |
+| `test.yml`       | PR, push | Unit + Integration  |
+| `playwright.yml` | PR, push | E2E with Playwright |
+| `chromatic.yml`  | PR       | Visual regression   |
+| `qodana.yml`     | PR       | Static analysis     |
 
 ### Coverage Thresholds
 
@@ -195,17 +251,6 @@ it("navigates on click", async () => {
 });
 ```
 
-## Future: E2E Testing
-
-E2E tests with Playwright will be added after UI/UX stabilizes. The plan:
-
-1. Install Playwright: `npm install -D @playwright/test`
-2. Create `playwright.config.ts`
-3. Add `e2e/` folder with smoke tests
-4. Create `.github/workflows/e2e.yml`
-
-See the deferred E2E plan in the project roadmap.
-
 ## Best Practices
 
 1. **Test behavior, not implementation** - Focus on what the user sees/does
@@ -214,6 +259,7 @@ See the deferred E2E plan in the project roadmap.
 4. **Keep tests isolated** - Reset mocks in `beforeEach`
 5. **Write descriptive test names** - `it("returns error when user not found")`
 6. **Group related tests** - Use `describe` blocks logically
+7. **Run validation before PR** - `npm run validate`
 
 ## Troubleshooting
 
@@ -252,3 +298,9 @@ npm run test:coverage
 ```
 
 Check `vitest.config.ts` excludes are not too broad.
+
+### E2E tests timing out
+
+- Increase timeout in `playwright.config.ts`
+- Use `await page.waitForLoadState("networkidle")`
+- Check if dev server is running: `npm run dev`
