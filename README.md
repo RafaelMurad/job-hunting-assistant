@@ -261,7 +261,7 @@ This creates **3 test users** with pre-populated CVs and applications:
 
 | User           | Email                        | Password           | CVs | Applications |
 | -------------- | ---------------------------- | ------------------ | --- | ------------ |
-| Rafael Murad   | `rafael.murad@example.com`   | `TestPassword123!` | 7   | 15           |
+| Long Johnson   | `long.johnson@example.com`   | `TestPassword123!` | 7   | 15           |
 | Sarah Chen     | `sarah.chen@example.com`     | `TestPassword123!` | 3   | 8            |
 | Marcus Johnson | `marcus.johnson@example.com` | `TestPassword123!` | 4   | 6            |
 

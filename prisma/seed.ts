@@ -64,7 +64,7 @@ function generateLatexCV(variant: {
 \\begin{center}
     \\textbf{\\Huge \\scshape ${variant.name}} \\\\ \\vspace{1pt}
     \\small ${variant.title} \\\\
-    \\href{mailto:rafael.murad@example.com}{rafael.murad@example.com} $|$
+    \\href{mailto:long.johnson@example.com}{long.johnson@example.com} $|$
     \\href{https://linkedin.com/in/rafaelmurad}{linkedin.com/in/rafaelmurad} $|$
     \\href{https://github.com/rafaelmurad}{github.com/rafaelmurad}
 \\end{center}
@@ -114,12 +114,12 @@ async function main(): Promise<void> {
   // NOTE: ID must match Neon Auth user ID for authenticated sessions
   // ============================================
   const user1 = await prisma.user.upsert({
-    where: { email: "rafael.murad@example.com" },
+    where: { email: "long.johnson@example.com" },
     update: {},
     create: {
       id: "6f010d61-6ccf-4aff-9e58-38c8f8453f38", // Neon Auth ID
-      email: "rafael.murad@example.com",
-      name: "Rafael Murad",
+      email: "long.johnson@example.com",
+      name: "Long Johnson",
       phone: "+1 (555) 123-4567",
       location: "San Francisco, CA",
       summary:
@@ -213,7 +213,7 @@ Data Analyst at Analytics Inc (2019-2021)
     {
       name: "Software Engineer - General",
       latexContent: generateLatexCV({
-        name: "Rafael Murad",
+        name: "Long Johnson",
         title: "Senior Software Engineer",
         focus:
           "Versatile full-stack engineer with 8+ years building scalable web applications. Expert in TypeScript/React ecosystem with strong distributed systems background.",
@@ -229,7 +229,7 @@ Data Analyst at Analytics Inc (2019-2021)
     {
       name: "Full-Stack Developer",
       latexContent: generateLatexCV({
-        name: "Rafael Murad",
+        name: "Long Johnson",
         title: "Full-Stack Developer",
         focus:
           "End-to-end product development specialist. Equally comfortable building beautiful UIs and robust backend systems. Passionate about developer experience and code quality.",
@@ -245,7 +245,7 @@ Data Analyst at Analytics Inc (2019-2021)
     {
       name: "Frontend Specialist",
       latexContent: generateLatexCV({
-        name: "Rafael Murad",
+        name: "Long Johnson",
         title: "Senior Frontend Engineer",
         focus:
           "Frontend performance expert specializing in React and Next.js. Obsessed with user experience, accessibility, and sub-second load times.",
@@ -261,7 +261,7 @@ Data Analyst at Analytics Inc (2019-2021)
     {
       name: "Tech Lead Resume",
       latexContent: generateLatexCV({
-        name: "Rafael Murad",
+        name: "Long Johnson",
         title: "Technical Lead",
         focus:
           "Engineering leader with track record of building high-performing teams. Balance technical excellence with business impact. Strong communicator bridging product and engineering.",
@@ -277,7 +277,7 @@ Data Analyst at Analytics Inc (2019-2021)
     {
       name: "AI/ML Focus",
       latexContent: generateLatexCV({
-        name: "Rafael Murad",
+        name: "Long Johnson",
         title: "AI/ML Engineer",
         focus:
           "Software engineer with growing AI/ML expertise. Experience building LLM-powered applications and ML pipelines. Bridges traditional software engineering with modern AI tooling.",
@@ -293,7 +293,7 @@ Data Analyst at Analytics Inc (2019-2021)
     {
       name: "Startup/Early Stage",
       latexContent: generateLatexCV({
-        name: "Rafael Murad",
+        name: "Long Johnson",
         title: "Founding Engineer",
         focus:
           "Versatile engineer thriving in ambiguity. Experience wearing multiple hats from DevOps to product design. Startup veteran who ships fast without sacrificing quality.",
@@ -309,7 +309,7 @@ Data Analyst at Analytics Inc (2019-2021)
     {
       name: "Remote Work Emphasis",
       latexContent: generateLatexCV({
-        name: "Rafael Murad",
+        name: "Long Johnson",
         title: "Senior Software Engineer (Remote)",
         focus:
           "Distributed work expert with 4+ years remote experience. Excellent async communicator. Self-motivated professional delivering results across time zones.",
@@ -593,7 +593,7 @@ I'm particularly excited about the opportunity to work on features like Server C
 I look forward to discussing how my experience building with Next.js can translate into building Next.js itself.
 
 Best regards,
-Rafael Murad`,
+Long Johnson`,
       status: "offer",
       appliedAt: new Date("2025-12-15"),
       notes:
@@ -638,7 +638,7 @@ Requirements:
 I am excited to apply for the Staff Engineer, Developer Experience position. Throughout my career, I've been passionate about making developers' lives easier...
 
 Best regards,
-Rafael Murad`,
+Long Johnson`,
       status: "offer",
       appliedAt: new Date("2025-12-01"),
       notes:
