@@ -1,4 +1,5 @@
 @import "tailwindcss";
+@import "@neondatabase/auth/ui/tailwind";
 
 @theme {
   /* Nordic Neutrals */
@@ -6,13 +7,13 @@
   --color-frost: #f9fafb;
   --color-mist: #f3f4f6;
   --color-ash: #e5e7eb;
-  
+
   /* Text Scale */
   --color-midnight: #111827;
   --color-midnight-light: #374151;
   --color-slate: #64748b;
   --color-stone: #9ca3af;
-  
+
   /* Nordic Blue (Fjords) */
   --color-fjord-50: #f0f9ff;
   --color-fjord-100: #e0f2fe;
@@ -24,7 +25,7 @@
   --color-fjord-700: #0369a1;
   --color-fjord-800: #075985;
   --color-fjord-900: #0c4a6e;
-  
+
   /* Nordic Green (Forest) */
   --color-forest-50: #f0fdf4;
   --color-forest-100: #dcfce7;
@@ -36,7 +37,7 @@
   --color-forest-700: #15803d;
   --color-forest-800: #166534;
   --color-forest-900: #14532d;
-  
+
   /* Nordic Red (Clay) */
   --color-clay-50: #fef2f2;
   --color-clay-100: #fee2e2;
@@ -48,7 +49,7 @@
   --color-clay-700: #b91c1c;
   --color-clay-800: #991b1b;
   --color-clay-900: #7f1d1d;
-  
+
   /* Nordic Neutrals (Extended) */
   --color-nordic-neutral-50: #f9fafb;
   --color-nordic-neutral-100: #f3f4f6;
@@ -62,33 +63,33 @@
   --color-nordic-neutral-900: #111827;
 
   /* Nordic Typography - Font Families */
-  --font-family-sans: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-  --font-family-display: 'Inter', system-ui, sans-serif;
-  
+  --font-family-sans: "Inter", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  --font-family-display: "Inter", system-ui, sans-serif;
+
   /* Nordic Typography - Font Sizes (Modular Scale 1.25 - Major Third) */
-  --font-size-xs: 0.75rem;      /* 12px */
-  --font-size-sm: 0.875rem;     /* 14px */
-  --font-size-base: 1rem;       /* 16px */
-  --font-size-lg: 1.125rem;     /* 18px */
-  --font-size-xl: 1.25rem;      /* 20px */
-  --font-size-2xl: 1.563rem;    /* 25px */
-  --font-size-3xl: 1.953rem;    /* 31px */
-  --font-size-4xl: 2.441rem;    /* 39px */
-  --font-size-5xl: 3.052rem;    /* 49px */
-  
+  --font-size-xs: 0.75rem; /* 12px */
+  --font-size-sm: 0.875rem; /* 14px */
+  --font-size-base: 1rem; /* 16px */
+  --font-size-lg: 1.125rem; /* 18px */
+  --font-size-xl: 1.25rem; /* 20px */
+  --font-size-2xl: 1.563rem; /* 25px */
+  --font-size-3xl: 1.953rem; /* 31px */
+  --font-size-4xl: 2.441rem; /* 39px */
+  --font-size-5xl: 3.052rem; /* 49px */
+
   /* Nordic Typography - Font Weights (Minimalist approach) */
   --font-weight-normal: 400;
   --font-weight-medium: 500;
   --font-weight-semibold: 600;
   --font-weight-bold: 700;
-  
+
   /* Nordic Typography - Line Heights (Generous for readability) */
   --line-height-tight: 1.25;
   --line-height-snug: 1.375;
   --line-height-normal: 1.5;
   --line-height-relaxed: 1.625;
   --line-height-loose: 2;
-  
+
   /* Nordic Typography - Letter Spacing (Subtle, breathable) */
   --letter-spacing-tighter: -0.05em;
   --letter-spacing-tight: -0.025em;
@@ -96,15 +97,15 @@
   --letter-spacing-wide: 0.025em;
   --letter-spacing-wider: 0.05em;
   --letter-spacing-widest: 0.1em;
-  
+
   /* Nordic Typography - Semantic Sizes */
-  --text-small: 0.875rem;        /* 14px */
-  --text-body: 1rem;             /* 16px */
-  --text-heading-sm: 1.25rem;    /* 20px */
-  --text-heading-md: 1.563rem;   /* 25px */
-  --text-heading-lg: 1.953rem;   /* 31px */
-  --text-heading-xl: 3.052rem;   /* 49px */
-  
+  --text-small: 0.875rem; /* 14px */
+  --text-body: 1rem; /* 16px */
+  --text-heading-sm: 1.25rem; /* 20px */
+  --text-heading-md: 1.563rem; /* 25px */
+  --text-heading-lg: 1.953rem; /* 31px */
+  --text-heading-xl: 3.052rem; /* 49px */
+
   /* Nordic Typography - Semantic Line Heights */
   --leading-tight: 1.25;
   --leading-heading: 1.25;
@@ -114,25 +115,25 @@
   /* Nordic Spacing - Generous Whitespace (Base 8px scale) */
   --spacing-0: 0;
   --spacing-px: 1px;
-  --spacing-0\.5: 0.125rem;   /* 2px */
-  --spacing-1: 0.25rem;       /* 4px */
-  --spacing-1\.5: 0.375rem;   /* 6px */
-  --spacing-2: 0.5rem;        /* 8px - Base unit */
-  --spacing-3: 0.75rem;       /* 12px */
-  --spacing-4: 1rem;          /* 16px */
-  --spacing-5: 1.25rem;       /* 20px */
-  --spacing-6: 1.5rem;        /* 24px */
-  --spacing-8: 2rem;          /* 32px */
-  --spacing-10: 2.5rem;       /* 40px */
-  --spacing-12: 3rem;         /* 48px */
-  --spacing-16: 4rem;         /* 64px */
-  --spacing-20: 5rem;         /* 80px */
-  --spacing-24: 6rem;         /* 96px */
-  --spacing-32: 8rem;         /* 128px */
-  --spacing-40: 10rem;        /* 160px */
-  --spacing-48: 12rem;        /* 192px */
-  --spacing-56: 14rem;        /* 224px */
-  --spacing-64: 16rem;        /* 256px */
+  --spacing-0\.5: 0.125rem; /* 2px */
+  --spacing-1: 0.25rem; /* 4px */
+  --spacing-1\.5: 0.375rem; /* 6px */
+  --spacing-2: 0.5rem; /* 8px - Base unit */
+  --spacing-3: 0.75rem; /* 12px */
+  --spacing-4: 1rem; /* 16px */
+  --spacing-5: 1.25rem; /* 20px */
+  --spacing-6: 1.5rem; /* 24px */
+  --spacing-8: 2rem; /* 32px */
+  --spacing-10: 2.5rem; /* 40px */
+  --spacing-12: 3rem; /* 48px */
+  --spacing-16: 4rem; /* 64px */
+  --spacing-20: 5rem; /* 80px */
+  --spacing-24: 6rem; /* 96px */
+  --spacing-32: 8rem; /* 128px */
+  --spacing-40: 10rem; /* 160px */
+  --spacing-48: 12rem; /* 192px */
+  --spacing-56: 14rem; /* 224px */
+  --spacing-64: 16rem; /* 256px */
 
   /* Nordic Spacing - Container Widths */
   --container-sm: 640px;
@@ -143,12 +144,12 @@
 
   /* Nordic Spacing - Border Radius (Subtle curves) */
   --radius-none: 0;
-  --radius-sm: 0.125rem;      /* 2px */
-  --radius-default: 0.25rem;  /* 4px */
-  --radius-md: 0.375rem;      /* 6px */
-  --radius-lg: 0.5rem;        /* 8px */
-  --radius-xl: 0.75rem;       /* 12px */
-  --radius-2xl: 1rem;         /* 16px */
+  --radius-sm: 0.125rem; /* 2px */
+  --radius-default: 0.25rem; /* 4px */
+  --radius-md: 0.375rem; /* 6px */
+  --radius-lg: 0.5rem; /* 8px */
+  --radius-xl: 0.75rem; /* 12px */
+  --radius-2xl: 1rem; /* 16px */
   --radius-full: 9999px;
 }
 
@@ -170,7 +171,12 @@ body {
 }
 
 /* Nordic Typography Utilities */
-h1, h2, h3, h4, h5, h6 {
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
   font-family: var(--font-family-display);
   font-weight: var(--font-weight-semibold);
   line-height: var(--line-height-tight);
@@ -270,4 +276,3 @@ p {
   --input: 217.2 32.6% 17.5%;
   --ring: 212.7 26.8% 83.9%;
 }
-

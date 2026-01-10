@@ -12,9 +12,12 @@ model User {
   id       String  @id @default(cuid())
   name     String
   email    String  @unique
-  password String? // Hashed password for email/password auth (null for OAuth-only users)
   phone    String?
   location String
+
+  // Neon Auth integration
+  // Links this User to a Neon Auth user (neon_auth.user.id)
+  neonAuthId String? @unique
 
   // CV content stored as text
   summary    String // Professional summary
@@ -32,15 +35,11 @@ model User {
   isTrusted  Boolean  @default(false) // Manually approved by admin
   isVerified Boolean  @default(false) // Email verified
 
-  // NextAuth.js avatar (from OAuth provider)
+  // Avatar from Neon Auth
   image String?
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
-
-  // NextAuth.js relations
-  accounts Account[]
-  sessions Session[]
 
   applications   Application[]
   socialProfiles SocialProfile[]
@@ -51,49 +50,6 @@ enum UserRole {
   USER
   ADMIN
   OWNER // Rafael - full access
-}
-
-// ============================================
-// NextAuth.js Models
-// ============================================
-
-model Account {
-  id                String  @id @default(cuid())
-  userId            String
-  type              String
-  provider          String
-  providerAccountId String
-  refresh_token     String? @db.Text
-  access_token      String? @db.Text
-  expires_at        Int?
-  token_type        String?
-  scope             String?
-  id_token          String? @db.Text
-  session_state     String?
-
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  @@unique([provider, providerAccountId])
-  @@index([userId])
-}
-
-model Session {
-  id           String   @id @default(cuid())
-  sessionToken String   @unique
-  userId       String
-  expires      DateTime
-
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  @@index([userId])
-}
-
-model VerificationToken {
-  identifier String
-  token      String   @unique
-  expires    DateTime
-
-  @@unique([identifier, token])
 }
 
 // ============================================
