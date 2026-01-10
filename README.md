@@ -197,7 +197,7 @@ npm run validate  # Runs all quality checks
 ✅ ESLint        — Zero warnings allowed
 ✅ TypeScript    — Strict mode, no implicit any
 ✅ Prettier      — Consistent formatting
-✅ Vitest        — 320+ unit/integration tests
+✅ Vitest        — 380+ unit/integration tests
 ✅ Playwright    — E2E browser automation
 ✅ Qodana        — Static code analysis (JetBrains)
 ```
@@ -248,6 +248,24 @@ npm run dev
 ```
 
 Open **[http://localhost:3000](http://localhost:3000)** and start hunting! 🎯
+
+### Development Testing
+
+Seed the database with test data to explore all features:
+
+```bash
+npx prisma db seed
+```
+
+This creates **3 test users** with pre-populated CVs and applications:
+
+| User           | Email                        | Password           | CVs | Applications |
+| -------------- | ---------------------------- | ------------------ | --- | ------------ |
+| Rafael Murad   | `rafael.murad@example.com`   | `TestPassword123!` | 7   | 15           |
+| Sarah Chen     | `sarah.chen@example.com`     | `TestPassword123!` | 3   | 8            |
+| Marcus Johnson | `marcus.johnson@example.com` | `TestPassword123!` | 4   | 6            |
+
+> **Note:** For seeded data to work, you must create these users in Neon Auth first, then update the user IDs in `prisma/seed.ts` to match.
 
 ---
 
