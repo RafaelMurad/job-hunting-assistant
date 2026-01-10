@@ -1,5 +1,3 @@
-"use client";
-
 /**
  * Neon Auth Account Pages
  *
@@ -13,17 +11,16 @@
 
 import { AccountView } from "@neondatabase/auth/react";
 import type { ReactElement } from "react";
-import { use } from "react";
 
 interface AccountPageProps {
   params: Promise<{ path: string }>;
 }
 
-export default function AccountPage({ params }: AccountPageProps): ReactElement {
-  const { path } = use(params);
+export default async function AccountPage({ params }: AccountPageProps): Promise<ReactElement> {
+  const { path } = await params;
 
   return (
-    <main className="container mx-auto flex min-h-[calc(100vh-4rem)] flex-col items-center justify-center gap-3 p-4 md:p-6">
+    <main className="container mx-auto flex min-h-[calc(100vh-4rem)] grow flex-col items-center justify-center gap-3 self-center p-4 md:p-6">
       <AccountView path={path} />
     </main>
   );
