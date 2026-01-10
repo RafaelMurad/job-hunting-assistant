@@ -16,19 +16,6 @@ import { AuthView } from "@neondatabase/auth/react";
 import type { ReactElement } from "react";
 import { use } from "react";
 
-// Pre-render only known auth paths
-export const dynamicParams = false;
-
-export function generateStaticParams(): { path: string }[] {
-  return [
-    { path: "sign-in" },
-    { path: "sign-up" },
-    { path: "sign-out" },
-    { path: "forgot-password" },
-    { path: "reset-password" },
-  ];
-}
-
 interface AuthPageProps {
   params: Promise<{ path: string }>;
 }

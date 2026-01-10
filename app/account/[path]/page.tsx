@@ -15,13 +15,6 @@ import { AccountView } from "@neondatabase/auth/react";
 import type { ReactElement } from "react";
 import { use } from "react";
 
-// Pre-render only known account paths
-export const dynamicParams = false;
-
-export function generateStaticParams(): { path: string }[] {
-  return [{ path: "settings" }, { path: "security" }];
-}
-
 interface AccountPageProps {
   params: Promise<{ path: string }>;
 }
