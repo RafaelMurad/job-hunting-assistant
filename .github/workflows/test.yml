@@ -13,40 +13,64 @@ jobs:
     outputs:
       should_skip: ${{ steps.check.outputs.should_skip }}
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-        with:
-          fetch-depth: 2
-
       - name: Check if only docs changed
         id: check
-        run: |
-          CHANGED_FILES=$(git diff --name-only HEAD~1 HEAD 2>/dev/null || git diff --name-only HEAD)
-          echo "Changed files in latest commit:"
-          echo "$CHANGED_FILES"
-
-          SKIP=true
-          while IFS= read -r file; do
-            if [[ -n "$file" ]]; then
-              if [[ "$file" =~ \.md$ ]] || \
-                 [[ "$file" =~ ^docs/ ]] || \
-                 [[ "$file" =~ ^\.github/workflows/.*\.yml$ ]] || \
-                 [[ "$file" == "LICENSE" ]] || \
-                 [[ "$file" == ".gitignore" ]]; then
-                echo "  ✓ Skippable: $file"
-              else
-                echo "  ✗ Code file: $file"
-                SKIP=false
-              fi
-            fi
-          done <<< "$CHANGED_FILES"
-
-          echo "should_skip=$SKIP" >> $GITHUB_OUTPUT
-          if [ "$SKIP" = "true" ]; then
-            echo "📝 Only docs/config changed - skipping tests"
-          else
-            echo "💻 Code changed - running tests"
-          fi
+        uses: actions/github-script@v7
+        with:
+          script: |
+            let files = [];
+            
+            if (context.eventName === 'pull_request') {
+              const before = context.payload.before;
+              const after = context.payload.after;
+              
+              if (before && after && before !== '0000000000000000000000000000000000000000') {
+                const compare = await github.rest.repos.compareCommits({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  base: before,
+                  head: after
+                });
+                files = compare.data.files.map(f => f.filename);
+                console.log(`PR synchronize: comparing ${before.slice(0,7)}..${after.slice(0,7)}`);
+              } else {
+                const prFiles = await github.rest.pulls.listFiles({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  pull_number: context.payload.pull_request.number
+                });
+                files = prFiles.data.map(f => f.filename);
+                console.log(`PR opened/reopened: checking all ${files.length} files`);
+              }
+            } else {
+              const compare = await github.rest.repos.compareCommits({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                base: context.payload.before,
+                head: context.payload.after
+              });
+              files = compare.data.files.map(f => f.filename);
+            }
+            
+            console.log('Changed files:', files);
+            
+            const skipPatterns = [
+              /\.md$/,
+              /^docs\//,
+              /^\.github\/workflows\/.*\.yml$/,
+              /^LICENSE$/,
+              /^\.gitignore$/
+            ];
+            
+            const codeFiles = files.filter(f => !skipPatterns.some(p => p.test(f)));
+            
+            if (codeFiles.length === 0 && files.length > 0) {
+              console.log('📝 Only docs/config changed - skipping tests');
+              core.setOutput('should_skip', 'true');
+            } else {
+              console.log('💻 Code files changed:', codeFiles);
+              core.setOutput('should_skip', 'false');
+            }
 
   test:
     name: Unit & Integration Tests
