@@ -5,28 +5,28 @@
  */
 
 import { AI_CONFIG, getModelName } from "../config";
-import type {
-  LatexExtractionModel,
-  JobAnalysisResult,
-  ParsedCVData,
-  ExtractedCVContent,
-} from "../types";
-import { jobAnalysisSchema, parsedCVDataSchema, extractedCVContentSchema } from "../schemas";
 import {
   ANALYSIS_PROMPT,
   COVER_LETTER_PROMPT,
+  CV_CONTENT_EXTRACTION_PROMPT,
   CV_EXTRACTION_PROMPT,
   LATEX_EXTRACTION_PROMPT,
-  STYLE_ANALYSIS_PROMPT,
   LATEX_FROM_STYLE_PROMPT,
-  CV_CONTENT_EXTRACTION_PROMPT,
+  STYLE_ANALYSIS_PROMPT,
 } from "../prompts";
+import { extractedCVContentSchema, jobAnalysisSchema, parsedCVDataSchema } from "../schemas";
+import type {
+  ExtractedCVContent,
+  JobAnalysisResult,
+  LatexExtractionModel,
+  ParsedCVData,
+} from "../types";
 import {
   cleanAndValidateLatex,
   cleanJsonResponse,
   extractJsonFromText,
-  parseJsonOrThrow,
   isValidJson,
+  parseJsonOrThrow,
 } from "../utils";
 
 // =============================================================================
@@ -233,27 +233,48 @@ export async function extractLatexWithGemini(
       },
     });
 
-    const result = await model.generateContent([
-      {
-        inlineData: {
-          mimeType,
-          data: base64Data,
-        },
-      },
-      LATEX_EXTRACTION_PROMPT,
-    ]);
-
-    const finishReason = result.response.candidates?.[0]?.finishReason;
-    const wasTruncated = finishReason === "MAX_TOKENS";
-
     try {
-      return cleanAndValidateLatex(result.response.text());
-    } catch (error) {
-      // If truncated and we have more limits to try, continue
-      if (wasTruncated && maxTokens < tokenLimits[tokenLimits.length - 1]!) {
-        console.warn(`[${modelId}] Response truncated at ${maxTokens} tokens, retrying...`);
-        continue;
+      const result = await model.generateContent([
+        {
+          inlineData: {
+            mimeType,
+            data: base64Data,
+          },
+        },
+        LATEX_EXTRACTION_PROMPT,
+      ]);
+
+      // Check for blocked content
+      const candidate = result.response.candidates?.[0];
+      if (!candidate) {
+        const blockReason = result.response.promptFeedback?.blockReason;
+        console.error(`[${modelId}] No response candidate. Block reason:`, blockReason);
+        throw new Error(`Content blocked by safety filter: ${blockReason || "unknown reason"}`);
       }
+
+      const finishReason = candidate.finishReason;
+      const wasTruncated = finishReason === "MAX_TOKENS";
+
+      // Check if response was blocked
+      if (finishReason === "SAFETY") {
+        const safetyRatings = candidate.safetyRatings;
+        console.error(`[${modelId}] Response blocked by safety filter:`, safetyRatings);
+        throw new Error("Content blocked by safety filter");
+      }
+
+      try {
+        return cleanAndValidateLatex(result.response.text());
+      } catch (error) {
+        // If truncated and we have more limits to try, continue
+        if (wasTruncated && maxTokens < tokenLimits[tokenLimits.length - 1]!) {
+          console.warn(`[${modelId}] Response truncated at ${maxTokens} tokens, retrying...`);
+          continue;
+        }
+        throw error;
+      }
+    } catch (error) {
+      // Log the actual error for debugging
+      console.error(`[${modelId}] Extraction error at ${maxTokens} tokens:`, error);
       throw error;
     }
   }
@@ -283,16 +304,34 @@ export async function extractContentWithGemini(
     },
   });
 
-  const result = await model.generateContent([
-    {
-      inlineData: {
-        mimeType,
-        data: base64Data,
+  try {
+    const result = await model.generateContent([
+      {
+        inlineData: {
+          mimeType,
+          data: base64Data,
+        },
       },
-    },
-    CV_CONTENT_EXTRACTION_PROMPT,
-  ]);
+      CV_CONTENT_EXTRACTION_PROMPT,
+    ]);
 
-  const jsonText = cleanJsonResponse(result.response.text());
-  return parseJsonOrThrow(jsonText, extractedCVContentSchema, "Gemini CV content extraction");
+    // Check for blocked content
+    const candidate = result.response.candidates?.[0];
+    if (!candidate) {
+      const blockReason = result.response.promptFeedback?.blockReason;
+      console.error(`[extractContentWithGemini] No response candidate. Block reason:`, blockReason);
+      throw new Error(`Content blocked by safety filter: ${blockReason || "unknown reason"}`);
+    }
+
+    if (candidate.finishReason === "SAFETY") {
+      console.error(`[extractContentWithGemini] Response blocked:`, candidate.safetyRatings);
+      throw new Error("Content blocked by safety filter");
+    }
+
+    const jsonText = cleanJsonResponse(result.response.text());
+    return parseJsonOrThrow(jsonText, extractedCVContentSchema, "Gemini CV content extraction");
+  } catch (error) {
+    console.error(`[extractContentWithGemini] Error:`, error);
+    throw error;
+  }
 }

@@ -16,6 +16,7 @@
 
 "use client";
 
+import { LaTeXEditor } from "@/components/latex-editor";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -28,7 +29,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Textarea } from "@/components/ui/textarea";
 import { useCallback, useEffect, useState, type ChangeEvent, type JSX } from "react";
 
 // ============================================
@@ -857,10 +857,9 @@ export default function CVEditorPage(): JSX.Element {
               </div>
             </CardHeader>
             <CardContent className="h-[calc(100%-60px)]">
-              <Textarea
+              <LaTeXEditor
                 value={latexContent}
-                onChange={(e) => setLatexContent(e.target.value)}
-                className="w-full h-full font-mono text-sm resize-none"
+                onChange={setLatexContent}
                 placeholder="Upload a PDF to extract LaTeX, or paste your LaTeX source here..."
               />
             </CardContent>

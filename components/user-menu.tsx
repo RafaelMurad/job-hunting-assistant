@@ -3,7 +3,12 @@
 import { Button } from "@/components/ui/button";
 import { neonSignOut, useNeonSession } from "@/lib/auth/neon-client";
 import Link from "next/link";
-import { type JSX } from "react";
+import { useSyncExternalStore, type JSX } from "react";
+
+/**
+ * Subscribe to nothing - just used to detect client mount
+ */
+const emptySubscribe = (): (() => void) => () => {};
 
 /**
  * User Menu Component
@@ -14,8 +19,16 @@ import { type JSX } from "react";
 export function UserMenu(): JSX.Element {
   const { data: session, isPending } = useNeonSession();
 
-  // Loading state
-  if (isPending) {
+  // Detect client mount without causing cascading renders
+  // Server returns false, client returns true after hydration
+  const isClient = useSyncExternalStore(
+    emptySubscribe,
+    () => true,
+    () => false
+  );
+
+  // Show placeholder until client-side to prevent hydration mismatch
+  if (!isClient || isPending) {
     return <div className="h-8 w-8 rounded-full bg-slate-200 animate-pulse" />;
   }
 

@@ -138,10 +138,23 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
       // Step 3: Upload LaTeX to Blob
       const latexUrl = await uploadCVLatex(userId, latexContent);
 
-      // Step 4: Update user record
-      await prisma.user.update({
+      // Step 4: Update or create user record (upsert handles new Neon Auth users)
+      await prisma.user.upsert({
         where: { id: userId },
-        data: {
+        update: {
+          cvPdfUrl: pdfUrl,
+          cvLatexUrl: latexUrl,
+          cvFilename: file.name,
+          cvUploadedAt: new Date(),
+        },
+        create: {
+          id: userId,
+          email: user.email ?? "",
+          name: user.name ?? "User",
+          location: "",
+          summary: "",
+          experience: "",
+          skills: "",
           cvPdfUrl: pdfUrl,
           cvLatexUrl: latexUrl,
           cvFilename: file.name,
