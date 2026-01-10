@@ -3,17 +3,21 @@
  *
  * User profile management with CV upload and manual entry.
  * Uses the useUser hook for all data operations.
+ * Uses the useCV hook for CV management.
  */
 
 "use client";
 
+import { ConfirmationDialog } from "@/components/confirmation-dialog";
 import { CVUpload, type ExtractedCVData } from "@/components/cv-upload";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { useUser, type User } from "@/lib/hooks";
+import { useCV } from "@/lib/hooks/useCV";
 import { useRouter } from "next/navigation";
 import { useState, type FormEvent, type JSX } from "react";
 
@@ -42,6 +46,16 @@ export default function ProfilePage(): JSX.Element {
     isProfileComplete,
   } = useUser();
 
+  const {
+    cvs,
+    loading: cvsLoading,
+    deleting: cvDeleting,
+    remove: removeCV,
+    setActive: setActiveCV,
+    canAddMore,
+    maxCVs,
+  } = useCV();
+
   // ============================================
   // LOCAL STATE
   // ============================================
@@ -51,6 +65,9 @@ export default function ProfilePage(): JSX.Element {
   const [toast, setToast] = useState<Toast | null>(null);
   const [inputMode, setInputMode] = useState<"manual" | "upload">("manual");
   const [lastError, setLastError] = useState<string | null>(null);
+
+  // CV management state
+  const [cvToDelete, setCvToDelete] = useState<string | null>(null);
 
   // Initialize form data once when userData becomes available
   // (using a ref pattern to avoid useEffect + setState)
@@ -77,6 +94,27 @@ export default function ProfilePage(): JSX.Element {
   const updateField = (field: keyof User, value: string): void => {
     if (!formData) return;
     setFormData({ ...formData, [field]: value });
+  };
+
+  // CV Management Handlers
+  const handleSetActive = async (cvId: string): Promise<void> => {
+    const success = await setActiveCV(cvId);
+    if (success) {
+      showToast("success", "CV set as active");
+    } else {
+      showToast("error", "Failed to set CV as active");
+    }
+  };
+
+  const handleDeleteCV = async (): Promise<void> => {
+    if (!cvToDelete) return;
+    const success = await removeCV(cvToDelete);
+    setCvToDelete(null);
+    if (success) {
+      showToast("success", "CV deleted");
+    } else {
+      showToast("error", "Failed to delete CV");
+    }
   };
 
   const handleSave = async (e: FormEvent): Promise<void> => {
@@ -465,6 +503,181 @@ export default function ProfilePage(): JSX.Element {
             </CardContent>
           </Card>
         )}
+
+        {/* CV Management Section */}
+        <Card className="shadow-sm mt-8">
+          <CardHeader className="bg-white border-b border-nordic-neutral-200">
+            <div className="flex items-center justify-between">
+              <div>
+                <CardTitle className="text-nordic-neutral-900">Your CV Documents</CardTitle>
+                <CardDescription className="text-nordic-neutral-600">
+                  Manage your CV files. The active CV will be used for job analysis.
+                </CardDescription>
+              </div>
+              <div className="text-sm text-nordic-neutral-500">
+                {cvs.length} / {maxCVs} CVs
+              </div>
+            </div>
+          </CardHeader>
+          <CardContent className="bg-white pt-6">
+            {cvsLoading ? (
+              <div className="flex items-center justify-center py-8">
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-fjord-600"></div>
+              </div>
+            ) : cvs.length === 0 ? (
+              <div className="text-center py-8">
+                <svg
+                  className="w-12 h-12 text-nordic-neutral-300 mx-auto mb-4"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={1.5}
+                    d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+                  />
+                </svg>
+                <p className="text-nordic-neutral-600 mb-4">
+                  No CVs uploaded yet. Add your first CV to get started.
+                </p>
+                <Button onClick={() => router.push("/cv")} disabled={!canAddMore}>
+                  Upload CV
+                </Button>
+              </div>
+            ) : (
+              <div className="space-y-4">
+                {/* CV List */}
+                <div className="divide-y divide-nordic-neutral-200">
+                  {cvs.map((cv) => (
+                    <div
+                      key={cv.id}
+                      className={`flex items-center justify-between py-4 first:pt-0 last:pb-0 ${
+                        cv.isActive ? "bg-forest-50/50 -mx-4 px-4 rounded-lg" : ""
+                      }`}
+                    >
+                      <div className="flex items-center gap-3 min-w-0 flex-1">
+                        {/* Document icon */}
+                        <div
+                          className={`p-2 rounded-lg ${cv.isActive ? "bg-forest-100" : "bg-nordic-neutral-100"}`}
+                        >
+                          <svg
+                            className={`w-5 h-5 ${cv.isActive ? "text-forest-600" : "text-nordic-neutral-500"}`}
+                            fill="none"
+                            stroke="currentColor"
+                            viewBox="0 0 24 24"
+                          >
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth={1.5}
+                              d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+                            />
+                          </svg>
+                        </div>
+                        {/* CV Info */}
+                        <div className="min-w-0 flex-1">
+                          <div className="flex items-center gap-2">
+                            <span className="font-medium text-nordic-neutral-900 truncate">
+                              {cv.name}
+                            </span>
+                            {cv.isActive && (
+                              <Badge variant="default" className="bg-forest-600 text-white">
+                                Active
+                              </Badge>
+                            )}
+                          </div>
+                          <p className="text-sm text-nordic-neutral-500">
+                            Updated {new Date(cv.updatedAt).toLocaleDateString()}
+                          </p>
+                        </div>
+                      </div>
+                      {/* Actions */}
+                      <div className="flex items-center gap-2 ml-4">
+                        {!cv.isActive && (
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => void handleSetActive(cv.id)}
+                            className="text-forest-600 border-forest-300 hover:bg-forest-50"
+                          >
+                            Set Active
+                          </Button>
+                        )}
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => {
+                            // Set as active and navigate to CV editor
+                            void handleSetActive(cv.id).then(() => {
+                              router.push("/cv");
+                            });
+                          }}
+                        >
+                          Edit
+                        </Button>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => setCvToDelete(cv.id)}
+                          className="text-clay-600 border-clay-300 hover:bg-clay-50"
+                          disabled={cvDeleting}
+                        >
+                          Delete
+                        </Button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+
+                {/* Add CV Button */}
+                {canAddMore && (
+                  <div className="pt-4 border-t border-nordic-neutral-200">
+                    <Button variant="outline" onClick={() => router.push("/cv")} className="w-full">
+                      <svg
+                        className="w-4 h-4 mr-2"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M12 4v16m8-8H4"
+                        />
+                      </svg>
+                      Add Another CV
+                    </Button>
+                  </div>
+                )}
+
+                {/* Limit reached notice */}
+                {!canAddMore && (
+                  <div className="pt-4 border-t border-nordic-neutral-200">
+                    <p className="text-sm text-nordic-neutral-500 text-center">
+                      Maximum of {maxCVs} CVs reached. Delete one to add another.
+                    </p>
+                  </div>
+                )}
+              </div>
+            )}
+          </CardContent>
+        </Card>
+
+        {/* Delete CV Confirmation Dialog */}
+        <ConfirmationDialog
+          open={!!cvToDelete}
+          onOpenChange={(open) => !open && setCvToDelete(null)}
+          title="Delete CV"
+          description="Are you sure you want to delete this CV? This action cannot be undone."
+          confirmText="Delete"
+          cancelText="Cancel"
+          variant="destructive"
+          onConfirm={handleDeleteCV}
+          isLoading={cvDeleting}
+        />
       </div>
     </div>
   );

@@ -4,14 +4,15 @@
  * WHY: Store the original CV PDF and extracted LaTeX for editing.
  * This enables the AI-powered CV editing workflow.
  *
- * WHAT: Upload CV PDF → Extract LaTeX with AI → Store both in Blob → Return URLs
+ * WHAT: Upload CV PDF → Extract LaTeX with AI → Create/Update CV record → Store in Blob → Return URLs
  *
  * HOW:
  * 1. Receive PDF upload via FormData
- * 2. Extract LaTeX from PDF using AI
- * 3. Store both PDF and LaTeX in Vercel Blob
- * 4. Update user record with file URLs
- * 5. Return the URLs for immediate use
+ * 2. Check CV count limit (max 5 per user)
+ * 3. Extract LaTeX from PDF using AI
+ * 4. Store both PDF and LaTeX in Vercel Blob
+ * 5. Create or update CV record in database
+ * 6. Return the CV data for immediate use
  */
 
 import {
@@ -27,10 +28,13 @@ import { deleteCVFiles, uploadCVLatex, uploadCVPdf } from "@/lib/storage";
 import { parseAIError } from "@/lib/utils";
 import { type NextRequest, NextResponse } from "next/server";
 
+const MAX_CVS_PER_USER = 5;
+
 /**
  * POST /api/cv/store
  *
  * Uploads CV PDF, extracts LaTeX, stores both in Blob storage.
+ * Creates a new CV record or updates existing one.
  * Requires authentication.
  */
 export async function POST(request: NextRequest): Promise<NextResponse> {
@@ -48,10 +52,27 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     const selectedModel =
       (formData.get("model") as LatexExtractionModel) || AI_CONFIG.defaultLatexModel;
     const selectedTemplate = formData.get("template") as CVTemplateId | null;
+    const cvId = formData.get("cvId") as string | null; // Optional - for updating existing CV
 
     // Validate file exists
     if (!file) {
       return NextResponse.json({ error: "No file uploaded" }, { status: 400 });
+    }
+
+    // If not updating an existing CV, check CV count limit
+    if (!cvId) {
+      const existingCount = await prisma.cV.count({
+        where: { userId },
+      });
+
+      if (existingCount >= MAX_CVS_PER_USER) {
+        return NextResponse.json(
+          {
+            error: `Maximum of ${MAX_CVS_PER_USER} CVs allowed. Please delete one before uploading a new CV.`,
+          },
+          { status: 403 }
+        );
+      }
     }
 
     // Supported file types
@@ -138,15 +159,10 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
       // Step 3: Upload LaTeX to Blob
       const latexUrl = await uploadCVLatex(userId, latexContent);
 
-      // Step 4: Update or create user record (upsert handles new Neon Auth users)
+      // Step 4: Ensure user record exists
       await prisma.user.upsert({
         where: { id: userId },
-        update: {
-          cvPdfUrl: pdfUrl,
-          cvLatexUrl: latexUrl,
-          cvFilename: file.name,
-          cvUploadedAt: new Date(),
-        },
+        update: {},
         create: {
           id: userId,
           email: user.email ?? "",
@@ -155,20 +171,62 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
           summary: "",
           experience: "",
           skills: "",
-          cvPdfUrl: pdfUrl,
-          cvLatexUrl: latexUrl,
-          cvFilename: file.name,
-          cvUploadedAt: new Date(),
         },
       });
+
+      // Step 5: Create or update CV record
+      let cvRecord;
+      const cvName = file.name.replace(/\.[^/.]+$/, ""); // Remove file extension for name
+
+      if (cvId) {
+        // Update existing CV
+        cvRecord = await prisma.cV.update({
+          where: { id: cvId },
+          data: {
+            name: cvName,
+            pdfUrl,
+            latexUrl,
+            latexContent,
+          },
+        });
+      } else {
+        // Create new CV
+        // If this is the first CV, set it as active
+        const existingCVs = await prisma.cV.count({
+          where: { userId },
+        });
+        const isFirstCV = existingCVs === 0;
+
+        // If setting as active, unset any existing active CV
+        if (isFirstCV) {
+          await prisma.cV.updateMany({
+            where: { userId, isActive: true },
+            data: { isActive: false },
+          });
+        }
+
+        cvRecord = await prisma.cV.create({
+          data: {
+            userId,
+            name: cvName,
+            pdfUrl,
+            latexUrl,
+            latexContent,
+            isActive: isFirstCV,
+          },
+        });
+      }
 
       return NextResponse.json({
         success: true,
         data: {
+          id: cvRecord.id,
           pdfUrl,
           latexUrl,
           latexContent,
           filename: file.name,
+          name: cvRecord.name,
+          isActive: cvRecord.isActive,
           modelUsed,
           fallbackUsed,
           templateId: selectedTemplate,
