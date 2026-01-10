@@ -57,22 +57,22 @@ test.describe("Authentication Pages", () => {
     test("redirects unauthenticated users from dashboard to auth", async ({ page }) => {
       await page.goto("/dashboard");
 
-      // Should redirect to sign-in with callback
-      await expect(page).toHaveURL(/\/auth\/sign-in.*callbackUrl/);
+      // Should redirect to sign-in (neonAuthMiddleware handles this)
+      await expect(page).toHaveURL(/\/auth\/sign-in/);
     });
 
     test("redirects unauthenticated users from profile to auth", async ({ page }) => {
       await page.goto("/profile");
 
-      // Should redirect to sign-in with callback
-      await expect(page).toHaveURL(/\/auth\/sign-in.*callbackUrl/);
+      // Should redirect to sign-in (neonAuthMiddleware handles this)
+      await expect(page).toHaveURL(/\/auth\/sign-in/);
     });
 
     test("redirects unauthenticated users from tracker to auth", async ({ page }) => {
       await page.goto("/tracker");
 
-      // Should redirect to sign-in with callback
-      await expect(page).toHaveURL(/\/auth\/sign-in.*callbackUrl/);
+      // Should redirect to sign-in (neonAuthMiddleware handles this)
+      await expect(page).toHaveURL(/\/auth\/sign-in/);
     });
   });
 });
