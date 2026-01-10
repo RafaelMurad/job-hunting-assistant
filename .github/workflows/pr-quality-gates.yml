@@ -40,7 +40,7 @@ jobs:
       - name: Verify build succeeds
         run: npm run build
         env:
-          NEON_AUTH_BASE_URL: "https://auth.example.com"
+          NEON_AUTH_BASE_URL: "https://ep-old-rain-adc804b7.neonauth.c-2.us-east-1.aws.neon.tech/neondb/auth"
       
       - name: Upload coverage reports
         if: always()
