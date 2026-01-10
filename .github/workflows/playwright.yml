@@ -31,18 +31,18 @@ jobs:
       - name: Build Next.js app
         run: npm run build
         env:
-          # Skip actual DB connection during build
+          # Provide fake values for build-time validation
           DATABASE_URL: "postgresql://fake:fake@localhost:5432/fake"
+          NEON_AUTH_BASE_URL: "https://ep-fake-test-000000.neonauth.c-2.us-east-1.aws.neon.tech/testdb/auth"
           SKIP_ENV_VALIDATION: "1"
 
       - name: Run Playwright tests
         run: npm run test:e2e
         env:
           CI: true
-          PLAYWRIGHT_BASE_URL: "http://localhost:3000"
-          # Add test environment variables as needed
-          DATABASE_URL: ${{ secrets.DATABASE_URL_TEST }}
-          NEON_AUTH_BASE_URL: ${{ secrets.NEON_AUTH_BASE_URL }}
+          # Use fake values for E2E tests (only testing unauthenticated flows)
+          DATABASE_URL: "postgresql://fake:fake@localhost:5432/fake"
+          NEON_AUTH_BASE_URL: "https://ep-fake-test-000000.neonauth.c-2.us-east-1.aws.neon.tech/testdb/auth"
 
       - name: Upload Playwright report
         uses: actions/upload-artifact@v4
