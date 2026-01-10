@@ -3,27 +3,56 @@ name: Tests
 on:
   push:
     branches: [main]
-    paths-ignore:
-      - '**.md'
-      - 'docs/**'
-      - '.github/*.md'
-      - '.github/workflows/*.yml'
-      - 'LICENSE'
-      - '.gitignore'
   pull_request:
     branches: [main]
-    paths-ignore:
-      - '**.md'
-      - 'docs/**'
-      - '.github/*.md'
-      - '.github/workflows/*.yml'
-      - 'LICENSE'
-      - '.gitignore'
 
 jobs:
+  check-changes:
+    name: Check for code changes
+    runs-on: ubuntu-latest
+    outputs:
+      should_skip: ${{ steps.check.outputs.should_skip }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 2
+
+      - name: Check if only docs changed
+        id: check
+        run: |
+          CHANGED_FILES=$(git diff --name-only HEAD~1 HEAD 2>/dev/null || git diff --name-only HEAD)
+          echo "Changed files in latest commit:"
+          echo "$CHANGED_FILES"
+
+          SKIP=true
+          while IFS= read -r file; do
+            if [[ -n "$file" ]]; then
+              if [[ "$file" =~ \.md$ ]] || \
+                 [[ "$file" =~ ^docs/ ]] || \
+                 [[ "$file" =~ ^\.github/workflows/.*\.yml$ ]] || \
+                 [[ "$file" == "LICENSE" ]] || \
+                 [[ "$file" == ".gitignore" ]]; then
+                echo "  ✓ Skippable: $file"
+              else
+                echo "  ✗ Code file: $file"
+                SKIP=false
+              fi
+            fi
+          done <<< "$CHANGED_FILES"
+
+          echo "should_skip=$SKIP" >> $GITHUB_OUTPUT
+          if [ "$SKIP" = "true" ]; then
+            echo "📝 Only docs/config changed - skipping tests"
+          else
+            echo "💻 Code changed - running tests"
+          fi
+
   test:
     name: Unit & Integration Tests
     runs-on: ubuntu-latest
+    needs: check-changes
+    if: needs.check-changes.outputs.should_skip != 'true'
 
     steps:
       - name: Checkout code
@@ -102,12 +131,16 @@ jobs:
   test-summary:
     name: Test Summary
     runs-on: ubuntu-latest
-    needs: [test]
+    needs: [check-changes, test]
     if: always()
 
     steps:
       - name: Check test results
         run: |
+          if [ "${{ needs.check-changes.outputs.should_skip }}" == "true" ]; then
+            echo "⏭️ Tests skipped (docs-only commit)"
+            exit 0
+          fi
           if [ "${{ needs.test.result }}" == "failure" ]; then
             echo "❌ Tests failed"
             exit 1
