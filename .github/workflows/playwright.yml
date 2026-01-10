@@ -7,6 +7,7 @@ on:
       - '**.md'
       - 'docs/**'
       - '.github/*.md'
+      - '.github/workflows/*.yml'
       - 'LICENSE'
       - '.gitignore'
   pull_request:
@@ -15,6 +16,7 @@ on:
       - '**.md'
       - 'docs/**'
       - '.github/*.md'
+      - '.github/workflows/*.yml'
       - 'LICENSE'
       - '.gitignore'
   workflow_dispatch:
