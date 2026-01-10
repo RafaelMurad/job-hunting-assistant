@@ -18,10 +18,12 @@ This roadmap is the execution-focused companion to the PRD.
 - ✅ Migrate from NextAuth.js v5 to Neon Auth
 - ✅ Add email/password authentication (built-in)
 - ✅ Update auth UI pages (`/auth/sign-in`, `/auth/sign-up`)
-- ✅ Update proxy.ts for Neon Auth session cookies
+- ✅ Replace custom proxy.ts with `neonAuthMiddleware`
 - ✅ Update tRPC context for Neon Auth sessions
+- ✅ Add ThemeProvider + navigate/Link for proper routing
+- ✅ Update E2E tests for new auth flow
 
-**Status:** Complete
+**Status:** Complete (PR #120)
 
 ---
 
@@ -73,8 +75,9 @@ This roadmap is the execution-focused companion to the PRD.
 
 **Deliverables:**
 
-- Updated README with skills showcase
-- Simplified PRD
+- ✅ Updated README with skills showcase
+- ✅ Simplified PRD
+- ✅ Updated copilot-instructions with auth patterns
 - Screenshots of key flows
 
 **Status:** In Progress
@@ -85,10 +88,10 @@ This roadmap is the execution-focused companion to the PRD.
 
 These features are out of scope for the portfolio but could be added later:
 
-- Email/password authentication
 - PDF export improvements
 - Interview calendar integration
 - Job board integrations
+- Account data export/deletion (GDPR)
 
 ---
 

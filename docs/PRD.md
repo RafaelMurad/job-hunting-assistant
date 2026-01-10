@@ -3,7 +3,7 @@
 ## Job Hunting Assistant
 
 **Product Version:** v1.2 (Portfolio)  
-**Last Updated:** January 4, 2026  
+**Last Updated:** January 10, 2026  
 **Author:** Rafael Murad
 
 ---

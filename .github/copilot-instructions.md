@@ -99,6 +99,25 @@ const session = await getNeonSession();
 if (!session?.data?.user?.id) return unauthorized();
 ```
 
+### Route Protection Pattern (`proxy.ts`)
+
+Uses `neonAuthMiddleware` from Neon Auth for protected routes:
+
+```typescript
+// proxy.ts - Next.js 16+ route protection
+import { neonAuthMiddleware } from "@neondatabase/auth/next/server";
+
+export default neonAuthMiddleware({
+  loginUrl: "/auth/sign-in",
+});
+
+export const config = {
+  matcher: ["/dashboard/:path*", "/profile/:path*", "/admin/:path*", ...],
+};
+```
+
+Protected routes are defined in `config.matcher`. Unauthenticated users are redirected to `/auth/sign-in`.
+
 ### Feature Flags (`lib/feature-flags/`)
 
 Custom client-side feature flag system with localStorage persistence and env var overrides.
