@@ -310,7 +310,7 @@ This is a portfolio project, but feedback and suggestions are welcome! Feel free
 <td align="center">
 <strong>Rafael Murad</strong>
 <br />
-<sub>Senior Frontend Engineer</sub>
+<sub>Frontend Engineer</sub>
 <br />
 <sub>React • TypeScript • Next.js</sub>
 <br /><br />
