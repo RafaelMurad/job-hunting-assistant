@@ -187,7 +187,7 @@ describe("Badge Component", () => {
     it("renders secondary variant", () => {
       render(<Badge variant="secondary">Secondary</Badge>);
       const badge = screen.getByText("Secondary");
-      expect(badge).toHaveClass("bg-gray-100");
+      expect(badge).toHaveClass("bg-slate-100");
     });
 
     it("renders destructive variant", () => {
@@ -199,7 +199,7 @@ describe("Badge Component", () => {
     it("renders outline variant", () => {
       render(<Badge variant="outline">Outline</Badge>);
       const badge = screen.getByText("Outline");
-      expect(badge).toHaveClass("text-gray-900");
+      expect(badge).toHaveClass("text-slate-900");
     });
   });
 
