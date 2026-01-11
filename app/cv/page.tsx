@@ -24,6 +24,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { FileUpload, type UploadProgress } from "@/components/ui/file-upload";
 import { Input } from "@/components/ui/input";
+import { Select, SelectContent, SelectItem, SelectTrigger } from "@/components/ui/select";
 import { useCV, type CVItem } from "@/lib/hooks/useCV";
 import { CheckCircle, Loader2, Upload, X, XCircle } from "lucide-react";
 import { useCallback, useEffect, useState, type ChangeEvent, type JSX } from "react";
@@ -74,13 +75,18 @@ type ViewMode = "pdf" | "latex" | "split";
 export default function CVEditorPage(): JSX.Element {
   // CV hook for data management
   const {
+    cvs,
     activeCV,
     loading: cvsLoading,
     updating: cvUpdating,
     update: updateCV,
+    setActive: setActiveCV,
     refetch: refetchCVs,
     canAddMore,
   } = useCV();
+
+  // CV switching state
+  const [isSwitchingCV, setIsSwitchingCV] = useState(false);
 
   // Current CV being edited
   const [currentCV, setCurrentCV] = useState<CVItem | null>(null);
@@ -599,6 +605,35 @@ export default function CVEditorPage(): JSX.Element {
     }
   };
 
+  /**
+   * Switch to a different CV
+   */
+  const handleCVSwitch = async (cvId: string): Promise<void> => {
+    if (cvId === currentCV?.id) return;
+
+    // Warn about unsaved changes
+    if (hasUnsavedChanges) {
+      const confirmed = window.confirm(
+        "You have unsaved changes. Switch CV anyway? Changes will be lost."
+      );
+      if (!confirmed) return;
+    }
+
+    setIsSwitchingCV(true);
+    try {
+      const success = await setActiveCV(cvId);
+      if (success) {
+        // The useEffect will handle loading the new CV when activeCV changes
+        setHasUnsavedChanges(false);
+        showToast("success", "Switched to selected CV");
+      } else {
+        showToast("error", "Failed to switch CV");
+      }
+    } finally {
+      setIsSwitchingCV(false);
+    }
+  };
+
   // ============================================
   // RENDER: LOADING STATE
   // ============================================
@@ -656,22 +691,42 @@ export default function CVEditorPage(): JSX.Element {
       {/* Header */}
       <header className="border-b border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800/50 px-6 py-4">
         <div className="max-w-[1600px] mx-auto flex items-center justify-between">
-          <div className="flex items-center gap-4">
-            <h1 className="text-2xl font-bold text-slate-900 dark:text-slate-100">CV Editor</h1>
-            {currentCV && (
-              <div className="flex items-center gap-2 px-3 py-1.5 bg-slate-100 dark:bg-slate-800 rounded-lg border border-slate-200 dark:border-slate-700">
-                <span className="text-sm text-slate-600 dark:text-slate-400">{currentCV.name}</span>
-                {currentCV.isActive && (
-                  <Badge className="bg-emerald-100 dark:bg-emerald-600/20 text-emerald-700 dark:text-emerald-400 border-emerald-200 dark:border-emerald-600/30 text-xs">
-                    Active
-                  </Badge>
-                )}
-                {hasUnsavedChanges && (
-                  <Badge className="bg-amber-100 dark:bg-amber-600/20 text-amber-700 dark:text-amber-400 border-amber-200 dark:border-amber-600/30 text-xs">
-                    Unsaved
-                  </Badge>
-                )}
-              </div>
+          <div className="flex items-center gap-3">
+            <h1 className="text-xl font-bold text-slate-900 dark:text-slate-100">CV Editor</h1>
+            <span className="text-slate-400 dark:text-slate-600">|</span>
+            {/* CV Selector Dropdown */}
+            <Select
+              value={currentCV?.id ?? ""}
+              onValueChange={(id) => void handleCVSwitch(id)}
+              disabled={isSwitchingCV || cvs.length === 0}
+            >
+              <SelectTrigger className="w-auto max-w-[200px] h-8 bg-transparent border-0 text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 px-2 gap-1">
+                <span className="truncate text-sm font-medium">
+                  {currentCV?.name ?? (cvs.length === 0 ? "No CVs" : "Select CV")}
+                </span>
+              </SelectTrigger>
+              <SelectContent align="start">
+                {cvs.map((cv, index) => (
+                  <SelectItem key={cv.id} value={cv.id} className="py-2">
+                    <div className="flex items-center gap-3">
+                      <span className="w-5 h-5 rounded bg-slate-200 dark:bg-slate-700 flex items-center justify-center text-xs font-medium text-slate-600 dark:text-slate-400">
+                        {index + 1}
+                      </span>
+                      <span className="truncate max-w-[180px]">{cv.name}</span>
+                      {cv.isActive && (
+                        <Badge className="bg-emerald-100 dark:bg-emerald-900/50 text-emerald-700 dark:text-emerald-400 text-[10px] px-1.5 py-0">
+                          Active
+                        </Badge>
+                      )}
+                    </div>
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            {hasUnsavedChanges && (
+              <Badge className="bg-amber-100 dark:bg-amber-600/20 text-amber-700 dark:text-amber-400 border-amber-200 dark:border-amber-600/30 text-xs">
+                Unsaved
+              </Badge>
             )}
           </div>
 
