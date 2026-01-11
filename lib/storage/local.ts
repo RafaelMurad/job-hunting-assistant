@@ -170,7 +170,7 @@ export const localStorageAdapter: StorageAdapter = {
   // ----------------------------------------
 
   async getCVs(): Promise<StoredCV[]> {
-    return await db.cvs.orderBy("createdAt").reverse().toArray();
+    return db.cvs.orderBy("createdAt").reverse().toArray();
   },
 
   async getCV(id: string): Promise<StoredCV | null> {
@@ -180,7 +180,7 @@ export const localStorageAdapter: StorageAdapter = {
 
   async getActiveCV(): Promise<StoredCV | null> {
     // Use filter instead of indexed query for boolean fields
-    const cv = await db.cvs.filter((cv) => cv.isActive === true).first();
+    const cv = await db.cvs.filter((cv) => cv.isActive).first();
     return cv ?? null;
   },
 
@@ -190,7 +190,7 @@ export const localStorageAdapter: StorageAdapter = {
 
     // If this is set as active, deactivate others
     if (input.isActive) {
-      const activeCvs = await db.cvs.filter((cv) => cv.isActive === true).toArray();
+      const activeCvs = await db.cvs.filter((cv) => cv.isActive).toArray();
       for (const cv of activeCvs) {
         await db.cvs.update(cv.id, { isActive: false });
       }
@@ -226,7 +226,7 @@ export const localStorageAdapter: StorageAdapter = {
 
     // If setting as active, deactivate others
     if (input.isActive) {
-      const activeCvs = await db.cvs.filter((cv) => cv.isActive === true).toArray();
+      const activeCvs = await db.cvs.filter((cv) => cv.isActive).toArray();
       for (const cv of activeCvs) {
         await db.cvs.update(cv.id, { isActive: false });
       }
@@ -268,7 +268,7 @@ export const localStorageAdapter: StorageAdapter = {
 
   async setActiveCV(id: string): Promise<void> {
     // Deactivate all CVs
-    const activeCvs = await db.cvs.filter((cv) => cv.isActive === true).toArray();
+    const activeCvs = await db.cvs.filter((cv) => cv.isActive).toArray();
     for (const cv of activeCvs) {
       await db.cvs.update(cv.id, { isActive: false });
     }
@@ -343,7 +343,7 @@ export const localStorageAdapter: StorageAdapter = {
   // ----------------------------------------
 
   async getApplications(): Promise<StoredApplication[]> {
-    return await db.applications.orderBy("createdAt").reverse().toArray();
+    return db.applications.orderBy("createdAt").reverse().toArray();
   },
 
   async getApplication(id: string): Promise<StoredApplication | null> {

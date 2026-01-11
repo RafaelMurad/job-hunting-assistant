@@ -87,7 +87,6 @@ export default function CVEditorPage(): JSX.Element {
     update: updateCV,
     setActive: setActiveCV,
     upload: uploadCV,
-    refetch: _refetchCVs,
     canAddMore,
   } = useStorageCV();
 

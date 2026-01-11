@@ -50,7 +50,6 @@ export default function ProfilePage(): JSX.Element {
     remove: removeCV,
     setActive: setActiveCV,
     upload: uploadCV,
-    refetch: _refetch,
     canAddMore,
     maxCVs,
   } = useStorageCV();

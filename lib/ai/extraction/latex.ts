@@ -245,13 +245,11 @@ export async function modifyLatexWithAI(
   };
 
   // Try Gemini first
-  if (isModelAvailable("gemini-2.5-flash", availabilityOptions)) {
+  const geminiApiKey = getAPIKeyForProvider("gemini", options?.geminiKey);
+  if (isModelAvailable("gemini-2.5-flash", availabilityOptions) && geminiApiKey) {
     try {
       const { GoogleGenerativeAI } = await import("@google/generative-ai");
-      const apiKey = getAPIKeyForProvider("gemini", options?.geminiKey);
-      if (!apiKey) throw new Error("Gemini API key not available");
-
-      const genAI = new GoogleGenerativeAI(apiKey);
+      const genAI = new GoogleGenerativeAI(geminiApiKey);
       const model = genAI.getGenerativeModel({
         model: AI_CONFIG.models.gemini,
         generationConfig: {
@@ -325,13 +323,11 @@ export async function analyzeATSCompliance(
   };
 
   // Try Gemini first
-  if (isModelAvailable("gemini-2.5-flash", availabilityOptions)) {
+  const geminiApiKey = getAPIKeyForProvider("gemini", options?.geminiKey);
+  if (isModelAvailable("gemini-2.5-flash", availabilityOptions) && geminiApiKey) {
     try {
       const { GoogleGenerativeAI } = await import("@google/generative-ai");
-      const apiKey = getAPIKeyForProvider("gemini", options?.geminiKey);
-      if (!apiKey) throw new Error("Gemini API key not available");
-
-      const genAI = new GoogleGenerativeAI(apiKey);
+      const genAI = new GoogleGenerativeAI(geminiApiKey);
       const model = genAI.getGenerativeModel({
         model: AI_CONFIG.models.gemini,
       });
