@@ -1,7 +1,11 @@
+"use client";
+
 import { Button } from "@/components/ui/button";
-import { isLocalMode } from "@/lib/storage/interface";
+import { useNeonSession } from "@/lib/auth/neon-client";
+import { useIsLocalMode } from "@/lib/storage/provider";
 import Link from "next/link";
-import { type JSX } from "react";
+import { useRouter } from "next/navigation";
+import { useEffect, type JSX } from "react";
 
 // ============================================
 // Mode-Specific Content
@@ -54,8 +58,36 @@ const DEMO_MODE_CONTENT = {
 // ============================================
 
 export default function LandingPage(): JSX.Element {
-  const isLocal = isLocalMode();
+  const router = useRouter();
+  const isLocal = useIsLocalMode();
+  const { data: session, isPending } = useNeonSession();
   const content = isLocal ? LOCAL_MODE_CONTENT : DEMO_MODE_CONTENT;
+
+  // Redirect logged-in users to dashboard
+  useEffect(() => {
+    // In local mode, users are always "logged in" - redirect to dashboard
+    if (isLocal) {
+      router.replace("/dashboard");
+      return;
+    }
+
+    // In demo mode, redirect authenticated users to dashboard
+    if (!isPending && session?.user) {
+      router.replace("/dashboard");
+    }
+  }, [isLocal, session, isPending, router]);
+
+  // Show loading state while checking auth or redirecting
+  if (isLocal || (!isPending && session?.user)) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-slate-50 dark:bg-slate-900">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-cyan-500 mx-auto mb-4"></div>
+          <p className="text-slate-600 dark:text-slate-400 text-sm">Redirecting to dashboard...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-linear-to-b from-white to-slate-50 dark:from-slate-900 dark:to-slate-800">

@@ -252,7 +252,7 @@ export default function ProfilePage(): JSX.Element {
   // ============================================
 
   return (
-    <div className="min-h-screen bg-slate-50 dark:bg-slate-900 py-8">
+    <div className="min-h-screen bg-slate-50 dark:bg-slate-900 py-4 sm:py-8">
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Toast Notification */}
         {toast && (
@@ -275,15 +275,15 @@ export default function ProfilePage(): JSX.Element {
           </div>
         )}
 
-        {/* Profile Header */}
-        <Card className="mb-6">
-          <CardContent className="pt-6 pb-6">
-            <div className="flex items-start gap-4">
-              {/* Avatar */}
+        {/* Profile Header - Compact on mobile */}
+        <Card className="mb-4 sm:mb-6">
+          <CardContent className="pt-4 pb-4 sm:pt-6 sm:pb-6">
+            <div className="flex items-start gap-3 sm:gap-4">
+              {/* Avatar - Smaller on mobile */}
               <AvatarUpload
                 name={formData.name || "User"}
                 imageUrl={null}
-                size={64}
+                size={48}
                 editable={false}
               />
 
@@ -309,7 +309,7 @@ export default function ProfilePage(): JSX.Element {
                     <>
                       {/* Name with badge */}
                       <div className="flex items-center gap-2 flex-wrap">
-                        <h1 className="text-xl font-bold text-slate-900 dark:text-slate-100 truncate">
+                        <h1 className="text-base sm:text-xl font-bold text-slate-900 dark:text-slate-100 truncate">
                           {formData.name || "Welcome!"}
                         </h1>
                         {isComplete ? (
@@ -599,69 +599,82 @@ export default function ProfilePage(): JSX.Element {
                       </p>
                     </div>
                   ) : (
-                    <div className="space-y-4">
+                    <div className="space-y-3">
                       {cvs.map((cv) => (
                         <div
                           key={cv.id}
-                          className={`flex items-center justify-between p-4 rounded-lg border ${
+                          className={`p-3 sm:p-4 rounded-lg border ${
                             cv.isActive
                               ? "border-emerald-300 dark:border-emerald-700 bg-emerald-50/50 dark:bg-emerald-900/20"
                               : "border-slate-200 dark:border-slate-700"
                           }`}
                         >
-                          <div className="flex items-center gap-3">
-                            <div
-                              className={`p-2 rounded-lg ${
-                                cv.isActive
-                                  ? "bg-emerald-100 dark:bg-emerald-900/50"
-                                  : "bg-slate-100 dark:bg-slate-800"
-                              }`}
-                            >
-                              <FileText
-                                className={`w-5 h-5 ${
+                          {/* Mobile: Stack layout, Desktop: Row layout */}
+                          <div className="flex items-start sm:items-center justify-between gap-3">
+                            <div className="flex items-start sm:items-center gap-3 min-w-0 flex-1">
+                              <div
+                                className={`p-2 rounded-lg shrink-0 ${
                                   cv.isActive
-                                    ? "text-emerald-600 dark:text-emerald-400"
-                                    : "text-slate-500 dark:text-slate-400"
+                                    ? "bg-emerald-100 dark:bg-emerald-900/50"
+                                    : "bg-slate-100 dark:bg-slate-800"
                                 }`}
-                              />
-                            </div>
-                            <div>
-                              <div className="flex items-center gap-2">
-                                <span className="font-medium text-slate-900 dark:text-slate-100">
-                                  {cv.name}
-                                </span>
-                                {cv.isActive && (
-                                  <Badge className="bg-emerald-600 text-white">Active</Badge>
-                                )}
+                              >
+                                <FileText
+                                  className={`w-5 h-5 ${
+                                    cv.isActive
+                                      ? "text-emerald-600 dark:text-emerald-400"
+                                      : "text-slate-500 dark:text-slate-400"
+                                  }`}
+                                />
                               </div>
-                              <p className="text-sm text-slate-500 dark:text-slate-400">
-                                Updated {new Date(cv.updatedAt).toLocaleDateString()}
-                              </p>
+                              <div className="min-w-0 flex-1">
+                                <div className="flex items-center gap-2 flex-wrap">
+                                  <span className="font-medium text-slate-900 dark:text-slate-100 text-sm sm:text-base truncate max-w-[150px] sm:max-w-none">
+                                    {cv.name}
+                                  </span>
+                                  {cv.isActive && (
+                                    <Badge className="bg-emerald-600 text-white text-xs shrink-0">
+                                      Active
+                                    </Badge>
+                                  )}
+                                </div>
+                                <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400">
+                                  Updated {new Date(cv.updatedAt).toLocaleDateString()}
+                                </p>
+                              </div>
                             </div>
-                          </div>
 
-                          <div className="flex items-center gap-2">
-                            {!cv.isActive && (
+                            {/* Actions - always visible on right */}
+                            <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
+                              {!cv.isActive && (
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  onClick={() => void handleSetActive(cv.id)}
+                                  className="h-8 px-2 sm:px-3 text-xs sm:text-sm"
+                                >
+                                  <span className="hidden sm:inline">Set Active</span>
+                                  <span className="sm:hidden">Activate</span>
+                                </Button>
+                              )}
                               <Button
                                 variant="outline"
                                 size="sm"
-                                onClick={() => void handleSetActive(cv.id)}
+                                onClick={() => router.push("/cv")}
+                                className="h-8 px-2 sm:px-3 text-xs sm:text-sm"
                               >
-                                Set Active
+                                Edit
                               </Button>
-                            )}
-                            <Button variant="outline" size="sm" onClick={() => router.push("/cv")}>
-                              Edit
-                            </Button>
-                            <Button
-                              variant="outline"
-                              size="icon"
-                              onClick={() => setCvToDelete(cv.id)}
-                              disabled={cvDeleting}
-                              className="text-red-600 hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-900/30"
-                            >
-                              <Trash2 className="h-4 w-4" />
-                            </Button>
+                              <Button
+                                variant="outline"
+                                size="icon"
+                                onClick={() => setCvToDelete(cv.id)}
+                                disabled={cvDeleting}
+                                className="h-8 w-8 text-red-600 hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-900/30"
+                              >
+                                <Trash2 className="h-4 w-4" />
+                              </Button>
+                            </div>
                           </div>
                         </div>
                       ))}
@@ -673,8 +686,8 @@ export default function ProfilePage(): JSX.Element {
           </Tabs>
         )}
 
-        {/* Navigation */}
-        <div className="mt-6 flex justify-end">
+        {/* Navigation - Hide on mobile (use bottom nav) */}
+        <div className="mt-4 sm:mt-6 hidden sm:flex justify-end">
           <Button variant="outline" onClick={() => router.push("/dashboard")}>
             ← Back to Dashboard
           </Button>

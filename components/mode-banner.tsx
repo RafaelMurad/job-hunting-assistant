@@ -178,7 +178,12 @@ export function ModeBanner({
       };
 
   const baseClasses = cn(
-    "flex items-center gap-3 px-4 py-2 border rounded-lg",
+    // Mobile: ultra-compact single line
+    "flex items-center gap-2 px-3 py-1.5 border text-xs",
+    // Desktop: more spacious
+    "sm:gap-3 sm:px-4 sm:py-2 sm:text-sm sm:rounded-lg",
+    // Mobile: no border-radius for full-bleed feel
+    "rounded-none sm:rounded-lg",
     content.bgClass,
     content.textClass,
     variant === "floating" && "fixed top-20 left-1/2 -translate-x-1/2 z-50 shadow-lg",
@@ -187,12 +192,18 @@ export function ModeBanner({
 
   return (
     <div className={baseClasses} role="status" aria-live="polite">
-      <span className={content.iconClass}>{content.icon}</span>
-      <div className="flex flex-1 items-center gap-2 text-sm">
+      <span className={cn(content.iconClass, "shrink-0")}>
+        {/* Smaller icon on mobile */}
+        <span className="sm:hidden">
+          {isLocalMode ? <ShieldIcon className="h-4 w-4" /> : <InfoIcon className="h-4 w-4" />}
+        </span>
+        <span className="hidden sm:inline">{content.icon}</span>
+      </span>
+      <div className="flex flex-1 items-center gap-1 sm:gap-2">
         <span className="font-medium">{content.title}</span>
         <span className="hidden sm:inline">—</span>
         <span className="hidden sm:inline">{content.description}</span>
-        <Link href={content.linkHref} className={cn("ml-2", content.linkClass)}>
+        <Link href={content.linkHref} className={cn("ml-auto sm:ml-2", content.linkClass)}>
           {content.linkText}
         </Link>
       </div>
@@ -200,7 +211,7 @@ export function ModeBanner({
         <button
           onClick={handleDismiss}
           className={cn(
-            "p-1 rounded hover:bg-black/5 dark:hover:bg-white/10 transition-colors",
+            "p-1 rounded hover:bg-black/5 dark:hover:bg-white/10 transition-colors shrink-0",
             content.iconClass
           )}
           aria-label="Dismiss banner"

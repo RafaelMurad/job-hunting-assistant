@@ -18,6 +18,8 @@
 
 import { AIInputBar } from "@/components/cv/ai-input-bar";
 import { EditorToolbar } from "@/components/cv/editor-toolbar";
+import { MobileAIBar } from "@/components/cv/mobile-ai-bar";
+import { MobileSettingsSheet } from "@/components/cv/mobile-settings-sheet";
 import { LaTeXEditor } from "@/components/latex-editor";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -27,6 +29,7 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger } from "@/components/ui/select";
 import { useStorageCV, type CVData } from "@/lib/hooks";
 import { useStorage } from "@/lib/storage/provider";
+import { cn } from "@/lib/utils";
 import { CheckCircle, Loader2, Upload, X, XCircle } from "lucide-react";
 import { useCallback, useEffect, useState, type ChangeEvent, type JSX } from "react";
 
@@ -68,6 +71,7 @@ interface Toast {
 }
 
 type ViewMode = "pdf" | "latex" | "split";
+type MobileViewMode = "pdf" | "latex";
 
 // ============================================
 // COMPONENT
@@ -98,6 +102,7 @@ export default function CVEditorPage(): JSX.Element {
   const [latexContent, setLatexContent] = useState<string>("");
   const [previewPdfUrl, setPreviewPdfUrl] = useState<string | null>(null);
   const [viewMode, setViewMode] = useState<ViewMode>("split");
+  const [mobileViewMode, setMobileViewMode] = useState<MobileViewMode>("pdf");
   const [atsAnalysis, setAtsAnalysis] = useState<ATSAnalysis | null>(null);
   const [toast, setToast] = useState<Toast | null>(null);
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
@@ -474,6 +479,12 @@ export default function CVEditorPage(): JSX.Element {
     }
   };
 
+  // Mobile: Compile, save, and switch to PDF view
+  const handleMobileSaveAndView = async (): Promise<void> => {
+    await handleCompile(true);
+    setMobileViewMode("pdf");
+  };
+
   const handleAIModify = async (instruction: string): Promise<void> => {
     if (!latexContent.trim()) {
       showToast("error", "No LaTeX content to modify. Upload a CV first.");
@@ -624,257 +635,456 @@ export default function CVEditorPage(): JSX.Element {
   }
 
   // ============================================
+  // RENDER: SHARED COMPONENTS
+  // ============================================
+
+  // Toast notification (shared between layouts)
+  const toastElement = toast && (
+    <div
+      className={`fixed top-4 right-4 z-50 p-4 rounded-lg shadow-lg max-w-md flex items-start gap-3 animate-in slide-in-from-right ${
+        toast.type === "success"
+          ? "bg-emerald-50 dark:bg-emerald-900/90 text-emerald-800 dark:text-emerald-100 border border-emerald-200 dark:border-emerald-700"
+          : toast.type === "error"
+            ? "bg-red-50 dark:bg-red-900/90 text-red-800 dark:text-red-100 border border-red-200 dark:border-red-700"
+            : "bg-sky-50 dark:bg-sky-900/90 text-sky-800 dark:text-sky-100 border border-sky-200 dark:border-sky-700"
+      }`}
+    >
+      <span className="shrink-0 mt-0.5">
+        {toast.type === "success" && (
+          <CheckCircle className="w-5 h-5 text-emerald-600 dark:text-emerald-400" />
+        )}
+        {toast.type === "error" && <XCircle className="w-5 h-5 text-red-600 dark:text-red-400" />}
+        {toast.type === "info" && <Loader2 className="w-5 h-5 text-sky-600 dark:text-sky-400" />}
+      </span>
+      <span className="flex-1 text-sm">{toast.message}</span>
+      <button
+        onClick={dismissToast}
+        className="shrink-0 text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200"
+        aria-label="Dismiss"
+      >
+        <X className="w-4 h-4" />
+      </button>
+    </div>
+  );
+
+  // Hidden file input (shared)
+  const fileInput = (
+    <Input
+      id="cv-upload"
+      type="file"
+      accept=".pdf,.docx,.tex"
+      className="hidden"
+      onChange={handleUpload}
+      disabled={cvUploading}
+    />
+  );
+
+  // PDF Preview Panel (desktop)
+  const pdfPreviewPanel = (
+    <Card className="bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 flex flex-col overflow-hidden h-full">
+      <CardHeader className="py-3 px-4 bg-slate-50 dark:bg-slate-900/50 border-b border-slate-200 dark:border-slate-700">
+        <div className="flex items-center justify-between">
+          <CardTitle className="text-sm font-medium text-slate-600 dark:text-slate-400">
+            PDF Preview
+          </CardTitle>
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={handleDownload}
+            disabled={!previewPdfUrl}
+            className="h-7 text-xs text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200"
+          >
+            Download
+          </Button>
+        </div>
+      </CardHeader>
+      <CardContent className="flex-1 p-4 overflow-hidden">
+        {previewPdfUrl && previewPdfUrl.length > 0 ? (
+          <iframe
+            src={previewPdfUrl}
+            className="w-full h-full border border-slate-200 dark:border-slate-600 rounded-lg bg-white"
+            title="CV Preview"
+          />
+        ) : (
+          <FileUpload
+            onFileSelect={handleFileSelect}
+            progress={uploadProgress}
+            accept=".pdf,.docx,.tex"
+            maxSize={10 * 1024 * 1024}
+            disabled={cvUploading}
+            title={
+              currentCV && !currentCV.latexContent
+                ? "Re-upload to enable editing"
+                : "Upload your CV"
+            }
+            description={
+              currentCV && !currentCV.latexContent
+                ? "This CV was imported without content. Upload the file again to edit it."
+                : "Drag and drop or click to browse (PDF, DOCX, or LaTeX)"
+            }
+            className="h-full"
+          />
+        )}
+      </CardContent>
+    </Card>
+  );
+
+  // PDF Preview Panel (mobile - title only, no download button)
+  const mobilePdfPreviewPanel = (
+    <Card className="bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 flex flex-col overflow-hidden h-full">
+      <CardHeader className="py-3 px-4 bg-slate-50 dark:bg-slate-900/50 border-b border-slate-200 dark:border-slate-700">
+        <div className="flex items-center h-8">
+          <CardTitle className="text-sm font-medium text-slate-600 dark:text-slate-400">
+            PDF Preview
+          </CardTitle>
+        </div>
+      </CardHeader>
+      <CardContent className="flex-1 p-4 overflow-hidden">
+        {previewPdfUrl && previewPdfUrl.length > 0 ? (
+          <iframe
+            src={previewPdfUrl}
+            className="w-full h-full border border-slate-200 dark:border-slate-600 rounded-lg bg-white"
+            title="CV Preview"
+          />
+        ) : (
+          <FileUpload
+            onFileSelect={handleFileSelect}
+            progress={uploadProgress}
+            accept=".pdf,.docx,.tex"
+            maxSize={10 * 1024 * 1024}
+            disabled={cvUploading}
+            title={
+              currentCV && !currentCV.latexContent
+                ? "Re-upload to enable editing"
+                : "Upload your CV"
+            }
+            description={
+              currentCV && !currentCV.latexContent
+                ? "This CV was imported without content. Upload the file again to edit it."
+                : "Drag and drop or click to browse (PDF, DOCX, or LaTeX)"
+            }
+            className="h-full"
+          />
+        )}
+      </CardContent>
+    </Card>
+  );
+
+  // LaTeX Editor Panel (desktop - with Preview button)
+  const latexEditorPanel = (
+    <Card className="bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 flex flex-col overflow-hidden h-full">
+      <CardHeader className="py-3 px-4 bg-slate-50 dark:bg-slate-900/50 border-b border-slate-200 dark:border-slate-700">
+        <div className="flex items-center justify-between">
+          <CardTitle className="text-sm font-medium text-slate-600 dark:text-slate-400">
+            LaTeX Source
+          </CardTitle>
+          <div className="flex gap-2">
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => void handleCompile(false)}
+              disabled={compiling || !latexContent}
+              className="h-7 text-xs text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200"
+            >
+              {compiling ? "Compiling..." : "Preview"}
+            </Button>
+            <Button
+              size="sm"
+              onClick={() => void handleCompile(true)}
+              disabled={compiling || !latexContent}
+              className="h-7 text-xs"
+            >
+              Save
+            </Button>
+          </div>
+        </div>
+      </CardHeader>
+      <CardContent className="flex-1 p-0 overflow-hidden">
+        <LaTeXEditor
+          value={latexContent}
+          onChange={setLatexContent}
+          placeholder="Upload a CV to extract LaTeX, or paste your LaTeX source here..."
+          className="h-full border-0 rounded-none"
+        />
+      </CardContent>
+    </Card>
+  );
+
+  // LaTeX Editor Panel (mobile - Save only, switches to PDF after)
+  const mobileLatexEditorPanel = (
+    <Card className="bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 flex flex-col overflow-hidden h-full">
+      <CardHeader className="py-3 px-4 bg-slate-50 dark:bg-slate-900/50 border-b border-slate-200 dark:border-slate-700">
+        <div className="flex items-center justify-between h-8">
+          <CardTitle className="text-sm font-medium text-slate-600 dark:text-slate-400">
+            LaTeX Source
+          </CardTitle>
+          <Button
+            size="sm"
+            onClick={() => void handleMobileSaveAndView()}
+            disabled={compiling || !latexContent}
+            className="h-8 px-4 text-sm bg-cyan-500 hover:bg-cyan-600 text-slate-900 dark:bg-cyan-500 dark:hover:bg-cyan-400 shadow-none!"
+          >
+            {compiling ? "Saving..." : "Save"}
+          </Button>
+        </div>
+      </CardHeader>
+      <CardContent className="flex-1 p-0 overflow-hidden">
+        <LaTeXEditor
+          value={latexContent}
+          onChange={setLatexContent}
+          placeholder="Upload a CV to extract LaTeX, or paste your LaTeX source here..."
+          className="h-full border-0 rounded-none"
+        />
+      </CardContent>
+    </Card>
+  );
+
+  // ============================================
   // RENDER: MAIN PAGE
   // ============================================
 
   return (
-    <div className="min-h-screen bg-slate-50 dark:bg-slate-900 flex flex-col">
+    <div className="min-h-screen bg-slate-50 dark:bg-slate-900">
       {/* Toast Notification */}
-      {toast && (
-        <div
-          className={`fixed top-4 right-4 z-50 p-4 rounded-lg shadow-lg max-w-md flex items-start gap-3 animate-in slide-in-from-right ${
-            toast.type === "success"
-              ? "bg-emerald-50 dark:bg-emerald-900/90 text-emerald-800 dark:text-emerald-100 border border-emerald-200 dark:border-emerald-700"
-              : toast.type === "error"
-                ? "bg-red-50 dark:bg-red-900/90 text-red-800 dark:text-red-100 border border-red-200 dark:border-red-700"
-                : "bg-sky-50 dark:bg-sky-900/90 text-sky-800 dark:text-sky-100 border border-sky-200 dark:border-sky-700"
-          }`}
-        >
-          <span className="shrink-0 mt-0.5">
-            {toast.type === "success" && (
-              <CheckCircle className="w-5 h-5 text-emerald-600 dark:text-emerald-400" />
-            )}
-            {toast.type === "error" && (
-              <XCircle className="w-5 h-5 text-red-600 dark:text-red-400" />
-            )}
-            {toast.type === "info" && (
-              <Loader2 className="w-5 h-5 text-sky-600 dark:text-sky-400" />
-            )}
-          </span>
-          <span className="flex-1 text-sm">{toast.message}</span>
-          <button
-            onClick={dismissToast}
-            className="shrink-0 text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200"
-            aria-label="Dismiss"
-          >
-            <X className="w-4 h-4" />
-          </button>
-        </div>
-      )}
+      {toastElement}
 
-      {/* Header */}
-      <header className="border-b border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800/50 px-6 py-4">
-        <div className="max-w-[1600px] mx-auto flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <h1 className="text-xl font-bold text-slate-900 dark:text-slate-100">CV Editor</h1>
-            <span className="text-slate-400 dark:text-slate-600">|</span>
-            {/* CV Selector Dropdown */}
+      {/* Hidden file input */}
+      {fileInput}
+
+      {/* ============================================ */}
+      {/* DESKTOP LAYOUT (md and above) - UNCHANGED */}
+      {/* ============================================ */}
+      <div className="hidden md:flex flex-col min-h-screen">
+        {/* Header */}
+        <header className="border-b border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800/50 px-6 py-4">
+          <div className="max-w-[1600px] mx-auto flex items-center justify-between gap-2">
+            <div className="flex items-center gap-3 min-w-0 flex-1">
+              <h1 className="text-xl font-bold text-slate-900 dark:text-slate-100 shrink-0">
+                CV Editor
+              </h1>
+              <span className="text-slate-400 dark:text-slate-600">|</span>
+              {/* CV Selector Dropdown */}
+              <Select
+                value={currentCV?.id ?? ""}
+                onValueChange={(id) => void handleCVSwitch(id)}
+                disabled={isSwitchingCV || cvs.length === 0}
+              >
+                <SelectTrigger className="w-auto max-w-[200px] h-8 bg-transparent border-0 text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 px-2 gap-1">
+                  <span className="truncate text-sm font-medium">
+                    {currentCV?.name ?? (cvs.length === 0 ? "No CVs" : "Select CV")}
+                  </span>
+                </SelectTrigger>
+                <SelectContent align="start">
+                  {cvs.map((cv, index) => (
+                    <SelectItem key={cv.id} value={cv.id} className="py-2">
+                      <div className="flex items-center gap-3">
+                        <span className="w-5 h-5 rounded bg-slate-200 dark:bg-slate-700 flex items-center justify-center text-xs font-medium text-slate-600 dark:text-slate-400">
+                          {index + 1}
+                        </span>
+                        <span className="truncate max-w-[180px]">{cv.name}</span>
+                        {cv.isActive && (
+                          <Badge className="bg-emerald-100 dark:bg-emerald-900/50 text-emerald-700 dark:text-emerald-400 text-[10px] px-1.5 py-0">
+                            Active
+                          </Badge>
+                        )}
+                      </div>
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              {hasUnsavedChanges && (
+                <Badge className="bg-amber-100 dark:bg-amber-600/20 text-amber-700 dark:text-amber-400 border-amber-200 dark:border-amber-600/30 text-xs shrink-0">
+                  Unsaved
+                </Badge>
+              )}
+            </div>
+
+            <Button
+              onClick={() => document.getElementById("cv-upload")?.click()}
+              disabled={cvUploading}
+              className="h-10 text-sm px-4 shrink-0"
+            >
+              {cvUploading ? (
+                <>
+                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                  Uploading...
+                </>
+              ) : (
+                <>
+                  <Upload className="w-4 h-4 mr-2" />
+                  Upload CV
+                </>
+              )}
+            </Button>
+          </div>
+        </header>
+
+        {/* AI Input Bar */}
+        <div className="px-6 pt-4 bg-slate-100 dark:bg-slate-900/50">
+          <div className="max-w-[1600px] mx-auto">
+            <AIInputBar
+              onApply={handleAIModify}
+              onATSCheck={handleATSCheck}
+              isModifying={modifying}
+              isAnalyzing={analyzing}
+              disabled={!latexContent.trim()}
+            />
+          </div>
+        </div>
+
+        {/* Toolbar */}
+        <div className="px-6 py-3 bg-slate-100 dark:bg-slate-900/50 border-b border-slate-200 dark:border-slate-800">
+          <div className="max-w-[1600px] mx-auto">
+            <EditorToolbar
+              models={availableModels.map((m) => ({
+                id: m.id,
+                name: m.name,
+                cost: m.cost,
+                available: m.available,
+              }))}
+              selectedModel={selectedModel}
+              onModelChange={setSelectedModel}
+              templates={availableTemplates.map((t) => ({ id: t.id, name: t.name }))}
+              selectedTemplate={selectedTemplate}
+              onTemplateChange={(id) => void handleTemplateChange(id)}
+              viewMode={viewMode}
+              onViewModeChange={setViewMode}
+              atsScore={atsAnalysis?.score}
+              onDownload={handleDownload}
+              onOpenOverleaf={handleOpenInOverleaf}
+              downloadDisabled={!previewPdfUrl}
+              disabled={cvUploading}
+              isSaving={cvUpdating}
+              onSave={() => void handleSaveCV()}
+              hasUnsavedChanges={hasUnsavedChanges}
+              className="border-0 pt-0"
+            />
+          </div>
+        </div>
+
+        {/* Main Editor Area */}
+        <main className="flex-1 px-6 py-4 min-h-0">
+          <div className="max-w-[1600px] mx-auto h-full">
+            <div
+              className={`grid gap-4 h-[calc(100vh-300px)] min-h-[500px] ${
+                viewMode === "split" ? "grid-cols-2" : "grid-cols-1"
+              }`}
+            >
+              {(viewMode === "pdf" || viewMode === "split") && pdfPreviewPanel}
+              {(viewMode === "latex" || viewMode === "split") && latexEditorPanel}
+            </div>
+          </div>
+        </main>
+      </div>
+
+      {/* ============================================ */}
+      {/* MOBILE LAYOUT (below md) - NEW OPTIMIZED */}
+      {/* ============================================ */}
+      <div className="md:hidden flex flex-col h-screen">
+        {/* Mobile Header - Minimal */}
+        <header className="border-b border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 px-4 py-3">
+          <div className="flex items-center justify-between">
+            <h1 className="text-lg font-bold text-slate-900 dark:text-slate-100">CV Editor</h1>
+            <Button
+              onClick={() => document.getElementById("cv-upload")?.click()}
+              disabled={cvUploading}
+              size="icon"
+              variant="ghost"
+              className="h-9 w-9 text-slate-600 dark:text-slate-400"
+            >
+              {cvUploading ? (
+                <Loader2 className="w-5 h-5 animate-spin" />
+              ) : (
+                <Upload className="w-5 h-5" />
+              )}
+            </Button>
+          </div>
+        </header>
+
+        {/* Mobile Control Bar - CV Selector + View Toggle */}
+        <div className="bg-slate-100 dark:bg-slate-900/50 border-b border-slate-200 dark:border-slate-800 px-4 py-2">
+          <div className="flex items-center gap-2 max-w-full">
+            {/* CV Selector - Flexible width with min-w-0 for truncation */}
             <Select
               value={currentCV?.id ?? ""}
               onValueChange={(id) => void handleCVSwitch(id)}
               disabled={isSwitchingCV || cvs.length === 0}
             >
-              <SelectTrigger className="w-auto max-w-[200px] h-8 bg-transparent border-0 text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 px-2 gap-1">
+              <SelectTrigger className="min-w-0 flex-1 h-9 px-3 bg-slate-200 dark:bg-slate-800 border-0 rounded-lg text-slate-700 dark:text-slate-200 hover:bg-slate-300 dark:hover:bg-slate-700 gap-2">
                 <span className="truncate text-sm font-medium">
                   {currentCV?.name ?? (cvs.length === 0 ? "No CVs" : "Select CV")}
                 </span>
+                {hasUnsavedChanges && (
+                  <span className="w-2 h-2 rounded-full bg-amber-500 shrink-0" />
+                )}
               </SelectTrigger>
               <SelectContent align="start">
                 {cvs.map((cv, index) => (
-                  <SelectItem key={cv.id} value={cv.id} className="py-2">
-                    <div className="flex items-center gap-3">
-                      <span className="w-5 h-5 rounded bg-slate-200 dark:bg-slate-700 flex items-center justify-center text-xs font-medium text-slate-600 dark:text-slate-400">
+                  <SelectItem key={cv.id} value={cv.id} className="py-2.5">
+                    <div className="flex items-center gap-2.5">
+                      <span className="w-5 h-5 rounded-full bg-slate-200 dark:bg-slate-600 flex items-center justify-center text-xs font-medium text-slate-600 dark:text-slate-300">
                         {index + 1}
                       </span>
-                      <span className="truncate max-w-[180px]">{cv.name}</span>
-                      {cv.isActive && (
-                        <Badge className="bg-emerald-100 dark:bg-emerald-900/50 text-emerald-700 dark:text-emerald-400 text-[10px] px-1.5 py-0">
-                          Active
-                        </Badge>
-                      )}
+                      <span className="truncate max-w-[160px]">{cv.name}</span>
                     </div>
                   </SelectItem>
                 ))}
               </SelectContent>
             </Select>
-            {hasUnsavedChanges && (
-              <Badge className="bg-amber-100 dark:bg-amber-600/20 text-amber-700 dark:text-amber-400 border-amber-200 dark:border-amber-600/30 text-xs">
-                Unsaved
-              </Badge>
-            )}
-          </div>
 
-          <Button
-            onClick={() => document.getElementById("cv-upload")?.click()}
-            disabled={cvUploading}
-            className="h-10"
-          >
-            {cvUploading ? (
-              <>
-                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                Uploading...
-              </>
-            ) : (
-              <>
-                <Upload className="w-4 h-4 mr-2" />
-                Upload CV
-              </>
-            )}
-          </Button>
-          <Input
-            id="cv-upload"
-            type="file"
-            accept=".pdf,.docx,.tex"
-            className="hidden"
-            onChange={handleUpload}
-            disabled={cvUploading}
-          />
-        </div>
-      </header>
-
-      {/* AI Input Bar */}
-      <div className="px-4 sm:px-6 pt-4 bg-slate-100 dark:bg-slate-900/50">
-        <div className="max-w-[1600px] mx-auto">
-          <AIInputBar
-            onApply={handleAIModify}
-            onATSCheck={handleATSCheck}
-            isModifying={modifying}
-            isAnalyzing={analyzing}
-            disabled={!latexContent.trim()}
-          />
-        </div>
-      </div>
-
-      {/* Toolbar - Between AI input and editor */}
-      <div className="px-4 sm:px-6 py-3 bg-slate-100 dark:bg-slate-900/50 border-b border-slate-200 dark:border-slate-800">
-        <div className="max-w-[1600px] mx-auto">
-          <EditorToolbar
-            models={availableModels.map((m) => ({
-              id: m.id,
-              name: m.name,
-              cost: m.cost,
-              available: m.available,
-            }))}
-            selectedModel={selectedModel}
-            onModelChange={setSelectedModel}
-            templates={availableTemplates.map((t) => ({ id: t.id, name: t.name }))}
-            selectedTemplate={selectedTemplate}
-            onTemplateChange={(id) => void handleTemplateChange(id)}
-            viewMode={viewMode}
-            onViewModeChange={setViewMode}
-            atsScore={atsAnalysis?.score}
-            onDownload={handleDownload}
-            onOpenOverleaf={handleOpenInOverleaf}
-            downloadDisabled={!previewPdfUrl}
-            disabled={cvUploading}
-            isSaving={cvUpdating}
-            onSave={() => void handleSaveCV()}
-            hasUnsavedChanges={hasUnsavedChanges}
-            className="border-0 pt-0"
-          />
-        </div>
-      </div>
-
-      {/* Main Editor Area */}
-      <main className="flex-1 px-4 sm:px-6 py-4 min-h-0">
-        <div className="max-w-[1600px] mx-auto h-full">
-          <div
-            className={`grid gap-4 h-[calc(100vh-340px)] sm:h-[calc(100vh-300px)] min-h-[400px] sm:min-h-[500px] ${
-              viewMode === "split" ? "lg:grid-cols-2" : "grid-cols-1"
-            }`}
-          >
-            {/* PDF Preview Panel */}
-            {(viewMode === "pdf" || viewMode === "split") && (
-              <Card className="bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 flex flex-col overflow-hidden">
-                <CardHeader className="py-3 px-4 bg-slate-50 dark:bg-slate-900/50 border-b border-slate-200 dark:border-slate-700">
-                  <div className="flex items-center justify-between">
-                    <CardTitle className="text-sm font-medium text-slate-600 dark:text-slate-400">
-                      PDF Preview
-                    </CardTitle>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={handleDownload}
-                      disabled={!previewPdfUrl}
-                      className="h-7 text-xs text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200"
-                    >
-                      Download
-                    </Button>
-                  </div>
-                </CardHeader>
-                <CardContent className="flex-1 p-4 overflow-hidden">
-                  {previewPdfUrl && previewPdfUrl.length > 0 ? (
-                    <iframe
-                      src={previewPdfUrl}
-                      className="w-full h-full border border-slate-200 dark:border-slate-600 rounded-lg bg-white"
-                      title="CV Preview"
-                    />
-                  ) : (
-                    <FileUpload
-                      onFileSelect={handleFileSelect}
-                      progress={uploadProgress}
-                      accept=".pdf,.docx,.tex"
-                      maxSize={10 * 1024 * 1024}
-                      disabled={cvUploading}
-                      title={
-                        currentCV && !currentCV.latexContent
-                          ? "Re-upload to enable editing"
-                          : "Upload your CV"
-                      }
-                      description={
-                        currentCV && !currentCV.latexContent
-                          ? "This CV was imported without content. Upload the file again to edit it."
-                          : "Drag and drop or click to browse (PDF, DOCX, or LaTeX)"
-                      }
-                      className="h-full"
-                    />
+            {/* View Mode Toggle - Compact */}
+            <div className="flex items-center bg-slate-200 dark:bg-slate-800 rounded-lg p-0.5 shrink-0">
+              {(["pdf", "latex"] as const).map((mode) => (
+                <button
+                  key={mode}
+                  onClick={() => setMobileViewMode(mode)}
+                  className={cn(
+                    "px-3 py-1.5 rounded-md text-sm font-medium transition-all",
+                    mobileViewMode === mode
+                      ? "bg-cyan-500 text-slate-900"
+                      : "text-slate-600 dark:text-slate-400"
                   )}
-                </CardContent>
-              </Card>
-            )}
-
-            {/* LaTeX Editor Panel */}
-            {(viewMode === "latex" || viewMode === "split") && (
-              <Card className="bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 flex flex-col overflow-hidden">
-                <CardHeader className="py-3 px-4 bg-slate-50 dark:bg-slate-900/50 border-b border-slate-200 dark:border-slate-700">
-                  <div className="flex items-center justify-between">
-                    <CardTitle className="text-sm font-medium text-slate-600 dark:text-slate-400">
-                      LaTeX Source
-                    </CardTitle>
-                    <div className="flex gap-2">
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => void handleCompile(false)}
-                        disabled={compiling || !latexContent}
-                        className="h-7 text-xs text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200"
-                      >
-                        {compiling ? "Compiling..." : "Preview"}
-                      </Button>
-                      <Button
-                        size="sm"
-                        onClick={() => void handleCompile(true)}
-                        disabled={compiling || !latexContent}
-                        className="h-7 text-xs"
-                      >
-                        Save
-                      </Button>
-                    </div>
-                  </div>
-                </CardHeader>
-                <CardContent className="flex-1 p-0 overflow-hidden">
-                  <LaTeXEditor
-                    value={latexContent}
-                    onChange={setLatexContent}
-                    placeholder="Upload a CV to extract LaTeX, or paste your LaTeX source here..."
-                    className="h-full border-0 rounded-none"
-                  />
-                </CardContent>
-              </Card>
-            )}
+                >
+                  {mode === "pdf" ? "PDF" : "LaTeX"}
+                </button>
+              ))}
+            </div>
           </div>
         </div>
-      </main>
+
+        {/* Mobile Main Content - Full height panel */}
+        <main className="flex-1 overflow-hidden pb-48">
+          <div className="h-full p-2">
+            {mobileViewMode === "pdf" ? mobilePdfPreviewPanel : mobileLatexEditorPanel}
+          </div>
+        </main>
+
+        {/* Mobile Bottom AI Bar */}
+        <MobileAIBar
+          onApply={handleAIModify}
+          onATSCheck={handleATSCheck}
+          isModifying={modifying}
+          isAnalyzing={analyzing}
+          disabled={!latexContent.trim()}
+          settingsTrigger={
+            <MobileSettingsSheet
+              models={availableModels.map((m) => ({
+                id: m.id,
+                name: m.name,
+                cost: m.cost,
+                available: m.available,
+              }))}
+              selectedModel={selectedModel}
+              onModelChange={setSelectedModel}
+              templates={availableTemplates.map((t) => ({ id: t.id, name: t.name }))}
+              selectedTemplate={selectedTemplate}
+              onTemplateChange={(id) => void handleTemplateChange(id)}
+              atsScore={atsAnalysis?.score}
+              disabled={cvUploading}
+            />
+          }
+        />
+      </div>
     </div>
   );
 }

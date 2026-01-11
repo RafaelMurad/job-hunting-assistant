@@ -38,10 +38,10 @@ function UserIcon({ className }: { className?: string }): JSX.Element {
 function LocalUserMenu(): JSX.Element {
   return (
     <Link href="/settings" className="flex items-center gap-2 group">
-      <div className="h-8 w-8 rounded-full bg-emerald-100 dark:bg-emerald-900 flex items-center justify-center">
+      <div className="h-8 w-8 sm:h-8 sm:w-8 rounded-full bg-emerald-100 dark:bg-emerald-900 flex items-center justify-center">
         <UserIcon className="h-4 w-4 text-emerald-600 dark:text-emerald-400" />
       </div>
-      <span className="hidden sm:inline text-sm text-slate-600 dark:text-slate-400 group-hover:text-slate-900 dark:group-hover:text-slate-200">
+      <span className="hidden md:inline text-sm text-slate-600 dark:text-slate-400 group-hover:text-slate-900 dark:group-hover:text-slate-200">
         Local User
       </span>
     </Link>
@@ -80,7 +80,7 @@ function DemoUserMenu(): JSX.Element {
 
   // Authenticated - show user info and sign out
   return (
-    <div className="flex items-center gap-4">
+    <div className="flex items-center gap-2 sm:gap-4">
       <div className="flex items-center gap-2">
         {session.user.image ? (
           // eslint-disable-next-line @next/next/no-img-element
@@ -94,7 +94,7 @@ function DemoUserMenu(): JSX.Element {
             {session.user.name?.charAt(0)?.toUpperCase() ?? "U"}
           </div>
         )}
-        <span className="hidden sm:inline text-sm text-slate-600">
+        <span className="hidden md:inline text-sm text-slate-600">
           {session.user.name ?? session.user.email}
         </span>
       </div>
@@ -102,7 +102,7 @@ function DemoUserMenu(): JSX.Element {
         variant="ghost"
         size="sm"
         onClick={() => void neonSignOut()}
-        className="text-slate-500 hover:text-slate-700"
+        className="hidden sm:inline-flex text-slate-500 hover:text-slate-700"
       >
         Sign Out
       </Button>

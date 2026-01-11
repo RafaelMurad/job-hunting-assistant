@@ -44,11 +44,16 @@ export default function SettingsPage(): JSX.Element {
   }
 
   return (
-    <div className="min-h-screen bg-slate-50 dark:bg-slate-900 py-12">
+    <div className="min-h-screen bg-slate-50 dark:bg-slate-900 py-4 sm:py-12">
       <div className="mx-auto max-w-4xl px-4">
-        <div className="mb-8">
-          <h1 className="text-4xl font-bold mb-2 text-gray-900 dark:text-slate-100">Settings</h1>
-          <p className="text-gray-600 dark:text-slate-400">Manage your account</p>
+        {/* Header - Compact on mobile */}
+        <div className="mb-4 sm:mb-8">
+          <h1 className="text-2xl sm:text-4xl font-bold mb-1 sm:mb-2 text-gray-900 dark:text-slate-100">
+            Settings
+          </h1>
+          <p className="text-sm sm:text-base text-gray-600 dark:text-slate-400">
+            Manage your account
+          </p>
         </div>
 
         {/* API Keys Settings (Local Mode Only) */}
@@ -56,22 +61,29 @@ export default function SettingsPage(): JSX.Element {
 
         {/* Account Settings */}
         <Card>
-          <CardHeader>
-            <CardTitle>Account</CardTitle>
-            <CardDescription>Manage your account settings</CardDescription>
+          <CardHeader className="p-4 sm:p-6 pb-2 sm:pb-4">
+            <CardTitle className="text-base sm:text-lg">Account</CardTitle>
+            <CardDescription className="text-xs sm:text-sm">
+              Manage your account settings
+            </CardDescription>
           </CardHeader>
-          <CardContent>
+          <CardContent className="p-4 sm:p-6 pt-0">
             <div className="space-y-4">
-              <div className="flex items-center justify-between rounded-lg border border-gray-200 dark:border-slate-700 p-4">
-                <div>
-                  <h3 className="font-semibold text-gray-900 dark:text-slate-100">
+              {/* Profile row - Stack on mobile */}
+              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between rounded-lg border border-gray-200 dark:border-slate-700 p-3 sm:p-4 gap-3">
+                <div className="min-w-0">
+                  <h3 className="font-semibold text-sm sm:text-base text-gray-900 dark:text-slate-100">
                     Profile Information
                   </h3>
-                  <p className="text-sm text-gray-500 dark:text-slate-400">
+                  <p className="text-xs sm:text-sm text-gray-500 dark:text-slate-400 truncate">
                     {userData?.user?.name ?? "Not set"} ({userData?.user?.email ?? "No email"})
                   </p>
                 </div>
-                <Button variant="outline" onClick={() => (window.location.href = "/profile")}>
+                <Button
+                  variant="outline"
+                  onClick={() => (window.location.href = "/profile")}
+                  className="h-11 sm:h-10 self-end sm:self-auto shrink-0"
+                >
                   Edit Profile
                 </Button>
               </div>

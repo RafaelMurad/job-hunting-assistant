@@ -194,31 +194,39 @@ export default function AnalyzePage(): JSX.Element {
   const displayError = inputError || analyzeError;
 
   return (
-    <div className="min-h-screen bg-slate-50 dark:bg-slate-900 py-12">
+    <div className="min-h-screen bg-slate-50 dark:bg-slate-900 py-4 sm:py-12">
       <div className="max-w-6xl mx-auto px-4">
-        <div className="mb-8 flex justify-between items-center">
+        {/* Header - Compact on mobile, hide back button (use bottom nav) */}
+        <div className="mb-4 sm:mb-8 flex justify-between items-start sm:items-center">
           <div>
-            <h1 className="text-4xl font-bold mb-2 text-slate-900 dark:text-slate-100">
+            <h1 className="text-2xl sm:text-4xl font-bold mb-1 sm:mb-2 text-slate-900 dark:text-slate-100">
               Analyze Job
             </h1>
-            <p className="text-slate-600 dark:text-slate-400">
+            <p className="text-sm sm:text-base text-slate-600 dark:text-slate-400">
               Paste a job description to get AI-powered analysis
             </p>
           </div>
-          <Button variant="outline" onClick={() => router.push("/")}>
+          {/* Hide on mobile - accessible via bottom nav */}
+          <Button
+            variant="outline"
+            onClick={() => router.push("/profile")}
+            className="hidden sm:inline-flex"
+          >
             ← Back to Profile
           </Button>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
           {/* Input Section */}
           <div>
             <Card>
-              <CardHeader>
-                <CardTitle>Job Description</CardTitle>
-                <CardDescription>Paste the full job posting here</CardDescription>
+              <CardHeader className="p-4 sm:p-6 pb-2 sm:pb-4">
+                <CardTitle className="text-base sm:text-lg">Job Description</CardTitle>
+                <CardDescription className="text-xs sm:text-sm">
+                  Paste the full job posting here
+                </CardDescription>
               </CardHeader>
-              <CardContent>
+              <CardContent className="p-4 sm:p-6 pt-0">
                 <Textarea
                   value={jobDescription}
                   onChange={(e) => {
@@ -226,14 +234,14 @@ export default function AnalyzePage(): JSX.Element {
                     setInputError(null); // Clear error when typing
                   }}
                   placeholder="Paste job description here..."
-                  rows={20}
-                  className="mb-4"
+                  rows={12}
+                  className="mb-3 sm:mb-4 text-sm sm:text-base min-h-[200px] sm:min-h-[300px]"
                 />
                 <Button
                   onClick={handleAnalyze}
                   disabled={analyzeState === "loading" || !jobDescription.trim()}
                   variant={getButtonVariant(analyzeState)}
-                  className={`w-full transition-colors ${
+                  className={`w-full h-11 transition-colors ${
                     analyzeState === "success" ? "bg-green-600 hover:bg-green-700" : ""
                   }`}
                 >
@@ -258,18 +266,22 @@ export default function AnalyzePage(): JSX.Element {
           {/* Analysis Results */}
           <div>
             {analysis && (
-              <div className="space-y-4">
+              <div className="space-y-3 sm:space-y-4">
                 <Card>
-                  <CardHeader>
-                    <CardTitle className="flex justify-between items-center">
-                      <span>{analysis.company}</span>
-                      <Badge className={getMatchColor(analysis.matchScore)}>
+                  <CardHeader className="p-4 sm:p-6 pb-2 sm:pb-4">
+                    <CardTitle className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-2">
+                      <span className="text-base sm:text-lg truncate">{analysis.company}</span>
+                      <Badge
+                        className={`${getMatchColor(analysis.matchScore)} shrink-0 self-start sm:self-auto`}
+                      >
                         {analysis.matchScore}% Match
                       </Badge>
                     </CardTitle>
-                    <CardDescription>{analysis.role}</CardDescription>
+                    <CardDescription className="text-xs sm:text-sm">
+                      {analysis.role}
+                    </CardDescription>
                   </CardHeader>
-                  <CardContent className="space-y-4">
+                  <CardContent className="p-4 sm:p-6 pt-0 space-y-3 sm:space-y-4">
                     {/* Top Requirements */}
                     <div>
                       <Label className="text-base mb-2 block">Top Requirements</Label>
@@ -341,12 +353,12 @@ export default function AnalyzePage(): JSX.Element {
                     )}
 
                     {/* Actions */}
-                    <div className="pt-4 space-y-2">
+                    <div className="pt-3 sm:pt-4 space-y-2">
                       <Button
                         onClick={handleGenerateCoverLetter}
                         disabled={coverLetterState === "loading"}
                         variant={getButtonVariant(coverLetterState)}
-                        className={`w-full transition-colors ${
+                        className={`w-full h-11 transition-colors ${
                           coverLetterState === "success" ? "bg-green-600 hover:bg-green-700" : ""
                         }`}
                       >
@@ -367,7 +379,7 @@ export default function AnalyzePage(): JSX.Element {
                         onClick={handleSaveApplication}
                         disabled={saveState === "loading"}
                         variant={getButtonVariant(saveState, "outline")}
-                        className={`w-full transition-colors ${
+                        className={`w-full h-11 transition-colors ${
                           saveState === "success"
                             ? "bg-green-600 hover:bg-green-700 text-white border-green-600"
                             : ""

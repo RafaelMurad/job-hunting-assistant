@@ -145,3 +145,27 @@ p {
     scroll-behavior: auto !important;
   }
 }
+
+/* Safe area insets for mobile devices with notches/home indicators */
+.safe-area-inset-bottom {
+  padding-bottom: env(safe-area-inset-bottom, 0);
+}
+
+/* Hide scrollbar but allow scrolling */
+.scrollbar-hide {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
+}
+
+/* Mobile-first touch target sizing */
+@media (max-width: 767px) {
+  /* Ensure minimum touch target size for accessibility */
+  button,
+  a,
+  [role="button"] {
+    min-height: 44px;
+  }
+}

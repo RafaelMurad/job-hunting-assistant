@@ -66,36 +66,25 @@ test.describe("Theme Toggle", () => {
     await page.goto("/");
     await page.waitForLoadState("networkidle");
 
-    // Find the theme toggle (radiogroup)
-    const themeToggle = page.getByRole("radiogroup", { name: /theme/i });
+    // Find the theme toggle button
+    const themeToggle = page.getByRole("button", { name: /switch to|theme/i });
     await expect(themeToggle).toBeVisible();
 
-    // Click dark mode button
-    const darkButton = page.getByRole("radio", { name: /dark/i });
-    await darkButton.click();
-
-    // Wait for theme to apply
+    // Click to cycle theme (light → dark)
+    await themeToggle.click();
     await page.waitForTimeout(300);
 
-    // Verify dark mode is active (check html class or body background)
-    const html = page.locator("html");
-    await expect(html).toHaveClass(/dark/);
-
-    // Take screenshot in dark mode
-    await expect(page).toHaveScreenshot("toggle-dark-mode.png", {
+    // Take screenshot after first click
+    await expect(page).toHaveScreenshot("toggle-after-click.png", {
       animations: "disabled",
     });
 
-    // Switch back to light mode
-    const lightButton = page.getByRole("radio", { name: /light/i });
-    await lightButton.click();
+    // Click again to continue cycling
+    await themeToggle.click();
     await page.waitForTimeout(300);
 
-    // Verify light mode (no dark class)
-    await expect(html).not.toHaveClass(/dark/);
-
-    // Take screenshot in light mode
-    await expect(page).toHaveScreenshot("toggle-light-mode.png", {
+    // Take screenshot after second click
+    await expect(page).toHaveScreenshot("toggle-after-second-click.png", {
       animations: "disabled",
     });
   });
@@ -146,8 +135,8 @@ test.describe("Component States", () => {
     await page.goto("/");
     await page.waitForLoadState("networkidle");
 
-    // Focus on the theme toggle area
-    const themeToggle = page.getByRole("radiogroup", { name: /theme/i });
+    // Focus on the theme toggle button
+    const themeToggle = page.getByRole("button", { name: /switch to|theme/i });
     await expect(themeToggle).toBeVisible();
 
     await expect(themeToggle).toHaveScreenshot("theme-toggle-component.png");

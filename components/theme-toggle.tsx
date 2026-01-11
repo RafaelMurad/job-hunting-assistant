@@ -17,94 +17,64 @@ function useMounted(): boolean {
   );
 }
 
-type ThemeOption = "light" | "system" | "dark";
-
-const themeOptions: { value: ThemeOption; icon: typeof Sun; label: string }[] = [
-  { value: "light", icon: Sun, label: "Light mode" },
-  { value: "system", icon: Monitor, label: "System preference" },
-  { value: "dark", icon: Moon, label: "Dark mode" },
-];
-
 /**
- * Animated theme toggle with sliding pill indicator
- * Allows users to switch between light, system, and dark themes
+ * Compact theme toggle button
+ * Cycles through: light → dark → system → light
+ * Shows icon representing what you'll switch TO (or current for system)
  */
 export function ThemeToggle(): JSX.Element {
   const { setTheme, theme } = useTheme();
   const mounted = useMounted();
 
-  // Get the index for the sliding indicator position
-  const getIndicatorPosition = (): number => {
-    if (!mounted) return 1; // Default to system
-    const index = themeOptions.findIndex((opt) => opt.value === theme);
-    return index === -1 ? 1 : index;
+  // Cycle: light → dark → system → light
+  const cycleTheme = (): void => {
+    if (theme === "light") setTheme("dark");
+    else if (theme === "dark") setTheme("system");
+    else setTheme("light");
   };
 
-  const indicatorPosition = getIndicatorPosition();
+  // Get icon and label based on current theme
+  const getIconAndLabel = (): { Icon: typeof Sun; label: string } => {
+    if (!mounted) return { Icon: Monitor, label: "Loading theme" };
+
+    switch (theme) {
+      case "light":
+        // In light mode, show moon (click to go dark)
+        return { Icon: Moon, label: "Switch to dark mode" };
+      case "dark":
+        // In dark mode, show sun (click to go system)
+        return { Icon: Sun, label: "Switch to system theme" };
+      case "system":
+      default:
+        // In system mode, show monitor
+        return { Icon: Monitor, label: "Switch to light mode" };
+    }
+  };
+
+  const { Icon, label } = getIconAndLabel();
 
   if (!mounted) {
-    // SSR/hydration placeholder with same dimensions
     return (
-      <div
-        className="flex h-9 items-center gap-0.5 rounded-full bg-slate-100 p-1 dark:bg-slate-800"
+      <button
+        type="button"
+        className="flex h-9 w-9 items-center justify-center rounded-lg text-slate-400"
+        disabled
         aria-label="Loading theme toggle"
       >
-        {themeOptions.map((option) => (
-          <div
-            key={option.value}
-            className="flex h-7 w-7 items-center justify-center rounded-full text-slate-400"
-          >
-            <option.icon className="h-4 w-4" />
-          </div>
-        ))}
-      </div>
+        <Monitor className="h-4 w-4" />
+      </button>
     );
   }
 
   return (
-    <div
-      className="relative flex h-9 items-center gap-0.5 rounded-full bg-slate-100 p-1 dark:bg-slate-800"
-      role="radiogroup"
-      aria-label="Theme selection"
+    <button
+      type="button"
+      className="flex h-9 w-9 items-center justify-center rounded-lg text-slate-600 transition-colors hover:bg-slate-100 hover:text-slate-900 dark:text-slate-300 dark:hover:bg-slate-800 dark:hover:text-white"
+      onClick={cycleTheme}
+      aria-label={label}
     >
-      {/* Sliding indicator */}
-      <div
-        className="absolute h-7 w-7 rounded-full bg-white shadow-sm transition-transform duration-200 ease-out dark:bg-slate-600"
-        style={{
-          transform: `translateX(calc(${indicatorPosition} * (1.75rem + 0.125rem)))`,
-          left: "0.25rem",
-        }}
-        aria-hidden="true"
-      />
-
-      {/* Theme buttons */}
-      {themeOptions.map((option) => {
-        const isSelected = theme === option.value;
-        const Icon = option.icon;
-
-        return (
-          <button
-            key={option.value}
-            type="button"
-            role="radio"
-            aria-checked={isSelected}
-            aria-label={option.label}
-            onClick={() => setTheme(option.value)}
-            className={`
-              relative z-10 flex h-7 w-7 items-center justify-center rounded-full
-              transition-colors duration-200
-              ${
-                isSelected
-                  ? "text-slate-900 dark:text-slate-100"
-                  : "text-slate-400 hover:text-slate-600 dark:text-slate-500 dark:hover:text-slate-300"
-              }
-            `}
-          >
-            <Icon className="h-4 w-4" />
-          </button>
-        );
-      })}
-    </div>
+      <Icon className="h-4 w-4" />
+    </button>
   );
 }
 

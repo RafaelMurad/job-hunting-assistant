@@ -16,7 +16,9 @@ interface LogoProps {
  */
 export function Logo({ className = "", showLink = true }: LogoProps): JSX.Element {
   const logoContent = (
-    <span className={`text-xl font-bold tracking-tight ${className}`}>
+    <span
+      className={`text-xl font-bold tracking-tight leading-none inline-flex items-center ${className}`}
+    >
       <span className="text-slate-900 dark:text-slate-100">Career</span>
       <span className="text-cyan-500 dark:text-cyan-400">Pal</span>
     </span>
@@ -24,7 +26,11 @@ export function Logo({ className = "", showLink = true }: LogoProps): JSX.Elemen
 
   if (showLink) {
     return (
-      <Link href="/" className="hover:opacity-80 transition-opacity" aria-label="CareerPal">
+      <Link
+        href="/"
+        className="flex items-center hover:opacity-80 transition-opacity"
+        aria-label="CareerPal"
+      >
         {logoContent}
       </Link>
     );
