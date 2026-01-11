@@ -7,14 +7,13 @@
  * - /auth/sign-out - Sign the user out
  * - /auth/forgot-password - Password reset flow
  *
- * In local mode, auth is not needed - redirects to dashboard.
+ * Authentication is required in BOTH local and demo modes.
+ * The only difference is where data is stored (IndexedDB vs PostgreSQL).
  *
  * @see https://neon.com/docs/auth/quick-start/nextjs
  */
 
-import { isLocalMode } from "@/lib/storage/interface";
 import { AuthView } from "@neondatabase/auth/react";
-import { redirect } from "next/navigation";
 import type { ReactElement } from "react";
 
 interface AuthPageProps {
@@ -22,11 +21,6 @@ interface AuthPageProps {
 }
 
 export default async function AuthPage({ params }: AuthPageProps): Promise<ReactElement> {
-  // In local mode, auth is not needed - redirect to dashboard
-  if (isLocalMode()) {
-    redirect("/dashboard");
-  }
-
   const { path } = await params;
 
   return (

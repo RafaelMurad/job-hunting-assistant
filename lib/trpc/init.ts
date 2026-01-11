@@ -10,11 +10,13 @@
  * - No code generation needed (unlike GraphQL)
  * - Automatic input validation with Zod
  * - Great DX with autocomplete
+ *
+ * Authentication is required in BOTH local and demo modes.
+ * The only difference is where data is stored (IndexedDB vs PostgreSQL).
  */
 
 import { getNeonSession } from "@/lib/auth/neon-server";
 import { prisma } from "@/lib/db";
-import { isLocalMode } from "@/lib/storage/interface";
 import { initTRPC, TRPCError } from "@trpc/server";
 import superjson from "superjson";
 import {
@@ -46,44 +48,7 @@ export const createTRPCContext = async (): Promise<{
   prisma: typeof prisma;
   session: NeonAuthSession | null;
 }> => {
-  // In local mode, create a synthetic session for the first user in the database
-  // This allows tRPC procedures to work without authentication
-  if (isLocalMode()) {
-    let localUser = await prisma.user.findFirst({
-      select: { id: true, email: true, name: true, image: true, role: true, isTrusted: true },
-    });
-
-    // Create a default local user if none exists
-    if (!localUser) {
-      localUser = await prisma.user.create({
-        data: {
-          name: "Local User",
-          email: "local@careerpal.app",
-          location: "",
-          summary: "",
-          experience: "",
-          skills: "",
-        },
-        select: { id: true, email: true, name: true, image: true, role: true, isTrusted: true },
-      });
-    }
-
-    return {
-      prisma,
-      session: {
-        user: {
-          id: localUser.id,
-          email: localUser.email,
-          name: localUser.name,
-          image: localUser.image,
-          role: localUser.role ?? "USER",
-          isTrusted: localUser.isTrusted ?? false,
-        },
-      },
-    };
-  }
-
-  // Demo mode: use Neon Auth session
+  // Use Neon Auth session for both local and demo modes
   const neonSession = await getNeonSession();
 
   // Map Neon Auth session to our app's session structure

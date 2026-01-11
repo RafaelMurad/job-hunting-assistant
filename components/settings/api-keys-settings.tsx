@@ -3,8 +3,9 @@
 /**
  * API Keys Settings Component
  *
- * Allows users to manage their API keys for local mode (BYOK).
- * Only visible in local mode - hidden in demo mode.
+ * Shows the status of API keys configured via environment variables.
+ * Fetches status from server API (keys are server-side only).
+ * If keys are missing, displays clear instructions on how to add them.
  *
  * @module components/settings/api-keys-settings
  */
@@ -12,278 +13,265 @@
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import {
-  getAPIKey,
-  maskAPIKey,
-  PROVIDER_INFO,
-  removeAPIKey,
-  setAPIKey,
-  testAPIKey,
-  validateKeyFormat,
-  type AIProvider,
-} from "@/lib/ai";
-import { isLocalMode } from "@/lib/storage/interface";
+import { PROVIDER_INFO } from "@/lib/ai";
+import type { AIProvider } from "@/lib/ai";
 import { useEffect, useState, type JSX } from "react";
 
 // ============================================
 // Types
 // ============================================
 
-interface KeyState {
-  value: string;
-  isEditing: boolean;
-  isTesting: boolean;
-  testResult: { valid: boolean; error?: string } | null;
+interface KeyStatus {
+  configured: boolean;
+  envVar: string;
 }
 
-type KeyStates = Record<AIProvider, KeyState>;
+interface KeyStatusResponse {
+  gemini: KeyStatus;
+  openrouter: KeyStatus;
+}
+
+interface TestResult {
+  testing: boolean;
+  result?: { valid: boolean; error?: string };
+}
 
 // ============================================
 // Component
 // ============================================
 
-/**
- * API Keys Settings component.
- * Renders nothing in demo mode.
- */
-export function APIKeysSettings(): JSX.Element | null {
-  const isLocal = isLocalMode();
-  // Use lazy initialization to load from localStorage only on client
-  const [keys, setKeys] = useState<KeyStates>(() => {
-    // During SSR, return empty state
-    if (typeof window === "undefined") {
-      return {
-        gemini: { value: "", isEditing: false, isTesting: false, testResult: null },
-        openrouter: { value: "", isEditing: false, isTesting: false, testResult: null },
-      };
-    }
-    // On client, load from localStorage immediately
-    const geminiKey = getAPIKey("gemini");
-    const openrouterKey = getAPIKey("openrouter");
-    return {
-      gemini: {
-        value: geminiKey ?? "",
-        isEditing: false,
-        isTesting: false,
-        testResult: null,
-      },
-      openrouter: {
-        value: openrouterKey ?? "",
-        isEditing: false,
-        isTesting: false,
-        testResult: null,
-      },
-    };
+export function APIKeysSettings(): JSX.Element {
+  const [isLoading, setIsLoading] = useState(true);
+  const [keyStatus, setKeyStatus] = useState<KeyStatusResponse | null>(null);
+  const [error, setError] = useState<string | null>(null);
+  const [testResults, setTestResults] = useState<Record<AIProvider, TestResult>>({
+    gemini: { testing: false },
+    openrouter: { testing: false },
   });
 
-  // Track hydration for conditional rendering
-  const [isClient, setIsClient] = useState(false);
-
-  // Use layoutEffect-like pattern: sync external state after hydration
+  // Fetch key status from server
   useEffect(() => {
-    // This runs after hydration, signaling we're on the client
-    // Using a callback to batch the update properly
-    const timeoutId = setTimeout(() => {
-      setIsClient(true);
-    }, 0);
-    return () => clearTimeout(timeoutId);
+    async function fetchKeyStatus(): Promise<void> {
+      try {
+        const response = await fetch("/api/ai/keys");
+        if (!response.ok) {
+          throw new Error("Failed to fetch key status");
+        }
+        const data = (await response.json()) as KeyStatusResponse;
+        setKeyStatus(data);
+      } catch (err) {
+        setError(err instanceof Error ? err.message : "Failed to load key status");
+      } finally {
+        setIsLoading(false);
+      }
+    }
+
+    void fetchKeyStatus();
   }, []);
 
-  // Don't render in demo mode or before hydration
-  if (!isClient || !isLocal) {
-    return null;
+  const handleTest = async (provider: AIProvider): Promise<void> => {
+    setTestResults((prev) => ({
+      ...prev,
+      [provider]: { testing: true },
+    }));
+
+    try {
+      const response = await fetch(`/api/ai/keys/test?provider=${provider}`);
+      const result = (await response.json()) as { valid: boolean; error?: string };
+
+      setTestResults((prev) => ({
+        ...prev,
+        [provider]: { testing: false, result },
+      }));
+    } catch {
+      setTestResults((prev) => ({
+        ...prev,
+        [provider]: { testing: false, result: { valid: false, error: "Network error" } },
+      }));
+    }
+  };
+
+  if (isLoading) {
+    return (
+      <Card>
+        <CardHeader>
+          <CardTitle>API Keys</CardTitle>
+          <CardDescription>Loading...</CardDescription>
+        </CardHeader>
+      </Card>
+    );
   }
 
-  const handleEdit = (provider: AIProvider): void => {
-    setKeys((prev) => ({
-      ...prev,
-      [provider]: { ...prev[provider], isEditing: true, testResult: null },
-    }));
-  };
-
-  const handleCancel = (provider: AIProvider): void => {
-    const savedKey = getAPIKey(provider);
-    setKeys((prev) => ({
-      ...prev,
-      [provider]: {
-        ...prev[provider],
-        value: savedKey ?? "",
-        isEditing: false,
-        testResult: null,
-      },
-    }));
-  };
-
-  const handleSave = (provider: AIProvider): void => {
-    const key = keys[provider].value.trim();
-    if (key === "") {
-      removeAPIKey(provider);
-    } else {
-      setAPIKey(provider, key);
-    }
-    setKeys((prev) => ({
-      ...prev,
-      [provider]: { ...prev[provider], isEditing: false },
-    }));
-  };
-
-  const handleTest = async (provider: AIProvider): Promise<void> => {
-    const key = keys[provider].value.trim();
-    if (!key) return;
-
-    setKeys((prev) => ({
-      ...prev,
-      [provider]: { ...prev[provider], isTesting: true, testResult: null },
-    }));
-
-    const result = await testAPIKey(provider, key);
-
-    setKeys((prev) => ({
-      ...prev,
-      [provider]: { ...prev[provider], isTesting: false, testResult: result },
-    }));
-  };
-
-  const handleRemove = (provider: AIProvider): void => {
-    removeAPIKey(provider);
-    setKeys((prev) => ({
-      ...prev,
-      [provider]: { value: "", isEditing: false, isTesting: false, testResult: null },
-    }));
-  };
-
-  const renderProviderCard = (provider: AIProvider): JSX.Element => {
-    const info = PROVIDER_INFO[provider];
-    const state = keys[provider];
-    const hasKey = state.value.length > 0;
-    const isValid = hasKey && validateKeyFormat(provider, state.value);
-
+  if (error || !keyStatus) {
     return (
-      <div
-        key={provider}
-        className="rounded-lg border border-slate-200 dark:border-slate-700 p-4 space-y-3"
-      >
-        {/* Header */}
-        <div className="flex items-start justify-between">
-          <div>
-            <div className="flex items-center gap-2">
-              <h3 className="font-semibold text-slate-900 dark:text-slate-100">{info.name}</h3>
-              {hasKey && !state.isEditing && (
-                <Badge variant={isValid ? "default" : "destructive"}>
-                  {isValid ? "Configured" : "Invalid Format"}
-                </Badge>
-              )}
-              {state.testResult && (
-                <Badge variant={state.testResult.valid ? "default" : "destructive"}>
-                  {state.testResult.valid ? "✓ Verified" : "✗ Failed"}
-                </Badge>
-              )}
-            </div>
-            <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">{info.description}</p>
-          </div>
-        </div>
-
-        {/* Key display or input */}
-        {state.isEditing ? (
-          <div className="space-y-2">
-            <Input
-              type="password"
-              placeholder={info.placeholder}
-              value={state.value}
-              onChange={(e) =>
-                setKeys((prev) => ({
-                  ...prev,
-                  [provider]: { ...prev[provider], value: e.target.value },
-                }))
-              }
-              className="font-mono text-sm"
-            />
-            <div className="flex items-center gap-2">
-              <Button size="sm" onClick={() => handleSave(provider)}>
-                Save
-              </Button>
-              <Button size="sm" variant="outline" onClick={() => handleCancel(provider)}>
-                Cancel
-              </Button>
-              <Button
-                size="sm"
-                variant="secondary"
-                onClick={() => handleTest(provider)}
-                disabled={!state.value.trim() || state.isTesting}
-              >
-                {state.isTesting ? "Testing..." : "Test Key"}
-              </Button>
-            </div>
-            {state.testResult && !state.testResult.valid && (
-              <p className="text-sm text-red-500 dark:text-red-400">{state.testResult.error}</p>
-            )}
-          </div>
-        ) : (
-          <div className="flex items-center gap-2">
-            {hasKey ? (
-              <>
-                <code className="text-sm bg-slate-100 dark:bg-slate-800 px-2 py-1 rounded font-mono">
-                  {maskAPIKey(state.value)}
-                </code>
-                <Button size="sm" variant="outline" onClick={() => handleEdit(provider)}>
-                  Edit
-                </Button>
-                <Button size="sm" variant="ghost" onClick={() => handleRemove(provider)}>
-                  Remove
-                </Button>
-              </>
-            ) : (
-              <Button size="sm" onClick={() => handleEdit(provider)}>
-                Add Key
-              </Button>
-            )}
-          </div>
-        )}
-
-        {/* Get key link */}
-        <p className="text-xs text-slate-400 dark:text-slate-500">
-          Get your API key from{" "}
-          <a
-            href={info.getKeyUrl}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="text-cyan-600 dark:text-cyan-400 hover:underline"
-          >
-            {info.getKeyUrl.replace("https://", "")}
-          </a>
-        </p>
-      </div>
+      <Card>
+        <CardHeader>
+          <CardTitle>API Keys</CardTitle>
+          <CardDescription className="text-red-500">{error ?? "Failed to load"}</CardDescription>
+        </CardHeader>
+      </Card>
     );
-  };
+  }
+
+  const hasKeys = keyStatus.gemini.configured || keyStatus.openrouter.configured;
 
   return (
     <Card>
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           API Keys
-          <Badge variant="outline" className="font-normal">
-            Local Mode
-          </Badge>
+          {hasKeys ? (
+            <Badge variant="default" className="bg-emerald-600">
+              Configured
+            </Badge>
+          ) : (
+            <Badge variant="secondary">Not Configured</Badge>
+          )}
         </CardTitle>
         <CardDescription>
-          Configure your own API keys to use AI features. Keys are stored locally in your browser
-          and never sent to our servers.
+          API keys are loaded from environment variables. Add them to your{" "}
+          <code className="bg-slate-100 dark:bg-slate-800 px-1 py-0.5 rounded text-xs">
+            .env.local
+          </code>{" "}
+          file.
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
-        {/* Security notice */}
-        <div className="rounded-lg bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 p-3">
-          <p className="text-sm text-amber-700 dark:text-amber-300">
-            <strong>Note:</strong> API keys stored in the browser are visible in DevTools. This is
-            safe for personal use, but avoid sharing your screen while keys are visible.
+        {/* Instructions if no keys */}
+        {!hasKeys && (
+          <div className="rounded-lg bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 p-4 space-y-3">
+            <p className="font-medium text-amber-800 dark:text-amber-200">No API keys configured</p>
+            <p className="text-sm text-amber-700 dark:text-amber-300">
+              To use AI features, add your API keys to{" "}
+              <code className="bg-amber-100 dark:bg-amber-800 px-1 py-0.5 rounded">.env.local</code>{" "}
+              in your project root:
+            </p>
+            <pre className="bg-slate-900 text-slate-100 p-3 rounded-lg text-sm overflow-x-auto">
+              <code>{`# .env.local
+
+# Get your key from: https://aistudio.google.com/app/apikey
+GEMINI_API_KEY=your_gemini_key_here
+
+# Get your key from: https://openrouter.ai/keys (optional)
+OPENROUTER_API_KEY=your_openrouter_key_here`}</code>
+            </pre>
+            <p className="text-sm text-amber-700 dark:text-amber-300">
+              After adding the keys, restart the development server:
+            </p>
+            <pre className="bg-slate-900 text-slate-100 p-3 rounded-lg text-sm">
+              <code>npm run dev</code>
+            </pre>
+          </div>
+        )}
+
+        {/* Provider status cards */}
+        {renderProviderCard("gemini", keyStatus.gemini, testResults.gemini, handleTest)}
+        {renderProviderCard("openrouter", keyStatus.openrouter, testResults.openrouter, handleTest)}
+
+        {/* Help text */}
+        <div className="text-sm text-slate-500 dark:text-slate-400 pt-2 border-t border-slate-200 dark:border-slate-700">
+          <p>
+            <strong>Note:</strong> Environment variables are loaded at build time. After modifying{" "}
+            <code className="bg-slate-100 dark:bg-slate-800 px-1 py-0.5 rounded text-xs">
+              .env.local
+            </code>
+            , restart your development server to apply changes.
           </p>
         </div>
-
-        {/* Provider cards */}
-        {renderProviderCard("gemini")}
-        {renderProviderCard("openrouter")}
       </CardContent>
     </Card>
+  );
+}
+
+function renderProviderCard(
+  provider: AIProvider,
+  status: KeyStatus,
+  testResult: TestResult,
+  onTest: (provider: AIProvider) => Promise<void>
+): JSX.Element {
+  const info = PROVIDER_INFO[provider];
+
+  return (
+    <div
+      key={provider}
+      className="rounded-lg border border-slate-200 dark:border-slate-700 p-4 space-y-3"
+    >
+      {/* Header */}
+      <div className="flex items-start justify-between">
+        <div className="flex-1">
+          <div className="flex items-center gap-2 flex-wrap">
+            <h3 className="font-semibold text-slate-900 dark:text-slate-100">{info.name}</h3>
+            {status.configured ? (
+              <Badge variant="default" className="bg-emerald-600">
+                ✓ Configured
+              </Badge>
+            ) : (
+              <Badge variant="outline" className="text-slate-500">
+                Not Set
+              </Badge>
+            )}
+            {testResult.result && (
+              <Badge variant={testResult.result.valid ? "default" : "destructive"}>
+                {testResult.result.valid ? "✓ Verified" : "✗ Failed"}
+              </Badge>
+            )}
+          </div>
+          <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">{info.description}</p>
+        </div>
+      </div>
+
+      {/* Key status */}
+      <div className="space-y-2">
+        <div className="flex items-center gap-2 text-sm">
+          <span className="text-slate-500 dark:text-slate-400">Environment Variable:</span>
+          <code className="bg-slate-100 dark:bg-slate-800 px-2 py-0.5 rounded font-mono text-xs">
+            {status.envVar}
+          </code>
+        </div>
+
+        {status.configured ? (
+          <div className="flex items-center gap-2">
+            <code className="text-sm bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-300 px-2 py-1 rounded font-mono">
+              ••••••••••••
+            </code>
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={() => void onTest(provider)}
+              disabled={testResult.testing}
+            >
+              {testResult.testing ? "Testing..." : "Test Connection"}
+            </Button>
+          </div>
+        ) : (
+          <p className="text-sm text-slate-500 dark:text-slate-400 italic">
+            Add{" "}
+            <code className="bg-slate-100 dark:bg-slate-800 px-1 py-0.5 rounded">
+              {status.envVar}
+            </code>{" "}
+            to your{" "}
+            <code className="bg-slate-100 dark:bg-slate-800 px-1 py-0.5 rounded">.env.local</code>{" "}
+            file
+          </p>
+        )}
+
+        {testResult.result && !testResult.result.valid && (
+          <p className="text-sm text-red-500 dark:text-red-400">{testResult.result.error}</p>
+        )}
+      </div>
+
+      {/* Get key link */}
+      <p className="text-xs text-slate-400 dark:text-slate-500">
+        Get your API key from{" "}
+        <a
+          href={info.getKeyUrl}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="text-cyan-600 dark:text-cyan-400 hover:underline"
+        >
+          {info.getKeyUrl.replace("https://", "")}
+        </a>
+      </p>
+    </div>
   );
 }

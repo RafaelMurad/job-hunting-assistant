@@ -6,41 +6,22 @@
  * WHAT: Receive LaTeX → Compile via latexonline.cc → Return PDF or upload to Blob
  *
  * HOW: Uses lib/latex.ts for compilation, optionally stores result in Blob.
+ *
+ * Authentication is required in BOTH local and demo modes.
+ * The only difference is where data is stored (IndexedDB vs PostgreSQL).
  */
 
 import { getNeonSession } from "@/lib/auth/neon-server";
 import { prisma } from "@/lib/db";
 import { compileLatexToPdf, LaTeXCompilationError, validateLatexSource } from "@/lib/latex";
 import { uploadCVLatex, uploadCVPdf } from "@/lib/storage";
-import { isLocalMode } from "@/lib/storage/interface";
 import { type NextRequest, NextResponse } from "next/server";
 
 /**
- * Get user ID for API routes.
- * In local mode, returns the first user from the database (creates one if needed).
- * In demo mode, uses Neon Auth session.
+ * Get authenticated user ID from Neon Auth session.
+ * Returns null if not authenticated.
  */
 async function getAuthenticatedUserId(): Promise<string | null> {
-  if (isLocalMode()) {
-    let localUser = await prisma.user.findFirst({ select: { id: true } });
-
-    // Create a default local user if none exists
-    if (!localUser) {
-      localUser = await prisma.user.create({
-        data: {
-          name: "Local User",
-          email: "local@careerpal.app",
-          location: "",
-          summary: "",
-          experience: "",
-          skills: "",
-        },
-        select: { id: true },
-      });
-    }
-
-    return localUser.id;
-  }
   const session = await getNeonSession();
   return session?.data?.user?.id ?? null;
 }

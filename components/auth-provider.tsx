@@ -1,7 +1,6 @@
 "use client";
 
 import { neonAuthClient } from "@/lib/auth/neon-client";
-import { isLocalMode } from "@/lib/storage/interface";
 import { NeonAuthUIProvider } from "@neondatabase/auth/react";
 import { ThemeProvider } from "next-themes";
 import Link from "next/link";
@@ -14,9 +13,8 @@ import type { JSX, ReactNode } from "react";
  * Wraps the application with Neon Auth's NeonAuthUIProvider
  * for client-side session access and auth UI components.
  *
- * In local mode, skips the NeonAuthUIProvider entirely since
- * there's no server-side authentication - users work directly
- * with browser storage.
+ * Authentication is required in BOTH local and demo modes.
+ * The only difference is where data is stored (IndexedDB vs PostgreSQL).
  *
  * Uses next-themes ThemeProvider to control the theme for Neon Auth UI.
  * disableTransitionOnChange prevents CSS flicker during theme hydration.
@@ -26,22 +24,6 @@ import type { JSX, ReactNode } from "react";
 export function AuthProvider({ children }: { children: ReactNode }): JSX.Element {
   const router = useRouter();
 
-  // Local mode - skip Neon Auth entirely (no server auth needed)
-  // Still wrap with ThemeProvider for consistent theming
-  if (isLocalMode()) {
-    return (
-      <ThemeProvider
-        attribute="class"
-        defaultTheme="light"
-        enableSystem={false}
-        disableTransitionOnChange
-      >
-        {children}
-      </ThemeProvider>
-    );
-  }
-
-  // Demo mode - full Neon Auth provider
   return (
     <ThemeProvider
       attribute="class"

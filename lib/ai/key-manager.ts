@@ -1,26 +1,18 @@
 /**
- * API Key Manager (BYOK - Bring Your Own Key)
+ * API Key Manager
  *
- * Manages user-provided API keys for local mode.
- * Keys are stored in localStorage and used for client-side AI calls.
- *
- * SECURITY NOTE: Browser-stored keys are visible in DevTools.
- * This is acceptable for local mode because:
- * 1. It's the user's own key
- * 2. Only they access their browser
- * 3. We clearly document this tradeoff
+ * Simple key management: checks if API keys are configured via environment variables.
+ * Users add keys to .env.local before running the dev server.
  *
  * @module lib/ai/key-manager
  */
 
-import { isLocalMode } from "@/lib/storage/interface";
 import type { AIProvider } from "./types";
 
 // ============================================
 // Constants
 // ============================================
 
-const STORAGE_PREFIX = "careerpal_api_key_";
 const VALID_PROVIDERS: AIProvider[] = ["gemini", "openrouter"];
 
 // Key format patterns for basic validation
@@ -36,6 +28,7 @@ export const PROVIDER_INFO: Record<
     name: string;
     description: string;
     getKeyUrl: string;
+    envVar: string;
     placeholder: string;
   }
 > = {
@@ -43,48 +36,27 @@ export const PROVIDER_INFO: Record<
     name: "Google Gemini",
     description: "Primary AI provider. Fast and free for most use cases.",
     getKeyUrl: "https://aistudio.google.com/app/apikey",
+    envVar: "GEMINI_API_KEY",
     placeholder: "AIza...",
   },
   openrouter: {
     name: "OpenRouter",
     description: "Fallback provider with access to multiple models.",
     getKeyUrl: "https://openrouter.ai/keys",
+    envVar: "OPENROUTER_API_KEY",
     placeholder: "sk-or-v1-...",
   },
 };
 
 // ============================================
-// Key Storage Functions
+// Key Access Functions
 // ============================================
 
 /**
- * Get stored API key for a provider.
- * Returns null if not in local mode or key not set.
+ * Get API key for a provider from environment variables.
+ * Keys should be set in .env.local
  */
 export function getAPIKey(provider: AIProvider): string | null {
-  if (typeof window === "undefined") {
-    // Server-side: use environment variables
-    return getServerAPIKey(provider);
-  }
-
-  if (!isLocalMode()) {
-    // Demo mode: keys come from server
-    return null;
-  }
-
-  try {
-    return localStorage.getItem(`${STORAGE_PREFIX}${provider}`);
-  } catch {
-    // localStorage not available (private browsing, etc.)
-    return null;
-  }
-}
-
-/**
- * Get API key from server environment variables.
- * Used in demo mode or server-side rendering.
- */
-function getServerAPIKey(provider: AIProvider): string | null {
   switch (provider) {
     case "gemini":
       return process.env.GEMINI_API_KEY ?? null;
@@ -96,60 +68,12 @@ function getServerAPIKey(provider: AIProvider): string | null {
 }
 
 /**
- * Store an API key for a provider.
- * Only works in local mode and browser environment.
+ * Check if a provider has an API key configured.
  */
-export function setAPIKey(provider: AIProvider, key: string): void {
-  if (typeof window === "undefined") {
-    throw new Error("Cannot store API keys on the server");
-  }
-
-  if (!isLocalMode()) {
-    throw new Error("API keys can only be stored in local mode");
-  }
-
-  if (!VALID_PROVIDERS.includes(provider)) {
-    throw new Error(`Invalid provider: ${provider}`);
-  }
-
-  try {
-    if (key.trim() === "") {
-      localStorage.removeItem(`${STORAGE_PREFIX}${provider}`);
-    } else {
-      localStorage.setItem(`${STORAGE_PREFIX}${provider}`, key.trim());
-    }
-  } catch {
-    throw new Error("Failed to store API key. localStorage may not be available.");
-  }
+export function hasAPIKey(provider: AIProvider): boolean {
+  const key = getAPIKey(provider);
+  return key !== null && key.length > 0;
 }
-
-/**
- * Remove a stored API key.
- */
-export function removeAPIKey(provider: AIProvider): void {
-  if (typeof window === "undefined") return;
-
-  try {
-    localStorage.removeItem(`${STORAGE_PREFIX}${provider}`);
-  } catch {
-    // Ignore errors
-  }
-}
-
-/**
- * Remove all stored API keys.
- */
-export function clearAllAPIKeys(): void {
-  if (typeof window === "undefined") return;
-
-  for (const provider of VALID_PROVIDERS) {
-    removeAPIKey(provider);
-  }
-}
-
-// ============================================
-// Key Validation Functions
-// ============================================
 
 /**
  * Validate API key format (basic pattern matching).
@@ -158,32 +82,27 @@ export function clearAllAPIKeys(): void {
 export function validateKeyFormat(provider: AIProvider, key: string): boolean {
   const pattern = KEY_PATTERNS[provider];
   if (!pattern) return false;
-
   return pattern.test(key.trim());
-}
-
-/**
- * Check if a provider has a valid API key configured.
- */
-export function hasAPIKey(provider: AIProvider): boolean {
-  const key = getAPIKey(provider);
-  return key !== null && key.length > 0;
 }
 
 /**
  * Get status of all API keys.
  */
-export function getAPIKeyStatus(): Record<AIProvider, { hasKey: boolean; isValid: boolean }> {
+export function getAPIKeyStatus(): Record<
+  AIProvider,
+  { hasKey: boolean; isValid: boolean; envVar: string }
+> {
   return VALID_PROVIDERS.reduce(
     (acc, provider) => {
       const key = getAPIKey(provider);
       acc[provider] = {
         hasKey: key !== null && key.length > 0,
         isValid: key !== null && validateKeyFormat(provider, key),
+        envVar: PROVIDER_INFO[provider].envVar,
       };
       return acc;
     },
-    {} as Record<AIProvider, { hasKey: boolean; isValid: boolean }>
+    {} as Record<AIProvider, { hasKey: boolean; isValid: boolean; envVar: string }>
   );
 }
 
@@ -202,8 +121,8 @@ export async function testAPIKey(
   valid: boolean;
   error?: string;
 }> {
-  if (!validateKeyFormat(provider, key)) {
-    return { valid: false, error: "Invalid key format" };
+  if (!key || key.length === 0) {
+    return { valid: false, error: "No key provided" };
   }
 
   try {

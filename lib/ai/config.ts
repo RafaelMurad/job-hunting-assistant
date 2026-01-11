@@ -2,9 +2,10 @@
  * AI Configuration
  *
  * Model configurations, API keys, and availability checking.
- * Supports both server-side (env vars) and client-side (localStorage) API keys.
+ * API keys are loaded from environment variables (.env.local).
  */
 
+import { getAPIKey, hasAPIKey } from "./key-manager";
 import type { AIProvider, LatexExtractionModel, ModelInfo } from "./types";
 
 // =============================================================================
@@ -61,45 +62,15 @@ export const LATEX_MODELS: ModelInfo[] = [
 // =============================================================================
 
 /**
- * Check if running in browser environment
- */
-function isBrowser(): boolean {
-  return typeof window !== "undefined";
-}
-
-/**
- * Get API key from localStorage (client-side only)
- */
-function getClientAPIKey(provider: AIProvider): string | null {
-  if (!isBrowser()) return null;
-  try {
-    return localStorage.getItem(`careerpal-ai-key-${provider}`);
-  } catch {
-    return null;
-  }
-}
-
-/**
- * Get API key for a provider
- * Priority: 1) Explicit key passed, 2) Client localStorage, 3) Server env vars
+ * Get API key for a provider.
+ * Priority: 1) Explicit key passed, 2) Environment variables
  */
 export function getAPIKeyForProvider(provider: AIProvider, explicitKey?: string): string | null {
-  // 1. Explicit key takes priority (for testing or overrides)
+  // Explicit key takes priority (for testing or overrides)
   if (explicitKey) return explicitKey;
 
-  // 2. Try client-side localStorage (BYOK)
-  const clientKey = getClientAPIKey(provider);
-  if (clientKey) return clientKey;
-
-  // 3. Fall back to server env vars
-  switch (provider) {
-    case "gemini":
-      return process.env.GEMINI_API_KEY ?? null;
-    case "openrouter":
-      return process.env.OPENROUTER_API_KEY ?? null;
-    default:
-      return null;
-  }
+  // Use key-manager which reads from environment variables
+  return getAPIKey(provider);
 }
 
 // =============================================================================
@@ -191,16 +162,15 @@ export function getModelName(_modelId: LatexExtractionModel): string {
 // =============================================================================
 
 /**
- * Check if BYOK (Bring Your Own Key) is configured for a provider
+ * Check if an API key is configured for a provider.
+ * Keys are loaded from environment variables.
  */
 export function hasBYOK(provider: AIProvider): boolean {
-  if (!isBrowser()) return false;
-  const key = getClientAPIKey(provider);
-  return !!key && key.length > 0;
+  return hasAPIKey(provider);
 }
 
 /**
- * Check if any AI provider is available (either BYOK or server keys)
+ * Check if any AI provider is available.
  */
 export function hasAnyAIAvailable(options?: AvailabilityOptions): boolean {
   return (

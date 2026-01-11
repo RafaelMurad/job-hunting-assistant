@@ -40,11 +40,10 @@ export {
 } from "./config";
 
 // =============================================================================
-// KEY MANAGER EXPORTS (BYOK support for local mode)
+// KEY MANAGER EXPORTS
 // =============================================================================
 
 export {
-  clearAllAPIKeys,
   getAPIKey,
   getAPIKeyStatus,
   getFirstAvailableProvider,
@@ -52,8 +51,6 @@ export {
   hasAPIKey,
   maskAPIKey,
   PROVIDER_INFO,
-  removeAPIKey,
-  setAPIKey,
   testAPIKey,
   validateKeyFormat,
 } from "./key-manager";
