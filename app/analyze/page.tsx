@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { useAnalyze, useApplications, type ButtonState } from "@/lib/hooks";
+import { useAnalyze, useStorageApplications, type ButtonState } from "@/lib/hooks";
 import { useRouter } from "next/navigation";
 import { useState, type Dispatch, type JSX, type SetStateAction } from "react";
 
@@ -32,7 +32,7 @@ export default function AnalyzePage(): JSX.Element {
     setCoverLetter,
   } = useAnalyze();
 
-  const { create: createApplication } = useApplications();
+  const { create: createApplication } = useStorageApplications();
 
   // Helper to reset button state after delay
   const resetButtonState = (setter: Dispatch<SetStateAction<ButtonState>>, delay = 2000): void => {

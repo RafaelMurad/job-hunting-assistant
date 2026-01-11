@@ -23,8 +23,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Textarea } from "@/components/ui/textarea";
-import { useUser, type User } from "@/lib/hooks";
-import { useCV } from "@/lib/hooks/useCV";
+import { useStorageUser, useStorageCV, type UserData } from "@/lib/hooks";
 import { FileText, Trash2, User as UserIcon } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useState, type FormEvent, type JSX } from "react";
@@ -41,29 +40,30 @@ export default function ProfilePage(): JSX.Element {
   // HOOKS
   // ============================================
 
-  const { user: userData, loading, saving, error, fieldErrors, save } = useUser();
+  const { user: userData, loading, saving, error, fieldErrors, save } = useStorageUser();
 
   const {
     cvs,
     loading: cvsLoading,
     deleting: cvDeleting,
+    uploading: cvUploading,
     remove: removeCV,
     setActive: setActiveCV,
-    refetch,
+    upload: uploadCV,
+    refetch: _refetch,
     canAddMore,
     maxCVs,
-  } = useCV();
+  } = useStorageCV();
 
   // ============================================
   // LOCAL STATE
   // ============================================
 
-  const [formData, setFormData] = useState<User | null>(null);
+  const [formData, setFormData] = useState<UserData | null>(null);
   const [toast, setToast] = useState<Toast | null>(null);
   const [lastError, setLastError] = useState<string | null>(null);
   const [cvToDelete, setCvToDelete] = useState<string | null>(null);
   const [isEditing, setIsEditing] = useState(false);
-  const [isUploading, setIsUploading] = useState(false);
 
   // Initialize form data once when userData becomes available
   if (userData && !formData && !loading) {
@@ -109,7 +109,7 @@ export default function ProfilePage(): JSX.Element {
     setTimeout(() => setToast(null), 5000);
   };
 
-  const updateField = (field: keyof User, value: string): void => {
+  const updateField = (field: keyof UserData, value: string): void => {
     if (!formData) return;
     setFormData({ ...formData, [field]: value });
   };
@@ -148,32 +148,22 @@ export default function ProfilePage(): JSX.Element {
       ...(formData.phone ? { phone: formData.phone } : {}),
     };
 
-    save(saveInput);
-
-    if (!error) {
+    try {
+      await save(saveInput);
       showToast("success", "Profile saved!");
       setIsEditing(false);
+    } catch {
+      // Error is handled by the hook
     }
   };
 
   const handleFileSelect = async (file: File): Promise<void> => {
-    setIsUploading(true);
-
     try {
-      // Upload and extract CV data
-      // Step 1: Store the CV (uploads to blob, extracts LaTeX, creates CV record)
-      const storeFormData = new FormData();
-      storeFormData.append("file", file);
-      storeFormData.append("template", "tech-minimalist"); // Default template
+      // Step 1: Upload CV using the storage-aware hook
+      const result = await uploadCV(file, { template: "tech-minimalist" });
 
-      const storeResponse = await fetch("/api/cv/store", {
-        method: "POST",
-        body: storeFormData,
-      });
-
-      if (!storeResponse.ok) {
-        const storeResult = await storeResponse.json();
-        throw new Error(storeResult.error || "Failed to store CV");
+      if (!result) {
+        throw new Error("Failed to upload CV");
       }
 
       // Step 2: Also extract profile data from the CV
@@ -186,12 +176,15 @@ export default function ProfilePage(): JSX.Element {
       });
 
       if (uploadResponse.ok) {
-        const result = (await uploadResponse.json()) as { data?: ExtractedCVData; error?: string };
+        const apiResult = (await uploadResponse.json()) as {
+          data?: ExtractedCVData;
+          error?: string;
+        };
 
-        if (result.data) {
+        if (apiResult.data) {
           // Update form data with extracted info
-          const extractedData = result.data;
-          const updatedData: User = {
+          const extractedData = apiResult.data;
+          const updatedData: UserData = {
             id: formData?.id || "",
             name: extractedData.name || formData?.name || "",
             email: extractedData.email || formData?.email || "",
@@ -205,7 +198,7 @@ export default function ProfilePage(): JSX.Element {
           setFormData(updatedData);
 
           // Auto-save the extracted data to profile
-          save({
+          void save({
             name: updatedData.name,
             email: updatedData.email,
             location: updatedData.location,
@@ -217,15 +210,10 @@ export default function ProfilePage(): JSX.Element {
         }
       }
 
-      // Refetch CVs to pick up the newly created CV
-      refetch();
-
       showToast("success", "CV uploaded and profile updated!");
       setIsEditing(false);
     } catch (err) {
       showToast("error", err instanceof Error ? err.message : "Failed to process CV");
-    } finally {
-      setIsUploading(false);
     }
   };
 
@@ -377,7 +365,7 @@ export default function ProfilePage(): JSX.Element {
         {showEditMode && (
           <CVDropzone
             onFileSelect={(file) => void handleFileSelect(file)}
-            isUploading={isUploading}
+            isUploading={cvUploading}
             disabled={!canAddMore}
             className="mb-6"
           />

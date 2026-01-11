@@ -89,54 +89,75 @@ export interface StoredFile {
 export interface CreateProfileInput {
   name: string;
   email: string;
-  phone?: string;
+  phone?: string | null | undefined;
   location: string;
   summary: string;
   experience: string;
   skills: string[];
-  image?: string;
+  image?: string | null | undefined;
 }
 
 export interface UpdateProfileInput {
-  name?: string;
-  phone?: string;
-  location?: string;
-  summary?: string;
-  experience?: string;
-  skills?: string[];
-  image?: string;
+  name?: string | undefined;
+  phone?: string | undefined;
+  location?: string | undefined;
+  summary?: string | undefined;
+  experience?: string | undefined;
+  skills?: string[] | undefined;
+  image?: string | undefined;
 }
 
 export interface CreateCVInput {
   name: string;
-  pdfBlob?: Blob;
-  latexContent?: string;
-  isActive?: boolean;
+  pdfBlob?: Blob | undefined;
+  latexContent?: string | undefined;
+  isActive?: boolean | undefined;
 }
 
 export interface UpdateCVInput {
-  name?: string;
-  pdfBlob?: Blob;
-  latexContent?: string;
-  isActive?: boolean;
+  name?: string | undefined;
+  pdfBlob?: Blob | undefined;
+  latexContent?: string | undefined;
+  isActive?: boolean | undefined;
+}
+
+export interface UploadCVOptions {
+  /**
+   * Optional AI model to use for LaTeX extraction.
+   */
+  model?: string | undefined;
+  /**
+   * Optional template to apply during extraction.
+   */
+  template?: string | undefined;
+  /**
+   * If provided, updates this CV instead of creating new.
+   */
+  cvId?: string | undefined;
+}
+
+export interface UploadCVResult {
+  cv: StoredCV;
+  modelUsed?: string | undefined;
+  fallbackUsed?: boolean | undefined;
 }
 
 export interface CreateApplicationInput {
   company: string;
   role: string;
   jobDescription: string;
-  jobUrl?: string;
+  jobUrl?: string | undefined;
   matchScore: number;
   analysis: string;
   coverLetter: string;
-  status?: ApplicationStatus;
+  status?: ApplicationStatus | undefined;
 }
 
 export interface UpdateApplicationInput {
-  status?: ApplicationStatus;
-  notes?: string;
-  appliedAt?: string;
-  coverLetter?: string;
+  status?: ApplicationStatus | undefined;
+  notes?: string | undefined;
+  appliedAt?: string | undefined;
+  coverLetter?: string | undefined;
 }
 
 // ============================================
@@ -229,6 +250,20 @@ export interface StorageAdapter {
    * Set a CV as the active one (deactivates others).
    */
   setActiveCV(id: string): Promise<void>;
+
+  /**
+   * Upload a CV file (PDF/DOCX/TEX), extract LaTeX, and store.
+   * This is the primary method for adding CVs from files.
+   *
+   * In local mode:
+   * - Stores PDF in IndexedDB
+   * - Calls /api/ai/extract-latex for AI extraction
+   * - Stores LaTeX in IndexedDB
+   *
+   * In demo mode:
+   * - Calls /api/cv/store (full server-side flow)
+   */
+  uploadCV(file: File, options?: UploadCVOptions): Promise<UploadCVResult>;
 
   // ----------------------------------------
   // Application Operations
@@ -323,14 +358,56 @@ export interface StorageAdapter {
 
 /**
  * Check if we're in local mode (browser storage).
+ *
+ * Detection logic (in order of priority):
+ * 1. Explicit NEXT_PUBLIC_MODE=local → local mode
+ * 2. Explicit NEXT_PUBLIC_MODE=demo → demo mode
+ * 3. Running on Vercel (VERCEL env var) → demo mode
+ * 4. Hostname is localhost/127.0.0.1 → local mode
+ * 5. Hostname contains "demo." → demo mode
+ * 6. Default → local mode (privacy-first default)
  */
 export function isLocalMode(): boolean {
-  return process.env.NEXT_PUBLIC_MODE === "local";
+  // Explicit mode takes priority
+  const explicitMode = process.env.NEXT_PUBLIC_MODE;
+  if (explicitMode === "local") return true;
+  if (explicitMode === "demo") return false;
+
+  // Server-side: check for Vercel environment
+  if (typeof window === "undefined") {
+    // VERCEL env var is set on Vercel deployments
+    if (process.env.VERCEL === "1") return false;
+    // NODE_ENV production without explicit mode = likely Vercel
+    if (process.env.NODE_ENV === "production") return false;
+    // Development = local
+    return true;
+  }
+
+  // Client-side: check hostname
+  const hostname = window.location.hostname;
+
+  // Localhost = local mode
+  if (hostname === "localhost" || hostname === "127.0.0.1") {
+    return true;
+  }
+
+  // Demo subdomain = demo mode
+  if (hostname.startsWith("demo.")) {
+    return false;
+  }
+
+  // Vercel preview URLs = demo mode
+  if (hostname.includes(".vercel.app")) {
+    return false;
+  }
+
+  // Default: local mode (privacy-first)
+  return true;
 }
 
 /**
  * Check if we're in demo mode (server storage).
  */
 export function isDemoMode(): boolean {
-  return process.env.NEXT_PUBLIC_MODE === "demo" || !process.env.NEXT_PUBLIC_MODE;
+  return !isLocalMode();
 }

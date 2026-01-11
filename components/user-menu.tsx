@@ -33,41 +33,38 @@ function UserIcon({ className }: { className?: string }): JSX.Element {
 }
 
 /**
- * User Menu Component
- *
- * Displays login button when unauthenticated, or user avatar with
- * dropdown menu when authenticated. In local mode, shows a simple
- * "Local User" indicator since no auth is needed.
+ * User Menu for Local Mode
  */
-export function UserMenu(): JSX.Element {
-  const isLocalMode = useIsLocalMode();
+function LocalUserMenu(): JSX.Element {
+  return (
+    <Link href="/settings" className="flex items-center gap-2 group">
+      <div className="h-8 w-8 rounded-full bg-emerald-100 dark:bg-emerald-900 flex items-center justify-center">
+        <UserIcon className="h-4 w-4 text-emerald-600 dark:text-emerald-400" />
+      </div>
+      <span className="hidden sm:inline text-sm text-slate-600 dark:text-slate-400 group-hover:text-slate-900 dark:group-hover:text-slate-200">
+        Local User
+      </span>
+    </Link>
+  );
+}
+
+/**
+ * User Menu for Demo Mode (with auth)
+ * Only rendered when NeonAuthUIProvider is present
+ */
+function DemoUserMenu(): JSX.Element {
   const { data: session, isPending } = useNeonSession();
 
-  // Detect client mount without causing cascading renders
-  // Server returns false, client returns true after hydration
+  // Detect client mount
   const isClient = useSyncExternalStore(
     emptySubscribe,
     () => true,
     () => false
   );
 
-  // Show placeholder until client-side to prevent hydration mismatch
+  // Show placeholder until client-side
   if (!isClient || isPending) {
     return <div className="h-8 w-8 rounded-full bg-slate-200 animate-pulse" />;
-  }
-
-  // Local mode - show "Local User" indicator (no auth needed)
-  if (isLocalMode) {
-    return (
-      <Link href="/settings" className="flex items-center gap-2 group">
-        <div className="h-8 w-8 rounded-full bg-emerald-100 dark:bg-emerald-900 flex items-center justify-center">
-          <UserIcon className="h-4 w-4 text-emerald-600 dark:text-emerald-400" />
-        </div>
-        <span className="hidden sm:inline text-sm text-slate-600 dark:text-slate-400 group-hover:text-slate-900 dark:group-hover:text-slate-200">
-          Local User
-        </span>
-      </Link>
-    );
   }
 
   // Unauthenticated - show login button
@@ -111,4 +108,35 @@ export function UserMenu(): JSX.Element {
       </Button>
     </div>
   );
+}
+
+/**
+ * User Menu Component
+ *
+ * Displays login button when unauthenticated, or user avatar with
+ * dropdown menu when authenticated. In local mode, shows a simple
+ * "Local User" indicator since no auth is needed.
+ */
+export function UserMenu(): JSX.Element {
+  const isLocalMode = useIsLocalMode();
+
+  // Detect client mount without causing cascading renders
+  const isClient = useSyncExternalStore(
+    emptySubscribe,
+    () => true,
+    () => false
+  );
+
+  // Show placeholder until client-side to prevent hydration mismatch
+  if (!isClient) {
+    return <div className="h-8 w-8 rounded-full bg-slate-200 animate-pulse" />;
+  }
+
+  // Local mode - simple user indicator, no auth needed
+  if (isLocalMode) {
+    return <LocalUserMenu />;
+  }
+
+  // Demo mode - full auth UI (useNeonSession is safe because AuthProvider wraps app)
+  return <DemoUserMenu />;
 }

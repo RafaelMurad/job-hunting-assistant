@@ -24,6 +24,8 @@ import type {
   UpdateApplicationInput,
   UpdateCVInput,
   UpdateProfileInput,
+  UploadCVOptions,
+  UploadCVResult,
 } from "./interface";
 
 // ============================================
@@ -294,6 +296,51 @@ export const serverStorageAdapter: StorageAdapter = {
 
   async setActiveCV(id: string): Promise<void> {
     await callTRPC<unknown>("cv.setActive", { id }, "mutation");
+  },
+
+  async uploadCV(file: File, options?: UploadCVOptions): Promise<UploadCVResult> {
+    // Server mode: call the existing /api/cv/store endpoint
+    const formData = new FormData();
+    formData.append("file", file);
+    if (options?.model) {
+      formData.append("model", options.model);
+    }
+    if (options?.template) {
+      formData.append("template", options.template);
+    }
+    if (options?.cvId) {
+      formData.append("cvId", options.cvId);
+    }
+
+    const response = await fetch("/api/cv/store", {
+      method: "POST",
+      body: formData,
+      credentials: "include",
+    });
+
+    if (!response.ok) {
+      const errorData = (await response.json().catch(() => ({}))) as { error?: string };
+      throw new Error(errorData.error ?? "Failed to upload CV");
+    }
+
+    const data = (await response.json()) as {
+      id: string;
+      name: string;
+      pdfUrl?: string | null;
+      latexUrl?: string | null;
+      latexContent?: string | null;
+      isActive: boolean;
+      createdAt: string;
+      updatedAt: string;
+      modelUsed?: string;
+      fallbackUsed?: boolean;
+    };
+
+    return {
+      cv: toStoredCV(data),
+      modelUsed: data.modelUsed,
+      fallbackUsed: data.fallbackUsed,
+    };
   },
 
   // ----------------------------------------

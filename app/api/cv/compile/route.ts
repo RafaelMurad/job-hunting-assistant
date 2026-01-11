@@ -12,7 +12,38 @@ import { getNeonSession } from "@/lib/auth/neon-server";
 import { prisma } from "@/lib/db";
 import { compileLatexToPdf, LaTeXCompilationError, validateLatexSource } from "@/lib/latex";
 import { uploadCVLatex, uploadCVPdf } from "@/lib/storage";
+import { isLocalMode } from "@/lib/storage/interface";
 import { type NextRequest, NextResponse } from "next/server";
+
+/**
+ * Get user ID for API routes.
+ * In local mode, returns the first user from the database (creates one if needed).
+ * In demo mode, uses Neon Auth session.
+ */
+async function getAuthenticatedUserId(): Promise<string | null> {
+  if (isLocalMode()) {
+    let localUser = await prisma.user.findFirst({ select: { id: true } });
+
+    // Create a default local user if none exists
+    if (!localUser) {
+      localUser = await prisma.user.create({
+        data: {
+          name: "Local User",
+          email: "local@careerpal.app",
+          location: "",
+          summary: "",
+          experience: "",
+          skills: "",
+        },
+        select: { id: true },
+      });
+    }
+
+    return localUser.id;
+  }
+  const session = await getNeonSession();
+  return session?.data?.user?.id ?? null;
+}
 
 /**
  * POST /api/cv/compile
@@ -22,16 +53,14 @@ import { type NextRequest, NextResponse } from "next/server";
  */
 export async function POST(request: NextRequest): Promise<NextResponse> {
   try {
-    // Verify authentication via Neon Auth
-    const session = await getNeonSession();
-    const user = session?.data?.user;
-    if (!user?.id) {
+    // Get authenticated user (works in both local and demo mode)
+    const userId = await getAuthenticatedUserId();
+    if (!userId) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
     const body = await request.json();
     const { latexContent, save = false } = body;
-    const userId = user.id;
 
     if (!latexContent || typeof latexContent !== "string") {
       return NextResponse.json({ error: "LaTeX content is required" }, { status: 400 });

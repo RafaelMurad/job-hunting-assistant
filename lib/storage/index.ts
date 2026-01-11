@@ -32,6 +32,8 @@ export type {
   CreateApplicationInput,
   UpdateApplicationInput,
   ExportedData,
+  UploadCVOptions,
+  UploadCVResult,
 } from "./interface";
 
 // Mode detection utilities

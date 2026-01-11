@@ -71,18 +71,15 @@ Or create both via the Vercel dashboard:
 
 ### Local Mode (careerpal-local)
 
-Only ONE environment variable is required:
+**No environment variables required!** Mode is auto-detected:
 
-| Variable           | Value   | Purpose           |
-| ------------------ | ------- | ----------------- |
-| `NEXT_PUBLIC_MODE` | `local` | Enable local mode |
+- Localhost → Local mode
+- Vercel deployment → Demo mode
+- `demo.*` hostname → Demo mode
 
-```bash
-vercel env add NEXT_PUBLIC_MODE production --project careerpal-local
-# Enter: local
-```
+Optionally override with `NEXT_PUBLIC_MODE=local`.
 
-**That's it!** Local mode doesn't need:
+\*\*Local mode doesn't need:
 
 - Database (uses IndexedDB)
 - Auth secrets (no server auth)

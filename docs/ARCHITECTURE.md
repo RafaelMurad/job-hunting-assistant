@@ -61,18 +61,37 @@ The application runs from a single codebase but adapts behavior based on `NEXT_P
 
 ### Mode Detection
 
+Mode is detected automatically based on environment:
+
 ```typescript
 // lib/storage/interface.ts
 export function isLocalMode(): boolean {
-  return process.env.NEXT_PUBLIC_MODE === "local";
-}
+  // 1. Explicit NEXT_PUBLIC_MODE takes priority
+  if (process.env.NEXT_PUBLIC_MODE === "local") return true;
+  if (process.env.NEXT_PUBLIC_MODE === "demo") return false;
 
-export function isDemoMode(): boolean {
-  return process.env.NEXT_PUBLIC_MODE !== "local";
+  // 2. Server-side: Vercel = demo, dev = local
+  if (typeof window === "undefined") {
+    if (process.env.VERCEL === "1") return false;
+    return true;
+  }
+
+  // 3. Client-side: localhost = local, Vercel/demo.* = demo
+  const hostname = window.location.hostname;
+  if (hostname === "localhost") return true;
+  if (hostname.startsWith("demo.")) return false;
+  if (hostname.includes(".vercel.app")) return false;
+
+  return true; // Default: local (privacy-first)
 }
 ```
 
-Build-time detection via `NEXT_PUBLIC_*` ensures mode is baked into the client bundle.
+**Detection priority:**
+
+1. Explicit `NEXT_PUBLIC_MODE` env var
+2. Vercel environment detection (server-side)
+3. Hostname detection (client-side)
+4. Default to local mode (privacy-first)
 
 ---
 

@@ -22,6 +22,8 @@ import type {
   UpdateApplicationInput,
   UpdateCVInput,
   UpdateProfileInput,
+  UploadCVOptions,
+  UploadCVResult,
 } from "./interface";
 
 // ============================================
@@ -131,8 +133,14 @@ export const localStorageAdapter: StorageAdapter = {
       // Update existing profile
       const updated: StoredProfile = {
         ...existing,
-        ...input,
+        name: input.name ?? existing.name,
+        email: existing.email,
+        phone: input.phone !== undefined ? input.phone : existing.phone,
+        location: input.location ?? existing.location,
+        summary: input.summary ?? existing.summary,
+        experience: input.experience ?? existing.experience,
         skills: input.skills ?? existing.skills,
+        image: input.image !== undefined ? input.image : existing.image,
         updatedAt: timestamp,
       };
       await db.profiles.put(updated);
@@ -266,6 +274,68 @@ export const localStorageAdapter: StorageAdapter = {
     }
     // Activate the specified CV
     await db.cvs.update(id, { isActive: true, updatedAt: now() });
+  },
+
+  async uploadCV(file: File, options?: UploadCVOptions): Promise<UploadCVResult> {
+    // Step 1: Call AI extraction endpoint
+    const formData = new FormData();
+    formData.append("file", file);
+    if (options?.model) {
+      formData.append("model", options.model);
+    }
+    if (options?.template) {
+      formData.append("template", options.template);
+    }
+
+    const response = await fetch("/api/ai/extract-latex", {
+      method: "POST",
+      body: formData,
+    });
+
+    if (!response.ok) {
+      const errorData = (await response.json().catch(() => ({}))) as { error?: string };
+      throw new Error(errorData.error ?? "Failed to extract LaTeX from file");
+    }
+
+    const extractionResult = (await response.json()) as {
+      latexContent: string;
+      modelUsed?: string;
+      fallbackUsed?: boolean;
+    };
+
+    // Step 2: Convert File to Blob for storage
+    const arrayBuffer = await file.arrayBuffer();
+    const pdfBlob = new Blob([arrayBuffer], { type: file.type });
+
+    // Step 3: Create or update CV in IndexedDB
+    const cvName = file.name.replace(/\.[^/.]+$/, ""); // Remove file extension
+    let cv: StoredCV;
+
+    if (options?.cvId) {
+      // Update existing CV
+      cv = await this.updateCV(options.cvId, {
+        name: cvName,
+        pdfBlob,
+        latexContent: extractionResult.latexContent,
+      });
+    } else {
+      // Create new CV - check if this is the first one
+      const existingCvs = await this.getCVs();
+      const isFirstCV = existingCvs.length === 0;
+
+      cv = await this.createCV({
+        name: cvName,
+        pdfBlob,
+        latexContent: extractionResult.latexContent,
+        isActive: isFirstCV, // Auto-activate if first CV
+      });
+    }
+
+    return {
+      cv,
+      modelUsed: extractionResult.modelUsed,
+      fallbackUsed: extractionResult.fallbackUsed,
+    };
   },
 
   // ----------------------------------------
