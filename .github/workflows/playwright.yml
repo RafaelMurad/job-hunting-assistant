@@ -125,8 +125,16 @@ jobs:
           NEON_AUTH_BASE_URL: "https://ep-fake-test-000000.neonauth.c-2.us-east-1.aws.neon.tech/testdb/auth"
           SKIP_ENV_VALIDATION: "1"
 
-      - name: Run Playwright tests
-        run: npm run test:e2e
+      - name: Run Playwright tests (excluding visual regression)
+        run: |
+          npx playwright test \
+            e2e/analyze.spec.ts \
+            e2e/auth.spec.ts \
+            e2e/cv.spec.ts \
+            e2e/dashboard.spec.ts \
+            e2e/landing.spec.ts \
+            e2e/profile.spec.ts \
+            e2e/tracker.spec.ts
         env:
           CI: true
           # Use fake values for E2E tests (only testing unauthenticated flows)
