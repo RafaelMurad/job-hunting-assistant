@@ -55,7 +55,8 @@ export function APIKeysSettings(): JSX.Element {
       try {
         const response = await fetch("/api/ai/keys");
         if (!response.ok) {
-          throw new Error("Failed to fetch key status");
+          setError("Failed to fetch key status");
+          return;
         }
         const data = (await response.json()) as KeyStatusResponse;
         setKeyStatus(data);

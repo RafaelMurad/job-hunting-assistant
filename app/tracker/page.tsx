@@ -116,12 +116,12 @@ export default function TrackerPage(): JSX.Element {
 
   const handleStatusChange = (appId: string, newStatus: ApplicationStatus): void => {
     setUpdatingStatusId(appId);
-    updateStatus(appId, newStatus);
+    void updateStatus(appId, newStatus);
     setTimeout(() => setUpdatingStatusId(null), 500);
   };
 
   const handleDelete = (appId: string): void => {
-    remove(appId);
+    void remove(appId);
     setDeletingId(null);
   };
 
@@ -132,7 +132,7 @@ export default function TrackerPage(): JSX.Element {
 
   const handleSaveNotes = (appId: string): void => {
     setSavingNotesId(appId);
-    updateNotes(appId, notesDraft);
+    void updateNotes(appId, notesDraft);
     setTimeout(() => {
       setSavingNotesId(null);
       setEditingNotesId(null);
