@@ -41,7 +41,7 @@ export function MobileMenu({ className }: MobileMenuProps): JSX.Element {
       <button
         onClick={() => setIsOpen(!isOpen)}
         className={cn(
-          "md:hidden inline-flex items-center justify-center h-11 w-11",
+          "md:hidden inline-flex items-center justify-center h-9 w-9",
           "text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700",
           "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-500 focus-visible:ring-offset-2 dark:focus-visible:ring-offset-slate-900",
           "transition-all duration-200 rounded-lg",

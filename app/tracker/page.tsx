@@ -3,8 +3,16 @@
 import { ConfirmationDialog } from "@/components/confirmation-dialog";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuRadioGroup,
+  DropdownMenuRadioItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { useStorageApplications } from "@/lib/hooks";
 import type { ApplicationStatus } from "@/types";
+import { ArrowUpDown } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useMemo, useState, type JSX } from "react";
 
@@ -105,15 +113,6 @@ export default function TrackerPage(): JSX.Element {
     return result;
   }, [applications, statusFilter, searchQuery, sortBy]);
 
-  // Count by status for tabs
-  const statusCounts = useMemo(() => {
-    const counts: Record<string, number> = { all: applications.length };
-    STATUS_OPTIONS.forEach(({ value }) => {
-      counts[value] = applications.filter((app) => app.status === value).length;
-    });
-    return counts;
-  }, [applications]);
-
   const handleStatusChange = (appId: string, newStatus: ApplicationStatus): void => {
     setUpdatingStatusId(appId);
     void updateStatus(appId, newStatus);
@@ -183,7 +182,7 @@ export default function TrackerPage(): JSX.Element {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-slate-900 py-12">
+    <div className="min-h-screen bg-gray-50 dark:bg-slate-900 py-4 sm:py-12">
       <div className="mx-auto max-w-7xl px-4">
         <ConfirmationDialog
           open={isDeleteDialogOpen}
@@ -200,63 +199,73 @@ export default function TrackerPage(): JSX.Element {
             handleDelete(deletingId);
           }}
         />
-        {/* Header */}
-        <div className="mb-8 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+        {/* Header - Compact on mobile */}
+        <div className="mb-4 sm:mb-8 flex flex-col gap-3 sm:gap-4 sm:flex-row sm:items-center sm:justify-between">
           <div>
-            <h1 className="text-4xl font-bold mb-2 text-gray-900 dark:text-slate-100">
+            <h1 className="text-2xl sm:text-4xl font-bold mb-1 sm:mb-2 text-gray-900 dark:text-slate-100">
               Application Tracker
             </h1>
-            <p className="text-gray-600 dark:text-slate-400">
+            <p className="text-sm sm:text-base text-gray-600 dark:text-slate-400">
               Track all your job applications in one place
             </p>
           </div>
-          <div className="flex gap-3">
-            <Button variant="outline" onClick={() => router.push("/profile")}>
+          {/* Hide Profile button on mobile - available via bottom nav */}
+          <div className="flex gap-2 sm:gap-3">
+            <Button
+              variant="outline"
+              onClick={() => router.push("/profile")}
+              className="hidden sm:inline-flex"
+            >
               Profile
             </Button>
-            <Button onClick={() => router.push("/analyze")}>+ Analyze New Job</Button>
+            <Button onClick={() => router.push("/analyze")} className="flex-1 sm:flex-none h-11">
+              + Analyze New Job
+            </Button>
           </div>
         </div>
 
-        {/* Stats Cards */}
-        <div className="mb-6 grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-5">
+        {/* Stats Cards - 2x2 on mobile, hide Avg Match on small screens */}
+        <div className="mb-4 sm:mb-6 grid grid-cols-2 gap-2 sm:gap-4 md:grid-cols-4 lg:grid-cols-5">
           <Card
-            className="cursor-pointer transition-shadow hover:shadow-md"
+            className="cursor-pointer transition-shadow hover:shadow-md p-0"
             onClick={() => setStatusFilter("all")}
           >
-            <CardHeader className="pb-2">
-              <CardDescription>Total</CardDescription>
-              <CardTitle className="text-3xl">{stats.total}</CardTitle>
+            <CardHeader className="p-3 sm:p-4 sm:pb-2">
+              <CardDescription className="text-xs sm:text-sm">Total</CardDescription>
+              <CardTitle className="text-2xl sm:text-3xl">{stats.total}</CardTitle>
             </CardHeader>
           </Card>
           <Card
-            className="cursor-pointer transition-shadow hover:shadow-md"
+            className="cursor-pointer transition-shadow hover:shadow-md p-0"
             onClick={() => setStatusFilter("applied")}
           >
-            <CardHeader className="pb-2">
-              <CardDescription>Applied</CardDescription>
-              <CardTitle className="text-3xl text-blue-600">{stats.applied}</CardTitle>
+            <CardHeader className="p-3 sm:p-4 sm:pb-2">
+              <CardDescription className="text-xs sm:text-sm">Applied</CardDescription>
+              <CardTitle className="text-2xl sm:text-3xl text-blue-600">{stats.applied}</CardTitle>
             </CardHeader>
           </Card>
           <Card
-            className="cursor-pointer transition-shadow hover:shadow-md"
+            className="cursor-pointer transition-shadow hover:shadow-md p-0"
             onClick={() => setStatusFilter("interviewing")}
           >
-            <CardHeader className="pb-2">
-              <CardDescription>Interviewing</CardDescription>
-              <CardTitle className="text-3xl text-purple-600">{stats.interviewing}</CardTitle>
+            <CardHeader className="p-3 sm:p-4 sm:pb-2">
+              <CardDescription className="text-xs sm:text-sm">Interviewing</CardDescription>
+              <CardTitle className="text-2xl sm:text-3xl text-purple-600">
+                {stats.interviewing}
+              </CardTitle>
             </CardHeader>
           </Card>
           <Card
-            className="cursor-pointer transition-shadow hover:shadow-md"
+            className="cursor-pointer transition-shadow hover:shadow-md p-0"
             onClick={() => setStatusFilter("offer")}
           >
-            <CardHeader className="pb-2">
-              <CardDescription>Offers</CardDescription>
-              <CardTitle className="text-3xl text-green-600">{stats.offers}</CardTitle>
+            <CardHeader className="p-3 sm:p-4 sm:pb-2">
+              <CardDescription className="text-xs sm:text-sm">Offers</CardDescription>
+              <CardTitle className="text-2xl sm:text-3xl text-green-600">{stats.offers}</CardTitle>
             </CardHeader>
           </Card>
-          <Card>
+          {/* Avg Match - hidden on mobile */}
+          <Card className="hidden lg:block">
             <CardHeader className="pb-2">
               <CardDescription>Avg Match</CardDescription>
               <CardTitle className="text-3xl">{stats.avgMatchScore}%</CardTitle>
@@ -265,12 +274,13 @@ export default function TrackerPage(): JSX.Element {
         </div>
 
         {/* Search and Filters */}
-        <div className="mb-6 rounded-lg border border-gray-200 dark:border-slate-700 bg-white dark:bg-slate-800 p-4">
-          <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-            {/* Search */}
-            <div className="relative flex-1 max-w-md">
+        <div className="mb-4 sm:mb-6 space-y-3">
+          {/* Search + Sort Row */}
+          <div className="flex items-center gap-2">
+            {/* Search Input */}
+            <div className="relative flex-1">
               <svg
-                className="absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-gray-400 dark:text-slate-500"
+                className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400 dark:text-slate-500"
                 fill="none"
                 viewBox="0 0 24 24"
                 stroke="currentColor"
@@ -284,15 +294,15 @@ export default function TrackerPage(): JSX.Element {
               </svg>
               <input
                 type="text"
-                placeholder="Search by company, role, or notes..."
+                placeholder="Search..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full rounded-lg border border-gray-300 dark:border-slate-600 bg-white dark:bg-slate-700 py-2 pl-10 pr-4 text-sm text-gray-900 dark:text-slate-100 placeholder:text-gray-400 dark:placeholder:text-slate-500 focus:border-sky-500 dark:focus:border-cyan-400 focus:outline-none focus:ring-2 focus:ring-sky-500/20 dark:focus:ring-cyan-400/20"
+                className="w-full h-10 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 pl-9 pr-8 text-sm text-slate-900 dark:text-slate-100 placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:border-cyan-500 dark:focus:border-cyan-400 focus:outline-none focus:ring-2 focus:ring-cyan-500/20 dark:focus:ring-cyan-400/20"
               />
               {searchQuery && (
                 <button
                   onClick={() => setSearchQuery("")}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 dark:text-slate-500 dark:hover:text-slate-300"
+                  className="absolute right-2 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 dark:text-slate-500 dark:hover:text-slate-300 p-1"
                 >
                   <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path
@@ -306,54 +316,65 @@ export default function TrackerPage(): JSX.Element {
               )}
             </div>
 
-            {/* Sort */}
-            <div className="flex items-center gap-3">
-              <label
-                htmlFor="sort-by"
-                className="text-sm font-medium text-gray-700 dark:text-slate-300"
+            {/* Sort Dropdown */}
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <button
+                  className="h-10 w-10 flex items-center justify-center rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-700 focus:border-cyan-500 dark:focus:border-cyan-400 focus:outline-none focus:ring-2 focus:ring-cyan-500/20 dark:focus:ring-cyan-400/20"
+                  title="Sort applications"
+                >
+                  <ArrowUpDown className="h-5 w-5" />
+                </button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent
+                align="end"
+                className="w-44 bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700"
               >
-                Sort by:
-              </label>
-              <select
-                id="sort-by"
-                value={sortBy}
-                onChange={(e) => setSortBy(e.target.value as SortOption)}
-                className="rounded-md border border-gray-300 dark:border-slate-600 bg-white dark:bg-slate-700 px-3 py-2 text-sm text-gray-900 dark:text-slate-100 focus:border-sky-500 dark:focus:border-cyan-400 focus:outline-none focus:ring-2 focus:ring-sky-500/20 dark:focus:ring-cyan-400/20"
-              >
-                {SORT_OPTIONS.map((option) => (
-                  <option key={option.value} value={option.value}>
-                    {option.label}
-                  </option>
-                ))}
-              </select>
-            </div>
+                <DropdownMenuRadioGroup
+                  value={sortBy}
+                  onValueChange={(value) => setSortBy(value as SortOption)}
+                >
+                  {SORT_OPTIONS.map((option) => (
+                    <DropdownMenuRadioItem
+                      key={option.value}
+                      value={option.value}
+                      className="cursor-pointer text-slate-700 dark:text-slate-200 focus:bg-slate-100 dark:focus:bg-slate-700 focus:text-slate-900 dark:focus:text-white data-[state=checked]:text-cyan-600 dark:data-[state=checked]:text-cyan-400"
+                    >
+                      {option.label}
+                    </DropdownMenuRadioItem>
+                  ))}
+                </DropdownMenuRadioGroup>
+              </DropdownMenuContent>
+            </DropdownMenu>
           </div>
 
-          {/* Status Filter Tabs */}
-          <div className="mt-4 flex flex-wrap gap-2">
-            <button
-              onClick={() => setStatusFilter("all")}
-              className={`rounded-full px-4 py-1.5 text-sm font-medium transition-colors ${
-                statusFilter === "all"
-                  ? "bg-sky-600 text-white"
-                  : "bg-gray-100 dark:bg-slate-700 text-gray-700 dark:text-slate-300 hover:bg-gray-200 dark:hover:bg-slate-600"
-              }`}
-            >
-              All ({statusCounts.all})
-            </button>
-            {STATUS_OPTIONS.map(({ value, label }) => (
+          {/* Status Filter Pills - Horizontal scroll */}
+          <div className="-mx-4 px-4 overflow-x-auto scrollbar-hide">
+            <div className="flex gap-2 min-w-max pb-1">
               <button
-                key={value}
-                onClick={() => setStatusFilter(value)}
-                className={`rounded-full px-4 py-1.5 text-sm font-medium transition-colors ${
-                  statusFilter === value
-                    ? "bg-sky-600 text-white"
-                    : "bg-gray-100 dark:bg-slate-700 text-gray-700 dark:text-slate-300 hover:bg-gray-200 dark:hover:bg-slate-600"
+                onClick={() => setStatusFilter("all")}
+                className={`h-8 rounded-full px-4 text-sm font-medium transition-colors whitespace-nowrap ${
+                  statusFilter === "all"
+                    ? "bg-cyan-500 text-slate-900"
+                    : "bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400"
                 }`}
               >
-                {label} ({statusCounts[value] || 0})
+                All
               </button>
-            ))}
+              {STATUS_OPTIONS.map(({ value, label }) => (
+                <button
+                  key={value}
+                  onClick={() => setStatusFilter(value)}
+                  className={`h-8 rounded-full px-4 text-sm font-medium transition-colors whitespace-nowrap ${
+                    statusFilter === value
+                      ? "bg-cyan-500 text-slate-900"
+                      : "bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400"
+                  }`}
+                >
+                  {label}
+                </button>
+              ))}
+            </div>
           </div>
         </div>
 

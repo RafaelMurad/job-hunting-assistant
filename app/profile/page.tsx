@@ -252,7 +252,7 @@ export default function ProfilePage(): JSX.Element {
   // ============================================
 
   return (
-    <div className="min-h-screen bg-slate-50 dark:bg-slate-900 py-8">
+    <div className="min-h-screen bg-slate-50 dark:bg-slate-900 py-4 sm:py-8">
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Toast Notification */}
         {toast && (
@@ -275,15 +275,15 @@ export default function ProfilePage(): JSX.Element {
           </div>
         )}
 
-        {/* Profile Header */}
-        <Card className="mb-6">
-          <CardContent className="pt-6 pb-6">
-            <div className="flex items-start gap-4">
-              {/* Avatar */}
+        {/* Profile Header - Compact on mobile */}
+        <Card className="mb-4 sm:mb-6">
+          <CardContent className="pt-4 pb-4 sm:pt-6 sm:pb-6">
+            <div className="flex items-start gap-3 sm:gap-4">
+              {/* Avatar - Smaller on mobile */}
               <AvatarUpload
                 name={formData.name || "User"}
                 imageUrl={null}
-                size={64}
+                size={48}
                 editable={false}
               />
 
@@ -309,7 +309,7 @@ export default function ProfilePage(): JSX.Element {
                     <>
                       {/* Name with badge */}
                       <div className="flex items-center gap-2 flex-wrap">
-                        <h1 className="text-xl font-bold text-slate-900 dark:text-slate-100 truncate">
+                        <h1 className="text-base sm:text-xl font-bold text-slate-900 dark:text-slate-100 truncate">
                           {formData.name || "Welcome!"}
                         </h1>
                         {isComplete ? (
@@ -673,8 +673,8 @@ export default function ProfilePage(): JSX.Element {
           </Tabs>
         )}
 
-        {/* Navigation */}
-        <div className="mt-6 flex justify-end">
+        {/* Navigation - Hide on mobile (use bottom nav) */}
+        <div className="mt-4 sm:mt-6 hidden sm:flex justify-end">
           <Button variant="outline" onClick={() => router.push("/dashboard")}>
             ← Back to Dashboard
           </Button>

@@ -16,8 +16,8 @@
  */
 
 import { type PrismaClient } from "@prisma/client";
+import { beforeEach, vi } from "vitest";
 import { mockDeep, mockReset, type DeepMockProxy } from "vitest-mock-extended";
-import { vi, beforeEach } from "vitest";
 
 // Create a deep mock of PrismaClient
 export const prismaMock = mockDeep<PrismaClient>();

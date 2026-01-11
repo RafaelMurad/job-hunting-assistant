@@ -63,15 +63,15 @@ jobs:
             ];
 
             const codeFiles = files.filter(f => !skipPatterns.some(p => p.test(f)));
-            
+
             if (codeFiles.length > 0) {
               console.log('💻 Code files changed:', codeFiles);
               core.setOutput('should_skip', 'false');
               return;
             }
-            
+
             console.log('📝 Only docs/config changed, checking previous run...');
-            
+
             const runs = await github.rest.actions.listWorkflowRuns({
               owner: context.repo.owner,
               repo: context.repo.repo,
@@ -82,11 +82,11 @@ jobs:
               per_page: 5,
               status: 'completed'
             });
-            
+
             const previousSuccess = runs.data.workflow_runs.find(run => 
               run.id !== context.runId && run.conclusion === 'success'
             );
-            
+
             if (previousSuccess) {
               console.log(`✅ Previous run #${previousSuccess.run_number} passed - skipping`);
               core.setOutput('should_skip', 'true');

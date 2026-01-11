@@ -7,14 +7,14 @@
  * - Application schemas (applicationCreateSchema, applicationUpdateSchema)
  */
 
-import { describe, it, expect } from "vitest";
+import { describe, expect, it } from "vitest";
 
 // User validations
 import {
+  cvUploadSchema,
+  userPatchSchema,
   userSchema,
   userUpdateSchema,
-  userPatchSchema,
-  cvUploadSchema,
 } from "@/lib/validations/user";
 
 // Analyze validations
@@ -26,11 +26,11 @@ import {
 
 // Application validations
 import {
-  applicationStatusSchema,
   applicationCreateSchema,
-  applicationUpdateSchema,
-  applicationListSchema,
   applicationDeleteSchema,
+  applicationListSchema,
+  applicationStatusSchema,
+  applicationUpdateSchema,
 } from "@/lib/validations/application";
 
 // ============================================================================

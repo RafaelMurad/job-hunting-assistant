@@ -5,7 +5,7 @@
  * This file should not import from providers to avoid circular dependencies.
  */
 
-import { type ZodSchema, type ZodError } from "zod";
+import { type ZodError, type ZodSchema } from "zod";
 
 // =============================================================================
 // TYPE-SAFE JSON PARSING UTILITIES

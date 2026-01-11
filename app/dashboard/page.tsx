@@ -54,25 +54,25 @@ export default function DashboardPage(): JSX.Element {
   );
 
   return (
-    <div className="min-h-screen bg-slate-50 dark:bg-slate-900 py-8">
+    <div className="min-h-screen bg-slate-50 dark:bg-slate-900 py-4 sm:py-8">
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
-        {/* Header */}
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold text-slate-900 dark:text-white mb-2">
+        {/* Header - Compact on mobile */}
+        <div className="mb-4 sm:mb-8">
+          <h1 className="text-2xl sm:text-3xl font-bold text-slate-900 dark:text-white mb-1 sm:mb-2">
             {user?.name ? `Welcome back, ${user.name.split(" ")[0]}!` : "Welcome to CareerPal"}
           </h1>
-          <p className="text-slate-600 dark:text-slate-400">
+          <p className="text-sm sm:text-base text-slate-600 dark:text-slate-400">
             Your command center for finding the perfect job.
           </p>
         </div>
 
-        {/* Profile Completion Alert */}
+        {/* Profile Completion Alert - Compact on mobile */}
         {!isProfileComplete && (
-          <div className="mb-6 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-4">
-            <div className="flex items-center justify-between">
-              <div className="flex items-start gap-3">
+          <div className="mb-4 sm:mb-6 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-3 sm:p-4">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+              <div className="flex items-start gap-2 sm:gap-3">
                 <svg
-                  className="w-5 h-5 text-red-600 mt-0.5"
+                  className="w-5 h-5 text-red-600 mt-0.5 shrink-0"
                   fill="currentColor"
                   viewBox="0 0 20 20"
                 >
@@ -83,17 +83,17 @@ export default function DashboardPage(): JSX.Element {
                   />
                 </svg>
                 <div>
-                  <h3 className="font-medium text-red-900 dark:text-red-100">
+                  <h3 className="font-medium text-red-900 dark:text-red-100 text-sm sm:text-base">
                     Complete Your Profile
                   </h3>
-                  <p className="text-sm text-red-700 dark:text-red-300 mt-1">
+                  <p className="text-xs sm:text-sm text-red-700 dark:text-red-300 mt-0.5 sm:mt-1">
                     Your profile is {profileCompletionPercent}% complete. Fill in all fields to
                     unlock AI features.
                   </p>
                 </div>
               </div>
-              <Link href="/profile">
-                <Button variant="outline" size="sm">
+              <Link href="/profile" className="self-end sm:self-auto">
+                <Button variant="outline" size="sm" className="whitespace-nowrap">
                   Complete Profile →
                 </Button>
               </Link>
@@ -101,44 +101,48 @@ export default function DashboardPage(): JSX.Element {
           </div>
         )}
 
-        {/* Stats Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
-          <Card>
-            <CardHeader className="pb-2">
-              <CardDescription>Total Applications</CardDescription>
-              <CardTitle className="text-3xl">{stats.total}</CardTitle>
+        {/* Stats Grid - 2x2 on mobile, 4 columns on desktop */}
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4 mb-4 sm:mb-8">
+          <Card className="p-0">
+            <CardHeader className="p-3 sm:p-4 sm:pb-2">
+              <CardDescription className="text-xs sm:text-sm">Total Applications</CardDescription>
+              <CardTitle className="text-2xl sm:text-3xl">{stats.total}</CardTitle>
             </CardHeader>
           </Card>
-          <Card>
-            <CardHeader className="pb-2">
-              <CardDescription>Applied</CardDescription>
-              <CardTitle className="text-3xl text-sky-600">{stats.applied}</CardTitle>
+          <Card className="p-0">
+            <CardHeader className="p-3 sm:p-4 sm:pb-2">
+              <CardDescription className="text-xs sm:text-sm">Applied</CardDescription>
+              <CardTitle className="text-2xl sm:text-3xl text-sky-600">{stats.applied}</CardTitle>
             </CardHeader>
           </Card>
-          <Card>
-            <CardHeader className="pb-2">
-              <CardDescription>Interviewing</CardDescription>
-              <CardTitle className="text-3xl text-emerald-600">{stats.interviewing}</CardTitle>
+          <Card className="p-0">
+            <CardHeader className="p-3 sm:p-4 sm:pb-2">
+              <CardDescription className="text-xs sm:text-sm">Interviewing</CardDescription>
+              <CardTitle className="text-2xl sm:text-3xl text-emerald-600">
+                {stats.interviewing}
+              </CardTitle>
             </CardHeader>
           </Card>
-          <Card>
-            <CardHeader className="pb-2">
-              <CardDescription>Offers</CardDescription>
-              <CardTitle className="text-3xl text-purple-600">{stats.offers}</CardTitle>
+          <Card className="p-0">
+            <CardHeader className="p-3 sm:p-4 sm:pb-2">
+              <CardDescription className="text-xs sm:text-sm">Offers</CardDescription>
+              <CardTitle className="text-2xl sm:text-3xl text-purple-600">{stats.offers}</CardTitle>
             </CardHeader>
           </Card>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6">
           {/* Quick Actions */}
           <Card className="lg:col-span-1">
-            <CardHeader>
-              <CardTitle>Quick Actions</CardTitle>
-              <CardDescription>Common tasks at your fingertips</CardDescription>
+            <CardHeader className="p-4 sm:p-6 pb-2 sm:pb-4">
+              <CardTitle className="text-base sm:text-lg">Quick Actions</CardTitle>
+              <CardDescription className="text-xs sm:text-sm">
+                Common tasks at your fingertips
+              </CardDescription>
             </CardHeader>
-            <CardContent className="space-y-3">
+            <CardContent className="p-4 sm:p-6 pt-0 space-y-2 sm:space-y-3">
               <Link href="/analyze" className="block">
-                <Button className="w-full justify-start gap-2" variant="outline">
+                <Button className="w-full justify-start gap-2 h-11" variant="outline">
                   <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path
                       strokeLinecap="round"
@@ -151,7 +155,7 @@ export default function DashboardPage(): JSX.Element {
                 </Button>
               </Link>
               <Link href="/tracker" className="block">
-                <Button className="w-full justify-start gap-2" variant="outline">
+                <Button className="w-full justify-start gap-2 h-11" variant="outline">
                   <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path
                       strokeLinecap="round"
@@ -164,7 +168,7 @@ export default function DashboardPage(): JSX.Element {
                 </Button>
               </Link>
               <Link href="/profile" className="block">
-                <Button className="w-full justify-start gap-2" variant="outline">
+                <Button className="w-full justify-start gap-2 h-11" variant="outline">
                   <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path
                       strokeLinecap="round"
@@ -181,25 +185,31 @@ export default function DashboardPage(): JSX.Element {
 
           {/* Recent Applications */}
           <Card className="lg:col-span-2">
-            <CardHeader>
-              <CardTitle>Recent Applications</CardTitle>
-              <CardDescription>Your latest job applications</CardDescription>
+            <CardHeader className="p-4 sm:p-6 pb-2 sm:pb-4">
+              <CardTitle className="text-base sm:text-lg">Recent Applications</CardTitle>
+              <CardDescription className="text-xs sm:text-sm">
+                Your latest job applications
+              </CardDescription>
             </CardHeader>
-            <CardContent>
+            <CardContent className="p-4 sm:p-6 pt-0">
               {recentApplications.length > 0 ? (
-                <div className="space-y-3">
+                <div className="space-y-2 sm:space-y-3">
                   {recentApplications.map((app) => (
                     <div
                       key={app.id}
-                      className="flex items-center justify-between p-3 bg-slate-50 dark:bg-slate-800 rounded-lg"
+                      className="flex items-center justify-between p-2 sm:p-3 bg-slate-50 dark:bg-slate-800 rounded-lg gap-2"
                     >
-                      <div>
-                        <p className="font-medium text-slate-900 dark:text-slate-100">{app.role}</p>
-                        <p className="text-sm text-slate-600 dark:text-slate-400">{app.company}</p>
+                      <div className="min-w-0 flex-1">
+                        <p className="font-medium text-slate-900 dark:text-slate-100 text-sm sm:text-base truncate">
+                          {app.role}
+                        </p>
+                        <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-400 truncate">
+                          {app.company}
+                        </p>
                       </div>
-                      <div className="flex items-center gap-3">
+                      <div className="flex items-center gap-2 sm:gap-3 shrink-0">
                         <span
-                          className={`text-xs px-2 py-1 rounded-full ${
+                          className={`text-xs px-2 py-1 rounded-full whitespace-nowrap ${
                             app.status === "interviewing"
                               ? "bg-emerald-100 dark:bg-emerald-900/50 text-emerald-700 dark:text-emerald-300"
                               : app.status === "applied"
@@ -211,7 +221,7 @@ export default function DashboardPage(): JSX.Element {
                         >
                           {app.status}
                         </span>
-                        <span className="text-sm text-slate-500 dark:text-slate-400">
+                        <span className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 hidden sm:inline">
                           {app.matchScore}% match
                         </span>
                       </div>
@@ -219,9 +229,9 @@ export default function DashboardPage(): JSX.Element {
                   ))}
                 </div>
               ) : (
-                <div className="text-center py-8">
+                <div className="text-center py-6 sm:py-8">
                   <svg
-                    className="w-12 h-12 text-slate-300 dark:text-gray-600 mx-auto mb-3"
+                    className="w-10 h-10 sm:w-12 sm:h-12 text-slate-300 dark:text-gray-600 mx-auto mb-3"
                     fill="none"
                     stroke="currentColor"
                     viewBox="0 0 24 24"
@@ -233,9 +243,11 @@ export default function DashboardPage(): JSX.Element {
                       d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"
                     />
                   </svg>
-                  <p className="text-slate-600 dark:text-slate-400 mb-4">No applications yet</p>
+                  <p className="text-sm sm:text-base text-slate-600 dark:text-slate-400 mb-4">
+                    No applications yet
+                  </p>
                   <Link href="/analyze">
-                    <Button>Analyze Your First Job →</Button>
+                    <Button className="h-11">Analyze Your First Job →</Button>
                   </Link>
                 </div>
               )}
@@ -243,14 +255,16 @@ export default function DashboardPage(): JSX.Element {
           </Card>
         </div>
 
-        {/* Profile Summary Card */}
+        {/* Profile Summary Card - Hidden on mobile (accessible via bottom nav) */}
         {user && isProfileComplete && (
-          <Card className="mt-6">
-            <CardHeader>
+          <Card className="mt-4 sm:mt-6 hidden sm:block">
+            <CardHeader className="p-4 sm:p-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <CardTitle>Your Profile</CardTitle>
-                  <CardDescription>Summary of your professional background</CardDescription>
+                  <CardTitle className="text-base sm:text-lg">Your Profile</CardTitle>
+                  <CardDescription className="text-xs sm:text-sm">
+                    Summary of your professional background
+                  </CardDescription>
                 </div>
                 <Link href="/profile">
                   <Button variant="outline" size="sm">
@@ -259,18 +273,24 @@ export default function DashboardPage(): JSX.Element {
                 </Link>
               </div>
             </CardHeader>
-            <CardContent>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <CardContent className="p-4 sm:p-6 pt-0">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
                 <div>
-                  <h4 className="text-sm font-medium text-slate-500 dark:text-slate-400 mb-1">
+                  <h4 className="text-xs sm:text-sm font-medium text-slate-500 dark:text-slate-400 mb-1">
                     Contact
                   </h4>
-                  <p className="text-slate-900 dark:text-slate-100">{user.name}</p>
-                  <p className="text-slate-600 dark:text-slate-400 text-sm">{user.email}</p>
-                  <p className="text-slate-600 dark:text-slate-400 text-sm">{user.location}</p>
+                  <p className="text-sm sm:text-base text-slate-900 dark:text-slate-100">
+                    {user.name}
+                  </p>
+                  <p className="text-slate-600 dark:text-slate-400 text-xs sm:text-sm">
+                    {user.email}
+                  </p>
+                  <p className="text-slate-600 dark:text-slate-400 text-xs sm:text-sm">
+                    {user.location}
+                  </p>
                 </div>
                 <div>
-                  <h4 className="text-sm font-medium text-slate-500 dark:text-slate-400 mb-1">
+                  <h4 className="text-xs sm:text-sm font-medium text-slate-500 dark:text-slate-400 mb-1">
                     Skills
                   </h4>
                   <div className="flex flex-wrap gap-1">

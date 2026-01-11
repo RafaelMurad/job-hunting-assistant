@@ -6,8 +6,8 @@
  * - parseAIError() - AI error message parser
  */
 
-import { describe, it, expect } from "vitest";
 import { cn, parseAIError } from "@/lib/utils";
+import { describe, expect, it } from "vitest";
 
 describe("cn (class name merger)", () => {
   it("merges multiple class strings", () => {
