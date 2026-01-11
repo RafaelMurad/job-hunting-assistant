@@ -164,7 +164,7 @@ export default function ProfilePage(): JSX.Element {
       <div className="min-h-screen flex items-center justify-center bg-slate-50 dark:bg-gray-900">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-sky-600 mx-auto mb-4"></div>
-          <p className="text-slate-600 dark:text-gray-400">Loading your profile...</p>
+          <p className="text-slate-600 dark:text-slate-400">Loading your profile...</p>
         </div>
       </div>
     );
@@ -174,10 +174,10 @@ export default function ProfilePage(): JSX.Element {
     return (
       <div className="min-h-screen flex items-center justify-center bg-slate-50 dark:bg-gray-900">
         <div className="text-center">
-          <p className="text-slate-900 dark:text-gray-100 text-lg font-medium">
+          <p className="text-slate-900 dark:text-slate-100 text-lg font-medium">
             Error loading user data
           </p>
-          <p className="text-slate-600 dark:text-gray-400 mt-2">Please refresh the page</p>
+          <p className="text-slate-600 dark:text-slate-400 mt-2">Please refresh the page</p>
           <Button onClick={() => window.location.reload()} className="mt-4">
             Refresh Page
           </Button>
@@ -191,7 +191,7 @@ export default function ProfilePage(): JSX.Element {
   // ============================================
 
   return (
-    <div className="min-h-screen bg-slate-50 dark:bg-gray-900 py-8">
+    <div className="min-h-screen bg-slate-50 dark:bg-slate-900 py-8">
       <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Toast Notification */}
         {toast && (
@@ -231,7 +231,7 @@ export default function ProfilePage(): JSX.Element {
               <span className="font-medium">{toast.message}</span>
               <button
                 onClick={() => setToast(null)}
-                className="ml-2 text-slate-500 hover:text-slate-700 dark:text-gray-400 dark:hover:text-gray-200"
+                className="ml-2 text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-gray-200"
               >
                 ×
               </button>
@@ -243,23 +243,23 @@ export default function ProfilePage(): JSX.Element {
         <div className="mb-8">
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
             <div>
-              <h1 className="text-3xl font-bold text-slate-900 dark:text-gray-100 mb-2">
+              <h1 className="text-3xl font-bold text-slate-900 dark:text-slate-100 mb-2">
                 Your Master CV
               </h1>
-              <p className="text-slate-600 dark:text-gray-400">
+              <p className="text-slate-600 dark:text-slate-400">
                 Complete your profile to start analyzing jobs and generating cover letters
               </p>
             </div>
 
             {/* Input Mode Toggle */}
-            <div className="flex items-center gap-2 bg-slate-100 dark:bg-gray-800 rounded-lg p-1">
+            <div className="flex items-center gap-2 bg-slate-100 dark:bg-slate-800 rounded-lg p-1">
               <button
                 type="button"
                 onClick={() => setInputMode("manual")}
                 className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
                   inputMode === "manual"
-                    ? "bg-white dark:bg-gray-700 text-slate-900 dark:text-gray-100 shadow-sm"
-                    : "text-slate-600 dark:text-gray-400 hover:text-slate-900 dark:hover:text-gray-200"
+                    ? "bg-white dark:bg-slate-700 text-slate-900 dark:text-slate-100 shadow-sm"
+                    : "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-gray-200"
                 }`}
               >
                 Manual Entry
@@ -269,8 +269,8 @@ export default function ProfilePage(): JSX.Element {
                 onClick={() => setInputMode("upload")}
                 className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
                   inputMode === "upload"
-                    ? "bg-white dark:bg-gray-700 text-slate-900 dark:text-gray-100 shadow-sm"
-                    : "text-slate-600 dark:text-gray-400 hover:text-slate-900 dark:hover:text-gray-200"
+                    ? "bg-white dark:bg-slate-700 text-slate-900 dark:text-slate-100 shadow-sm"
+                    : "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-gray-200"
                 }`}
               >
                 Upload CV
@@ -310,21 +310,24 @@ export default function ProfilePage(): JSX.Element {
         {/* Manual Entry Mode */}
         {inputMode === "manual" && (
           <Card className="shadow-sm">
-            <CardHeader className="bg-white dark:bg-gray-800 border-b border-slate-200 dark:border-gray-700">
-              <CardTitle className="text-slate-900 dark:text-gray-100">
+            <CardHeader className="bg-white dark:bg-slate-800 border-b border-slate-200 dark:border-slate-700">
+              <CardTitle className="text-slate-900 dark:text-slate-100">
                 Profile Information
               </CardTitle>
-              <CardDescription className="text-slate-600 dark:text-gray-400">
+              <CardDescription className="text-slate-600 dark:text-slate-400">
                 This information will be used to analyze job matches and generate personalized cover
                 letters
               </CardDescription>
             </CardHeader>
-            <CardContent className="bg-white dark:bg-gray-800 pt-6">
+            <CardContent className="bg-white dark:bg-slate-800 pt-6">
               <form onSubmit={handleSave} className="space-y-6">
                 {/* Contact Info */}
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
-                    <Label htmlFor="name" className="text-slate-900 dark:text-gray-100 font-medium">
+                    <Label
+                      htmlFor="name"
+                      className="text-slate-900 dark:text-slate-100 font-medium"
+                    >
                       Full Name *
                     </Label>
                     <Input
@@ -332,7 +335,7 @@ export default function ProfilePage(): JSX.Element {
                       value={formData.name}
                       onChange={(e) => updateField("name", e.target.value)}
                       placeholder="John Doe"
-                      className={`mt-2 text-slate-900 dark:text-gray-100 ${
+                      className={`mt-2 text-slate-900 dark:text-slate-100 ${
                         fieldErrors?.name ? "border-red-500 focus:ring-red-500" : ""
                       }`}
                     />
@@ -345,7 +348,7 @@ export default function ProfilePage(): JSX.Element {
                   <div>
                     <Label
                       htmlFor="email"
-                      className="text-slate-900 dark:text-gray-100 font-medium"
+                      className="text-slate-900 dark:text-slate-100 font-medium"
                     >
                       Email *
                     </Label>
@@ -355,7 +358,7 @@ export default function ProfilePage(): JSX.Element {
                       value={formData.email}
                       onChange={(e) => updateField("email", e.target.value)}
                       placeholder="john@example.com"
-                      className={`mt-2 text-slate-900 dark:text-gray-100 ${
+                      className={`mt-2 text-slate-900 dark:text-slate-100 ${
                         fieldErrors?.email ? "border-red-500 focus:ring-red-500" : ""
                       }`}
                     />
@@ -371,7 +374,7 @@ export default function ProfilePage(): JSX.Element {
                   <div>
                     <Label
                       htmlFor="phone"
-                      className="text-slate-900 dark:text-gray-100 font-medium"
+                      className="text-slate-900 dark:text-slate-100 font-medium"
                     >
                       Phone
                     </Label>
@@ -380,13 +383,13 @@ export default function ProfilePage(): JSX.Element {
                       value={formData.phone || ""}
                       onChange={(e) => updateField("phone", e.target.value)}
                       placeholder="+1 555 123 4567"
-                      className="mt-2 text-slate-900 dark:text-gray-100"
+                      className="mt-2 text-slate-900 dark:text-slate-100"
                     />
                   </div>
                   <div>
                     <Label
                       htmlFor="location"
-                      className="text-slate-900 dark:text-gray-100 font-medium"
+                      className="text-slate-900 dark:text-slate-100 font-medium"
                     >
                       Location *
                     </Label>
@@ -395,7 +398,7 @@ export default function ProfilePage(): JSX.Element {
                       value={formData.location}
                       onChange={(e) => updateField("location", e.target.value)}
                       placeholder="San Francisco, CA"
-                      className={`mt-2 text-slate-900 dark:text-gray-100 ${
+                      className={`mt-2 text-slate-900 dark:text-slate-100 ${
                         fieldErrors?.location ? "border-red-500 focus:ring-red-500" : ""
                       }`}
                     />
@@ -411,7 +414,7 @@ export default function ProfilePage(): JSX.Element {
                 <div>
                   <Label
                     htmlFor="summary"
-                    className="text-slate-900 dark:text-gray-100 font-medium"
+                    className="text-slate-900 dark:text-slate-100 font-medium"
                   >
                     Professional Summary *
                   </Label>
@@ -421,7 +424,7 @@ export default function ProfilePage(): JSX.Element {
                     onChange={(e) => updateField("summary", e.target.value)}
                     placeholder="Senior Software Engineer with 5+ years of experience building scalable web applications..."
                     rows={4}
-                    className={`mt-2 text-slate-900 dark:text-gray-100 ${
+                    className={`mt-2 text-slate-900 dark:text-slate-100 ${
                       fieldErrors?.summary ? "border-red-500 focus:ring-red-500" : ""
                     }`}
                   />
@@ -430,7 +433,7 @@ export default function ProfilePage(): JSX.Element {
                       {fieldErrors.summary}
                     </p>
                   )}
-                  <p className="text-sm text-slate-500 dark:text-gray-400 mt-2">
+                  <p className="text-sm text-slate-500 dark:text-slate-400 mt-2">
                     A brief overview of your professional background and expertise.
                   </p>
                 </div>
@@ -439,7 +442,7 @@ export default function ProfilePage(): JSX.Element {
                 <div>
                   <Label
                     htmlFor="experience"
-                    className="text-slate-900 dark:text-gray-100 font-medium"
+                    className="text-slate-900 dark:text-slate-100 font-medium"
                   >
                     Work Experience *
                   </Label>
@@ -449,7 +452,7 @@ export default function ProfilePage(): JSX.Element {
                     onChange={(e) => updateField("experience", e.target.value)}
                     placeholder="Company Name | Role (Start Date - End Date)&#10;- Key achievement 1&#10;- Key achievement 2&#10;&#10;Previous Company | Previous Role..."
                     rows={10}
-                    className={`mt-2 text-slate-900 dark:text-gray-100 ${
+                    className={`mt-2 text-slate-900 dark:text-slate-100 ${
                       fieldErrors?.experience ? "border-red-500 focus:ring-red-500" : ""
                     }`}
                   />
@@ -458,14 +461,17 @@ export default function ProfilePage(): JSX.Element {
                       {fieldErrors.experience}
                     </p>
                   )}
-                  <p className="text-sm text-slate-500 dark:text-gray-400 mt-2">
+                  <p className="text-sm text-slate-500 dark:text-slate-400 mt-2">
                     Include company, role, dates, and key achievements for each position.
                   </p>
                 </div>
 
                 {/* Skills */}
                 <div>
-                  <Label htmlFor="skills" className="text-slate-900 dark:text-gray-100 font-medium">
+                  <Label
+                    htmlFor="skills"
+                    className="text-slate-900 dark:text-slate-100 font-medium"
+                  >
                     Skills *
                   </Label>
                   <Textarea
@@ -474,7 +480,7 @@ export default function ProfilePage(): JSX.Element {
                     onChange={(e) => updateField("skills", e.target.value)}
                     placeholder="React, TypeScript, Node.js, PostgreSQL, AWS, Docker, Git..."
                     rows={3}
-                    className={`mt-2 text-slate-900 dark:text-gray-100 ${
+                    className={`mt-2 text-slate-900 dark:text-slate-100 ${
                       fieldErrors?.skills ? "border-red-500 focus:ring-red-500" : ""
                     }`}
                   />
@@ -483,7 +489,7 @@ export default function ProfilePage(): JSX.Element {
                       {fieldErrors.skills}
                     </p>
                   )}
-                  <p className="text-sm text-slate-500 dark:text-gray-400 mt-2">
+                  <p className="text-sm text-slate-500 dark:text-slate-400 mt-2">
                     Comma-separated list of your skills and technologies.
                   </p>
                 </div>
@@ -551,22 +557,22 @@ export default function ProfilePage(): JSX.Element {
 
         {/* CV Management Section */}
         <Card className="shadow-sm mt-8">
-          <CardHeader className="bg-white dark:bg-gray-800 border-b border-slate-200 dark:border-gray-700">
+          <CardHeader className="bg-white dark:bg-slate-800 border-b border-slate-200 dark:border-slate-700">
             <div className="flex items-center justify-between">
               <div>
-                <CardTitle className="text-slate-900 dark:text-gray-100">
+                <CardTitle className="text-slate-900 dark:text-slate-100">
                   Your CV Documents
                 </CardTitle>
-                <CardDescription className="text-slate-600 dark:text-gray-400">
+                <CardDescription className="text-slate-600 dark:text-slate-400">
                   Manage your CV files. The active CV will be used for job analysis.
                 </CardDescription>
               </div>
-              <div className="text-sm text-slate-500 dark:text-gray-400">
+              <div className="text-sm text-slate-500 dark:text-slate-400">
                 {cvs.length} / {maxCVs} CVs
               </div>
             </div>
           </CardHeader>
-          <CardContent className="bg-white dark:bg-gray-800 pt-6">
+          <CardContent className="bg-white dark:bg-slate-800 pt-6">
             {cvsLoading ? (
               <div className="flex items-center justify-center py-8">
                 <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-sky-600"></div>
@@ -586,7 +592,7 @@ export default function ProfilePage(): JSX.Element {
                     d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
                   />
                 </svg>
-                <p className="text-slate-600 dark:text-gray-400 mb-4">
+                <p className="text-slate-600 dark:text-slate-400 mb-4">
                   No CVs uploaded yet. Add your first CV to get started.
                 </p>
                 <Button onClick={() => router.push("/cv")} disabled={!canAddMore}>
@@ -609,10 +615,10 @@ export default function ProfilePage(): JSX.Element {
                       <div className="flex items-center gap-3 min-w-0 flex-1">
                         {/* Document icon */}
                         <div
-                          className={`p-2 rounded-lg ${cv.isActive ? "bg-emerald-100 dark:bg-emerald-900/50" : "bg-slate-100 dark:bg-gray-700"}`}
+                          className={`p-2 rounded-lg ${cv.isActive ? "bg-emerald-100 dark:bg-emerald-900/50" : "bg-slate-100 dark:bg-slate-700"}`}
                         >
                           <svg
-                            className={`w-5 h-5 ${cv.isActive ? "text-emerald-600 dark:text-emerald-400" : "text-slate-500 dark:text-gray-400"}`}
+                            className={`w-5 h-5 ${cv.isActive ? "text-emerald-600 dark:text-emerald-400" : "text-slate-500 dark:text-slate-400"}`}
                             fill="none"
                             stroke="currentColor"
                             viewBox="0 0 24 24"
@@ -628,7 +634,7 @@ export default function ProfilePage(): JSX.Element {
                         {/* CV Info */}
                         <div className="min-w-0 flex-1">
                           <div className="flex items-center gap-2">
-                            <span className="font-medium text-slate-900 dark:text-gray-100 truncate">
+                            <span className="font-medium text-slate-900 dark:text-slate-100 truncate">
                               {cv.name}
                             </span>
                             {cv.isActive && (
@@ -637,7 +643,7 @@ export default function ProfilePage(): JSX.Element {
                               </Badge>
                             )}
                           </div>
-                          <p className="text-sm text-slate-500 dark:text-gray-400">
+                          <p className="text-sm text-slate-500 dark:text-slate-400">
                             Updated {new Date(cv.updatedAt).toLocaleDateString()}
                           </p>
                         </div>
@@ -682,7 +688,7 @@ export default function ProfilePage(): JSX.Element {
 
                 {/* Add CV Button */}
                 {canAddMore && (
-                  <div className="pt-4 border-t border-slate-200 dark:border-gray-700">
+                  <div className="pt-4 border-t border-slate-200 dark:border-slate-700">
                     <Button variant="outline" onClick={() => router.push("/cv")} className="w-full">
                       <svg
                         className="w-4 h-4 mr-2"
@@ -704,8 +710,8 @@ export default function ProfilePage(): JSX.Element {
 
                 {/* Limit reached notice */}
                 {!canAddMore && (
-                  <div className="pt-4 border-t border-slate-200 dark:border-gray-700">
-                    <p className="text-sm text-slate-500 dark:text-gray-400 text-center">
+                  <div className="pt-4 border-t border-slate-200 dark:border-slate-700">
+                    <p className="text-sm text-slate-500 dark:text-slate-400 text-center">
                       Maximum of {maxCVs} CVs reached. Delete one to add another.
                     </p>
                   </div>

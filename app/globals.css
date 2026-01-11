@@ -130,3 +130,18 @@ p {
   --input: 217 33% 17%;
   --ring: 213 27% 84%;
 }
+
+/* Accessibility: Reduced Motion Support
+ * Respects user preference for reduced motion (vestibular disorders, motion sensitivity)
+ * Reference: https://developer.mozilla.org/en-US/docs/Web/CSS/@media/prefers-reduced-motion
+ */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}

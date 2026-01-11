@@ -3,6 +3,7 @@ import { CommandPalette } from "@/components/command-palette";
 import { MobileMenu } from "@/components/mobile-menu";
 import { ThemeProvider } from "@/components/theme-provider";
 import { ThemeToggle } from "@/components/theme-toggle";
+import { SkipLink } from "@/components/ui/skip-link";
 import { UserMenu } from "@/components/user-menu";
 import { FeatureFlagProvider } from "@/lib/feature-flags/provider";
 import { TRPCProvider } from "@/lib/trpc/provider";
@@ -32,6 +33,9 @@ export default function RootLayout({
           <AuthProvider>
             <TRPCProvider>
               <FeatureFlagProvider>
+                {/* Skip Link - Accessibility for keyboard users */}
+                <SkipLink />
+
                 {/* Navigation */}
                 <nav className="bg-white dark:bg-slate-800 border-b border-slate-200 dark:border-slate-700">
                   <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -94,7 +98,7 @@ export default function RootLayout({
                 </nav>
 
                 {/* Main Content */}
-                <main>{children}</main>
+                <main id="main-content">{children}</main>
 
                 {/* Command Palette (⌘K) */}
                 <CommandPalette />

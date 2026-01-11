@@ -611,7 +611,7 @@ export default function CVEditorPage(): JSX.Element {
           {/* Dismiss button */}
           <button
             onClick={dismissToast}
-            className="shrink-0 ml-2 text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300"
+            className="shrink-0 ml-2 text-gray-400 dark:text-slate-500 hover:text-slate-600 dark:hover:text-slate-300"
             aria-label="Dismiss"
           >
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
