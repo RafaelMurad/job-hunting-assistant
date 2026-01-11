@@ -122,26 +122,26 @@ function UXPlannerContent(): JSX.Element {
 
   if (isLoading) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-nordic-neutral-50">
+      <div className="flex min-h-screen items-center justify-center bg-slate-50">
         <div className="text-center">
-          <div className="mx-auto mb-4 h-8 w-8 animate-spin rounded-full border-4 border-fjord-600 border-t-transparent" />
-          <p className="text-nordic-neutral-600">Loading UX Research Data...</p>
+          <div className="mx-auto mb-4 h-8 w-8 animate-spin rounded-full border-4 border-sky-600 border-t-transparent" />
+          <p className="text-slate-600">Loading UX Research Data...</p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="flex min-h-screen bg-nordic-neutral-50">
+    <div className="flex min-h-screen bg-slate-50">
       {/* Main Content */}
       <div className={`flex-1 p-4 md:p-8 transition-all ${chatOpen ? "md:mr-96" : ""}`}>
         <div className="mx-auto max-w-6xl">
           {/* Admin Navigation */}
           <div className="mb-4 flex gap-4 text-sm">
-            <Link href="/admin/flags" className="text-nordic-neutral-500 hover:text-fjord-600">
+            <Link href="/admin/flags" className="text-slate-500 hover:text-sky-600">
               Feature Flags
             </Link>
-            <Link href="/admin/ux-planner" className="font-medium text-fjord-600">
+            <Link href="/admin/ux-planner" className="font-medium text-sky-600">
               UX Planner
             </Link>
           </div>
@@ -149,8 +149,8 @@ function UXPlannerContent(): JSX.Element {
           {/* Header with Stats */}
           <div className="mb-8 flex items-start justify-between">
             <div>
-              <h1 className="text-3xl font-bold text-nordic-neutral-900">UX Research Platform</h1>
-              <p className="text-nordic-neutral-600">
+              <h1 className="text-3xl font-bold text-slate-900">UX Research Platform</h1>
+              <p className="text-slate-600">
                 AI-powered analysis of user journeys, personas, and pain points
               </p>
             </div>
@@ -158,8 +158,8 @@ function UXPlannerContent(): JSX.Element {
               onClick={() => setChatOpen(!chatOpen)}
               className={`rounded-lg px-4 py-2 text-sm font-medium transition-colors ${
                 chatOpen
-                  ? "bg-fjord-600 text-white"
-                  : "bg-white text-nordic-neutral-700 hover:bg-nordic-neutral-100 border border-nordic-neutral-200"
+                  ? "bg-sky-600 text-white"
+                  : "bg-white text-slate-700 hover:bg-slate-100 border border-slate-200"
               }`}
             >
               💬 {chatOpen ? "Close Chat" : "Open AI Chat"}
@@ -169,21 +169,21 @@ function UXPlannerContent(): JSX.Element {
           {/* Stats Bar */}
           {stats && (
             <div className="mb-6 grid grid-cols-2 gap-3 md:grid-cols-4 md:gap-4">
-              <div className="rounded-lg bg-white p-4 border border-nordic-neutral-200">
-                <div className="text-2xl font-bold text-fjord-600">{stats.personaCount}</div>
-                <div className="text-sm text-nordic-neutral-500">Personas</div>
+              <div className="rounded-lg bg-white p-4 border border-slate-200">
+                <div className="text-2xl font-bold text-sky-600">{stats.personaCount}</div>
+                <div className="text-sm text-slate-500">Personas</div>
               </div>
-              <div className="rounded-lg bg-white p-4 border border-nordic-neutral-200">
-                <div className="text-2xl font-bold text-fjord-600">{stats.journeyCount}</div>
-                <div className="text-sm text-nordic-neutral-500">Journeys</div>
+              <div className="rounded-lg bg-white p-4 border border-slate-200">
+                <div className="text-2xl font-bold text-sky-600">{stats.journeyCount}</div>
+                <div className="text-sm text-slate-500">Journeys</div>
               </div>
-              <div className="rounded-lg bg-white p-4 border border-nordic-neutral-200">
-                <div className="text-2xl font-bold text-fjord-600">{stats.painPointCount}</div>
-                <div className="text-sm text-nordic-neutral-500">Pain Points</div>
+              <div className="rounded-lg bg-white p-4 border border-slate-200">
+                <div className="text-2xl font-bold text-sky-600">{stats.painPointCount}</div>
+                <div className="text-sm text-slate-500">Pain Points</div>
               </div>
-              <div className="rounded-lg bg-white p-4 border border-nordic-neutral-200">
+              <div className="rounded-lg bg-white p-4 border border-slate-200">
                 <div className="text-2xl font-bold text-red-600">{stats.criticalPainPoints}</div>
-                <div className="text-sm text-nordic-neutral-500">Critical Issues</div>
+                <div className="text-sm text-slate-500">Critical Issues</div>
               </div>
             </div>
           )}
@@ -231,8 +231,8 @@ function UXPlannerContent(): JSX.Element {
                 }}
                 className={`rounded-lg px-4 py-2 text-sm font-medium transition-colors ${
                   activeTab === tab.id
-                    ? "bg-fjord-600 text-white"
-                    : "bg-white text-nordic-neutral-700 hover:bg-nordic-neutral-100"
+                    ? "bg-sky-600 text-white"
+                    : "bg-white text-slate-700 hover:bg-slate-100"
                 }`}
               >
                 {tab.icon} {tab.label} ({tab.count})
@@ -244,10 +244,10 @@ function UXPlannerContent(): JSX.Element {
           <div className="grid gap-6 lg:grid-cols-3">
             {/* Left Panel - List */}
             <div className="lg:col-span-1">
-              <div className="rounded-lg border border-nordic-neutral-200 bg-white p-4">
+              <div className="rounded-lg border border-slate-200 bg-white p-4">
                 {activeTab === "journeys" && (
                   <>
-                    <h2 className="mb-4 font-semibold text-nordic-neutral-900">Journeys</h2>
+                    <h2 className="mb-4 font-semibold text-slate-900">Journeys</h2>
                     <div className="space-y-2">
                       {data?.journeys.map((j) => (
                         <button
@@ -255,25 +255,21 @@ function UXPlannerContent(): JSX.Element {
                           onClick={() => setSelectedId(j.id)}
                           className={`w-full rounded-lg p-3 text-left transition-colors ${
                             selectedId === j.id
-                              ? "bg-fjord-50 border-fjord-200 border"
-                              : "hover:bg-nordic-neutral-50"
+                              ? "bg-sky-50 border-sky-200 border"
+                              : "hover:bg-slate-50"
                           }`}
                         >
-                          <div className="font-medium text-nordic-neutral-900">{j.name}</div>
-                          <div className="text-sm text-nordic-neutral-500 line-clamp-2">
-                            {j.description}
-                          </div>
+                          <div className="font-medium text-slate-900">{j.name}</div>
+                          <div className="text-sm text-slate-500 line-clamp-2">{j.description}</div>
                           <div className="mt-1 flex gap-2">
-                            <span className="text-xs text-nordic-neutral-400">
-                              {j.steps.length} steps
-                            </span>
+                            <span className="text-xs text-slate-400">{j.steps.length} steps</span>
                             <span
                               className={`text-xs px-1.5 py-0.5 rounded ${
                                 j.status === "VALIDATED"
                                   ? "bg-green-100 text-green-700"
                                   : j.status === "IN_REVIEW"
                                     ? "bg-amber-100 text-amber-700"
-                                    : "bg-nordic-neutral-100 text-nordic-neutral-600"
+                                    : "bg-slate-100 text-slate-600"
                               }`}
                             >
                               {j.status.toLowerCase()}
@@ -287,7 +283,7 @@ function UXPlannerContent(): JSX.Element {
 
                 {activeTab === "personas" && (
                   <>
-                    <h2 className="mb-4 font-semibold text-nordic-neutral-900">Personas</h2>
+                    <h2 className="mb-4 font-semibold text-slate-900">Personas</h2>
                     <div className="space-y-2">
                       {data?.personas.map((p) => (
                         <button
@@ -295,15 +291,15 @@ function UXPlannerContent(): JSX.Element {
                           onClick={() => setSelectedId(p.id)}
                           className={`w-full rounded-lg p-3 text-left transition-colors ${
                             selectedId === p.id
-                              ? "bg-fjord-50 border-fjord-200 border"
-                              : "hover:bg-nordic-neutral-50"
+                              ? "bg-sky-50 border-sky-200 border"
+                              : "hover:bg-slate-50"
                           }`}
                         >
                           <div className="flex items-center gap-2">
                             <span className="text-lg">👤</span>
                             <div>
-                              <div className="font-medium text-nordic-neutral-900">{p.name}</div>
-                              <div className="text-xs text-nordic-neutral-500">{p.type}</div>
+                              <div className="font-medium text-slate-900">{p.name}</div>
+                              <div className="text-xs text-slate-500">{p.type}</div>
                             </div>
                           </div>
                         </button>
@@ -314,7 +310,7 @@ function UXPlannerContent(): JSX.Element {
 
                 {activeTab === "pain-points" && (
                   <>
-                    <h2 className="mb-4 font-semibold text-nordic-neutral-900">Pain Points</h2>
+                    <h2 className="mb-4 font-semibold text-slate-900">Pain Points</h2>
                     <div className="space-y-2">
                       {data?.painPoints.map((p) => (
                         <button
@@ -322,12 +318,12 @@ function UXPlannerContent(): JSX.Element {
                           onClick={() => setSelectedId(p.id)}
                           className={`w-full rounded-lg p-3 text-left transition-colors ${
                             selectedId === p.id
-                              ? "bg-fjord-50 border-fjord-200 border"
-                              : "hover:bg-nordic-neutral-50"
+                              ? "bg-sky-50 border-sky-200 border"
+                              : "hover:bg-slate-50"
                           }`}
                         >
                           <div className="flex items-start justify-between">
-                            <div className="font-medium text-nordic-neutral-900">{p.title}</div>
+                            <div className="font-medium text-slate-900">{p.title}</div>
                             <span
                               className={`rounded px-2 py-0.5 text-xs font-medium ${
                                 p.severity === "CRITICAL"
@@ -342,7 +338,7 @@ function UXPlannerContent(): JSX.Element {
                               {p.severity.toLowerCase()}
                             </span>
                           </div>
-                          <div className="mt-1 text-sm text-nordic-neutral-500">
+                          <div className="mt-1 text-sm text-slate-500">
                             {p.category} • Effort: {p.effort.toLowerCase()}
                           </div>
                         </button>
@@ -353,9 +349,7 @@ function UXPlannerContent(): JSX.Element {
 
                 {activeTab === "principles" && (
                   <>
-                    <h2 className="mb-4 font-semibold text-nordic-neutral-900">
-                      Design Principles
-                    </h2>
+                    <h2 className="mb-4 font-semibold text-slate-900">Design Principles</h2>
                     <div className="space-y-2">
                       {data?.principles.map((p) => (
                         <button
@@ -363,14 +357,12 @@ function UXPlannerContent(): JSX.Element {
                           onClick={() => setSelectedId(p.id)}
                           className={`w-full rounded-lg p-3 text-left transition-colors ${
                             selectedId === p.id
-                              ? "bg-fjord-50 border-fjord-200 border"
-                              : "hover:bg-nordic-neutral-50"
+                              ? "bg-sky-50 border-sky-200 border"
+                              : "hover:bg-slate-50"
                           }`}
                         >
-                          <div className="font-medium text-nordic-neutral-900">{p.name}</div>
-                          <div className="text-sm text-nordic-neutral-500 line-clamp-2">
-                            {p.description}
-                          </div>
+                          <div className="font-medium text-slate-900">{p.name}</div>
+                          <div className="text-sm text-slate-500 line-clamp-2">{p.description}</div>
                         </button>
                       ))}
                     </div>
@@ -381,11 +373,9 @@ function UXPlannerContent(): JSX.Element {
                 {activeTab === "implementations" && (
                   <>
                     <div className="mb-4 flex items-center justify-between">
-                      <h2 className="font-semibold text-nordic-neutral-900">
-                        Implementation Tracking
-                      </h2>
+                      <h2 className="font-semibold text-slate-900">Implementation Tracking</h2>
                       {implStats && (
-                        <span className="text-sm text-nordic-neutral-500">
+                        <span className="text-sm text-slate-500">
                           {implStats.completionRate}% complete
                         </span>
                       )}
@@ -394,38 +384,33 @@ function UXPlannerContent(): JSX.Element {
                     {/* Status Summary */}
                     {implStats && (
                       <div className="mb-4 grid grid-cols-4 gap-2 text-center text-xs">
-                        <div className="rounded-lg bg-nordic-neutral-100 p-2">
+                        <div className="rounded-lg bg-slate-100 p-2">
                           <div className="font-semibold">{implStats.notStarted}</div>
-                          <div className="text-nordic-neutral-500">Todo</div>
+                          <div className="text-slate-500">Todo</div>
                         </div>
                         <div className="rounded-lg bg-yellow-100 p-2">
                           <div className="font-semibold">{implStats.inProgress}</div>
-                          <div className="text-nordic-neutral-500">Active</div>
+                          <div className="text-slate-500">Active</div>
                         </div>
                         <div className="rounded-lg bg-green-100 p-2">
                           <div className="font-semibold">{implStats.implemented}</div>
-                          <div className="text-nordic-neutral-500">Done</div>
+                          <div className="text-slate-500">Done</div>
                         </div>
-                        <div className="rounded-lg bg-fjord-100 p-2">
+                        <div className="rounded-lg bg-sky-100 p-2">
                           <div className="font-semibold">{implStats.verified}</div>
-                          <div className="text-nordic-neutral-500">Verified</div>
+                          <div className="text-slate-500">Verified</div>
                         </div>
                       </div>
                     )}
 
                     <div className="space-y-2">
                       {implementations?.map((impl) => (
-                        <div
-                          key={impl.id}
-                          className="rounded-lg border border-nordic-neutral-200 p-3"
-                        >
+                        <div key={impl.id} className="rounded-lg border border-slate-200 p-3">
                           <div className="flex items-start justify-between gap-2">
                             <div className="flex-1">
-                              <div className="font-medium text-nordic-neutral-900">
-                                {impl.title}
-                              </div>
+                              <div className="font-medium text-slate-900">{impl.title}</div>
                               {impl.painPoint && (
-                                <div className="text-xs text-nordic-neutral-500">
+                                <div className="text-xs text-slate-500">
                                   Pain Point: {impl.painPoint.title}
                                 </div>
                               )}
@@ -444,12 +429,12 @@ function UXPlannerContent(): JSX.Element {
                               }
                               className={`rounded-md border px-2 py-1 text-xs font-medium ${
                                 impl.status === "VERIFIED"
-                                  ? "bg-fjord-100 text-fjord-700"
+                                  ? "bg-sky-100 text-sky-700"
                                   : impl.status === "IMPLEMENTED"
                                     ? "bg-green-100 text-green-700"
                                     : impl.status === "IN_PROGRESS"
                                       ? "bg-yellow-100 text-yellow-700"
-                                      : "bg-nordic-neutral-100 text-nordic-neutral-700"
+                                      : "bg-slate-100 text-slate-700"
                               }`}
                             >
                               <option value="NOT_STARTED">Todo</option>
@@ -459,7 +444,7 @@ function UXPlannerContent(): JSX.Element {
                             </select>
                           </div>
                           {impl.aiNotes && (
-                            <div className="mt-2 text-xs text-nordic-neutral-500 bg-nordic-neutral-50 p-2 rounded">
+                            <div className="mt-2 text-xs text-slate-500 bg-slate-50 p-2 rounded">
                               💡 {impl.aiNotes}
                             </div>
                           )}
@@ -467,25 +452,23 @@ function UXPlannerContent(): JSX.Element {
                             <button
                               onClick={() => scanImplementationMutation.mutate({ id: impl.id })}
                               disabled={scanImplementationMutation.isPending}
-                              className="text-xs text-fjord-600 hover:underline"
+                              className="text-xs text-sky-600 hover:underline"
                             >
                               🔍 Scan
                             </button>
                             {impl.commit && (
-                              <span className="text-xs text-nordic-neutral-500">
+                              <span className="text-xs text-slate-500">
                                 Commit: {impl.commit.slice(0, 7)}
                               </span>
                             )}
                             {impl.prNumber && (
-                              <span className="text-xs text-nordic-neutral-500">
-                                PR #{impl.prNumber}
-                              </span>
+                              <span className="text-xs text-slate-500">PR #{impl.prNumber}</span>
                             )}
                           </div>
                         </div>
                       ))}
                       {(!implementations || implementations.length === 0) && (
-                        <div className="text-center text-sm text-nordic-neutral-500 py-8">
+                        <div className="text-center text-sm text-slate-500 py-8">
                           No implementations tracked yet.
                           <br />
                           Use the AI chat to identify improvements to track.
@@ -499,18 +482,18 @@ function UXPlannerContent(): JSX.Element {
 
             {/* Right Panel - Detail */}
             <div className="lg:col-span-2">
-              <div className="rounded-lg border border-nordic-neutral-200 bg-white p-6">
+              <div className="rounded-lg border border-slate-200 bg-white p-6">
                 {/* Journey Detail */}
                 {activeTab === "journeys" && selectedJourney && (
                   <>
                     <div className="mb-4 flex items-start justify-between">
                       <div>
-                        <h2 className="text-xl font-semibold text-nordic-neutral-900">
+                        <h2 className="text-xl font-semibold text-slate-900">
                           {selectedJourney.name}
                         </h2>
-                        <p className="text-nordic-neutral-600">{selectedJourney.description}</p>
+                        <p className="text-slate-600">{selectedJourney.description}</p>
                         {selectedJourney.persona && (
-                          <p className="mt-1 text-sm text-fjord-600">
+                          <p className="mt-1 text-sm text-sky-600">
                             Persona: {selectedJourney.persona.name}
                           </p>
                         )}
@@ -518,7 +501,7 @@ function UXPlannerContent(): JSX.Element {
                       <button
                         onClick={handleAnalyze}
                         disabled={isAnalyzing}
-                        className="rounded-lg bg-fjord-600 px-4 py-2 text-sm font-medium text-white hover:bg-fjord-700 disabled:opacity-50"
+                        className="rounded-lg bg-sky-600 px-4 py-2 text-sm font-medium text-white hover:bg-sky-700 disabled:opacity-50"
                       >
                         {isAnalyzing ? "Analyzing..." : "🔍 AI Analyze"}
                       </button>
@@ -526,33 +509,27 @@ function UXPlannerContent(): JSX.Element {
 
                     {/* Journey Steps */}
                     <div className="mb-6">
-                      <h3 className="mb-3 text-sm font-medium text-nordic-neutral-500">
-                        Journey Steps
-                      </h3>
+                      <h3 className="mb-3 text-sm font-medium text-slate-500">Journey Steps</h3>
                       <div className="space-y-3">
                         {selectedJourney.steps.map((step, i) => (
                           <div
                             key={step.id}
-                            className="flex items-start gap-3 rounded-lg border border-nordic-neutral-200 p-3"
+                            className="flex items-start gap-3 rounded-lg border border-slate-200 p-3"
                           >
-                            <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-fjord-100 text-xs font-medium text-fjord-600">
+                            <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-sky-100 text-xs font-medium text-sky-600">
                               {i + 1}
                             </div>
                             <div className="flex-1">
                               <div className="flex items-center gap-2">
-                                <span className="font-medium text-nordic-neutral-900">
-                                  {step.stage}
-                                </span>
-                                <span className="text-xs text-nordic-neutral-400">
-                                  {step.touchpoint}
-                                </span>
+                                <span className="font-medium text-slate-900">{step.stage}</span>
+                                <span className="text-xs text-slate-400">{step.touchpoint}</span>
                               </div>
-                              <p className="text-sm text-nordic-neutral-600">{step.action}</p>
+                              <p className="text-sm text-slate-600">{step.action}</p>
                               <div className="mt-1 flex gap-4 text-xs">
-                                <span className="text-nordic-neutral-500">
+                                <span className="text-slate-500">
                                   💭 &ldquo;{step.thinking}&rdquo;
                                 </span>
-                                <span className="text-nordic-neutral-500">😊 {step.feeling}</span>
+                                <span className="text-slate-500">😊 {step.feeling}</span>
                               </div>
                               {step.opportunity && (
                                 <p className="mt-1 text-xs text-green-600">💡 {step.opportunity}</p>
@@ -570,24 +547,24 @@ function UXPlannerContent(): JSX.Element {
                   <>
                     <div className="mb-4 flex items-start justify-between">
                       <div>
-                        <h2 className="text-xl font-semibold text-nordic-neutral-900">
+                        <h2 className="text-xl font-semibold text-slate-900">
                           {selectedPersona.name}
                         </h2>
-                        <p className="text-sm text-nordic-neutral-500">{selectedPersona.type}</p>
+                        <p className="text-sm text-slate-500">{selectedPersona.type}</p>
                       </div>
                       <button
                         onClick={handleAnalyze}
                         disabled={isAnalyzing}
-                        className="rounded-lg bg-fjord-600 px-4 py-2 text-sm font-medium text-white hover:bg-fjord-700 disabled:opacity-50"
+                        className="rounded-lg bg-sky-600 px-4 py-2 text-sm font-medium text-white hover:bg-sky-700 disabled:opacity-50"
                       >
                         {isAnalyzing ? "Analyzing..." : "🔍 AI Analyze"}
                       </button>
                     </div>
-                    <p className="mb-6 text-nordic-neutral-600">{selectedPersona.description}</p>
+                    <p className="mb-6 text-slate-600">{selectedPersona.description}</p>
 
                     <div className="grid gap-6 md:grid-cols-2">
                       <div>
-                        <h3 className="mb-2 text-sm font-medium text-nordic-neutral-500">Goals</h3>
+                        <h3 className="mb-2 text-sm font-medium text-slate-500">Goals</h3>
                         <ul className="space-y-1">
                           {selectedPersona.goals.map((goal, i) => (
                             <li key={i} className="flex items-start gap-2 text-sm">
@@ -598,9 +575,7 @@ function UXPlannerContent(): JSX.Element {
                         </ul>
                       </div>
                       <div>
-                        <h3 className="mb-2 text-sm font-medium text-nordic-neutral-500">
-                          Frustrations
-                        </h3>
+                        <h3 className="mb-2 text-sm font-medium text-slate-500">Frustrations</h3>
                         <ul className="space-y-1">
                           {selectedPersona.frustrations.map((f, i) => (
                             <li key={i} className="flex items-start gap-2 text-sm">
@@ -611,15 +586,10 @@ function UXPlannerContent(): JSX.Element {
                         </ul>
                       </div>
                       <div className="md:col-span-2">
-                        <h3 className="mb-2 text-sm font-medium text-nordic-neutral-500">
-                          Behaviors
-                        </h3>
+                        <h3 className="mb-2 text-sm font-medium text-slate-500">Behaviors</h3>
                         <div className="flex flex-wrap gap-2">
                           {selectedPersona.behaviors.map((b, i) => (
-                            <span
-                              key={i}
-                              className="rounded-full bg-nordic-neutral-100 px-3 py-1 text-sm"
-                            >
+                            <span key={i} className="rounded-full bg-slate-100 px-3 py-1 text-sm">
                               {b}
                             </span>
                           ))}
@@ -634,7 +604,7 @@ function UXPlannerContent(): JSX.Element {
                   <>
                     <div className="mb-4 flex items-start justify-between">
                       <div>
-                        <h2 className="text-xl font-semibold text-nordic-neutral-900">
+                        <h2 className="text-xl font-semibold text-slate-900">
                           {selectedPainPoint.title}
                         </h2>
                         <div className="mt-1 flex gap-2">
@@ -651,7 +621,7 @@ function UXPlannerContent(): JSX.Element {
                           >
                             {selectedPainPoint.severity}
                           </span>
-                          <span className="text-xs text-nordic-neutral-500">
+                          <span className="text-xs text-slate-500">
                             {selectedPainPoint.category}
                           </span>
                         </div>
@@ -659,16 +629,16 @@ function UXPlannerContent(): JSX.Element {
                       <button
                         onClick={handleAnalyze}
                         disabled={isAnalyzing}
-                        className="rounded-lg bg-fjord-600 px-4 py-2 text-sm font-medium text-white hover:bg-fjord-700 disabled:opacity-50"
+                        className="rounded-lg bg-sky-600 px-4 py-2 text-sm font-medium text-white hover:bg-sky-700 disabled:opacity-50"
                       >
                         {isAnalyzing ? "Analyzing..." : "🔍 AI Analyze All"}
                       </button>
                     </div>
 
-                    <p className="mb-4 text-nordic-neutral-600">{selectedPainPoint.description}</p>
+                    <p className="mb-4 text-slate-600">{selectedPainPoint.description}</p>
 
                     {selectedPainPoint.userQuote && (
-                      <blockquote className="mb-4 border-l-4 border-fjord-300 bg-fjord-50 p-3 text-sm italic text-nordic-neutral-600">
+                      <blockquote className="mb-4 border-l-4 border-sky-300 bg-sky-50 p-3 text-sm italic text-slate-600">
                         &ldquo;{selectedPainPoint.userQuote}&rdquo;
                       </blockquote>
                     )}
@@ -687,13 +657,11 @@ function UXPlannerContent(): JSX.Element {
                 {/* Principle Detail */}
                 {activeTab === "principles" && selectedPrinciple && (
                   <>
-                    <h2 className="mb-2 text-xl font-semibold text-nordic-neutral-900">
+                    <h2 className="mb-2 text-xl font-semibold text-slate-900">
                       {selectedPrinciple.name}
                     </h2>
-                    <p className="mb-4 text-nordic-neutral-600">{selectedPrinciple.description}</p>
-                    <p className="mb-6 text-sm text-nordic-neutral-500">
-                      {selectedPrinciple.rationale}
-                    </p>
+                    <p className="mb-4 text-slate-600">{selectedPrinciple.description}</p>
+                    <p className="mb-6 text-sm text-slate-500">{selectedPrinciple.rationale}</p>
 
                     <div className="grid gap-4 md:grid-cols-2">
                       <div className="rounded-lg bg-green-50 p-4">
@@ -718,7 +686,7 @@ function UXPlannerContent(): JSX.Element {
 
                 {/* No Selection */}
                 {!selectedId && (
-                  <div className="text-center py-12 text-nordic-neutral-500">
+                  <div className="text-center py-12 text-slate-500">
                     <p className="text-lg mb-2">Select an item from the list</p>
                     <p className="text-sm">
                       Choose a {activeTab.replace("-", " ")} to view details and run AI analysis
@@ -728,25 +696,25 @@ function UXPlannerContent(): JSX.Element {
 
                 {/* AI Analysis Results */}
                 {analysisResult && (
-                  <div className="mt-6 rounded-lg border-2 border-fjord-200 bg-fjord-50 p-4">
-                    <h3 className="mb-3 flex items-center gap-2 text-sm font-semibold text-fjord-800">
+                  <div className="mt-6 rounded-lg border-2 border-sky-200 bg-sky-50 p-4">
+                    <h3 className="mb-3 flex items-center gap-2 text-sm font-semibold text-sky-800">
                       🤖 AI Analysis Results
                       {analysisResult.score && (
-                        <span className="rounded-full bg-fjord-200 px-2 py-0.5 text-xs">
+                        <span className="rounded-full bg-sky-200 px-2 py-0.5 text-xs">
                           Score: {analysisResult.score}/100
                         </span>
                       )}
                     </h3>
-                    <p className="mb-4 text-sm text-fjord-700">{analysisResult.summary}</p>
+                    <p className="mb-4 text-sm text-sky-700">{analysisResult.summary}</p>
 
                     {analysisResult.issues.length > 0 && (
                       <div className="mb-4">
-                        <h4 className="mb-2 text-xs font-medium text-fjord-600">Issues Found</h4>
+                        <h4 className="mb-2 text-xs font-medium text-sky-600">Issues Found</h4>
                         <div className="space-y-2">
                           {analysisResult.issues.map((issue, i) => (
                             <div
                               key={i}
-                              className="rounded bg-white p-2 text-sm border border-fjord-200"
+                              className="rounded bg-white p-2 text-sm border border-sky-200"
                             >
                               <div className="flex items-center gap-2">
                                 <span
@@ -760,9 +728,9 @@ function UXPlannerContent(): JSX.Element {
                                 >
                                   {issue.type}
                                 </span>
-                                <span className="text-nordic-neutral-700">{issue.description}</span>
+                                <span className="text-slate-700">{issue.description}</span>
                               </div>
-                              <p className="mt-1 text-xs text-fjord-600">💡 {issue.suggestion}</p>
+                              <p className="mt-1 text-xs text-sky-600">💡 {issue.suggestion}</p>
                             </div>
                           ))}
                         </div>
@@ -771,8 +739,8 @@ function UXPlannerContent(): JSX.Element {
 
                     {analysisResult.recommendations.length > 0 && (
                       <div>
-                        <h4 className="mb-2 text-xs font-medium text-fjord-600">Recommendations</h4>
-                        <ul className="space-y-1 text-sm text-fjord-700">
+                        <h4 className="mb-2 text-xs font-medium text-sky-600">Recommendations</h4>
+                        <ul className="space-y-1 text-sm text-sky-700">
                           {analysisResult.recommendations.map((rec, i) => (
                             <li key={i}>• {rec}</li>
                           ))}
@@ -789,17 +757,15 @@ function UXPlannerContent(): JSX.Element {
 
       {/* Chat Sidebar - Full screen on mobile, sidebar on desktop */}
       {chatOpen && (
-        <div className="fixed inset-0 md:inset-auto md:right-0 md:top-0 md:h-full md:w-96 border-l border-nordic-neutral-200 bg-white shadow-lg flex flex-col z-50">
-          <div className="border-b border-nordic-neutral-200 p-4 flex items-start justify-between">
+        <div className="fixed inset-0 md:inset-auto md:right-0 md:top-0 md:h-full md:w-96 border-l border-slate-200 bg-white shadow-lg flex flex-col z-50">
+          <div className="border-b border-slate-200 p-4 flex items-start justify-between">
             <div>
-              <h3 className="font-semibold text-nordic-neutral-900">🤖 UX Research Assistant</h3>
-              <p className="text-xs text-nordic-neutral-500">
-                Ask questions about your UX research data
-              </p>
+              <h3 className="font-semibold text-slate-900">🤖 UX Research Assistant</h3>
+              <p className="text-xs text-slate-500">Ask questions about your UX research data</p>
             </div>
             <button
               onClick={() => setChatOpen(false)}
-              className="text-nordic-neutral-400 hover:text-nordic-neutral-600 p-1 rounded hover:bg-nordic-neutral-100"
+              className="text-slate-400 hover:text-slate-600 p-1 rounded hover:bg-slate-100"
               aria-label="Close chat"
             >
               <svg
@@ -820,7 +786,7 @@ function UXPlannerContent(): JSX.Element {
           {/* Chat Messages */}
           <div className="flex-1 overflow-y-auto p-4 space-y-4">
             {(!chatHistory || chatHistory.length === 0) && (
-              <div className="text-center text-sm text-nordic-neutral-500 py-8">
+              <div className="text-center text-sm text-slate-500 py-8">
                 <p className="mb-4">👋 Hi! I can help you with UX research questions.</p>
                 <p className="text-xs">Try asking:</p>
                 <ul className="text-xs mt-2 space-y-1">
@@ -835,8 +801,8 @@ function UXPlannerContent(): JSX.Element {
                 key={msg.id}
                 className={`rounded-lg p-3 text-sm ${
                   msg.role === "user"
-                    ? "bg-fjord-100 text-fjord-900 ml-8"
-                    : "bg-nordic-neutral-100 text-nordic-neutral-900 mr-8 prose prose-sm prose-neutral max-w-none"
+                    ? "bg-sky-100 text-sky-900 ml-8"
+                    : "bg-slate-100 text-slate-900 mr-8 prose prose-sm prose-neutral max-w-none"
                 }`}
               >
                 {msg.role === "user" ? (
@@ -868,11 +834,9 @@ function UXPlannerContent(): JSX.Element {
                         <strong className="font-semibold">{children}</strong>
                       ),
                       code: ({ children }) => (
-                        <code className="bg-nordic-neutral-200 px-1 py-0.5 rounded text-xs">
-                          {children}
-                        </code>
+                        <code className="bg-slate-200 px-1 py-0.5 rounded text-xs">{children}</code>
                       ),
-                      hr: () => <hr className="my-3 border-nordic-neutral-300" />,
+                      hr: () => <hr className="my-3 border-slate-300" />,
                     }}
                   >
                     {msg.content}
@@ -881,7 +845,7 @@ function UXPlannerContent(): JSX.Element {
               </div>
             ))}
             {chatMutation.isPending && (
-              <div className="bg-nordic-neutral-100 rounded-lg p-3 text-sm mr-8 animate-pulse">
+              <div className="bg-slate-100 rounded-lg p-3 text-sm mr-8 animate-pulse">
                 Thinking...
               </div>
             )}
@@ -889,7 +853,7 @@ function UXPlannerContent(): JSX.Element {
           </div>
 
           {/* Chat Input */}
-          <div className="border-t border-nordic-neutral-200 p-4">
+          <div className="border-t border-slate-200 p-4">
             <div className="flex gap-2">
               <input
                 type="text"
@@ -897,13 +861,13 @@ function UXPlannerContent(): JSX.Element {
                 onChange={(e) => setChatInput(e.target.value)}
                 onKeyDown={(e) => e.key === "Enter" && !e.shiftKey && void handleChat()}
                 placeholder="Ask about your UX research..."
-                className="flex-1 rounded-lg border border-nordic-neutral-200 px-3 py-2 text-sm focus:border-fjord-500 focus:outline-none"
+                className="flex-1 rounded-lg border border-slate-200 px-3 py-2 text-sm focus:border-sky-500 focus:outline-none"
                 disabled={chatMutation.isPending}
               />
               <button
                 onClick={() => void handleChat()}
                 disabled={chatMutation.isPending || !chatInput.trim()}
-                className="rounded-lg bg-fjord-600 px-4 py-2 text-sm font-medium text-white hover:bg-fjord-700 disabled:opacity-50"
+                className="rounded-lg bg-sky-600 px-4 py-2 text-sm font-medium text-white hover:bg-sky-700 disabled:opacity-50"
               >
                 Send
               </button>

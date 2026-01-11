@@ -50,14 +50,14 @@ describe("ConfirmationDialog", () => {
       render(<ConfirmationDialog {...defaultProps} variant="destructive" />);
 
       // Check for SVG warning icon (has specific path)
-      const svg = document.querySelector("svg.text-clay-600");
+      const svg = document.querySelector("svg.text-red-600");
       expect(svg).toBeInTheDocument();
     });
 
     it("does not show warning icon for default variant", () => {
       render(<ConfirmationDialog {...defaultProps} variant="default" />);
 
-      const svg = document.querySelector("svg.text-clay-600");
+      const svg = document.querySelector("svg.text-red-600");
       expect(svg).not.toBeInTheDocument();
     });
   });

@@ -139,27 +139,27 @@ export default function TrackerPage(): JSX.Element {
 
   const getStatusBadgeVariant = (status: string): string => {
     const variants: Record<string, string> = {
-      saved: "bg-nordic-neutral-100 text-nordic-neutral-700 border border-nordic-neutral-200",
-      applied: "bg-fjord-50 text-fjord-700 border border-fjord-200",
-      interviewing: "bg-forest-50 text-forest-700 border border-forest-200",
-      offer: "bg-forest-100 text-forest-800 border border-forest-300",
-      rejected: "bg-clay-100 text-clay-700 border border-clay-300",
+      saved: "bg-slate-100 text-slate-700 border border-slate-200",
+      applied: "bg-sky-50 text-sky-700 border border-sky-200",
+      interviewing: "bg-emerald-50 text-emerald-700 border border-emerald-200",
+      offer: "bg-emerald-100 text-emerald-800 border border-emerald-300",
+      rejected: "bg-red-100 text-red-700 border border-red-300",
     };
-    return variants[status] || "bg-nordic-neutral-100 text-nordic-neutral-700";
+    return variants[status] || "bg-slate-100 text-slate-700";
   };
 
   const getMatchColor = (score: number): string => {
-    if (score >= 80) return "text-forest-700 font-semibold";
-    if (score >= 60) return "text-fjord-600 font-semibold";
-    if (score >= 40) return "text-clay-600 font-semibold";
-    return "text-nordic-neutral-600 font-semibold";
+    if (score >= 80) return "text-emerald-700 font-semibold";
+    if (score >= 60) return "text-sky-600 font-semibold";
+    if (score >= 40) return "text-red-600 font-semibold";
+    return "text-slate-600 font-semibold";
   };
 
   const getMatchBgColor = (score: number): string => {
-    if (score >= 80) return "bg-forest-100";
-    if (score >= 60) return "bg-fjord-100";
-    if (score >= 40) return "bg-clay-100";
-    return "bg-nordic-neutral-100";
+    if (score >= 80) return "bg-emerald-100";
+    if (score >= 60) return "bg-sky-100";
+    if (score >= 40) return "bg-red-100";
+    return "bg-slate-100";
   };
 
   if (loading) {
@@ -285,7 +285,7 @@ export default function TrackerPage(): JSX.Element {
                 placeholder="Search by company, role, or notes..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 py-2 pl-10 pr-4 text-sm text-gray-900 dark:text-gray-100 placeholder:text-gray-400 dark:placeholder:text-gray-500 focus:border-fjord-500 dark:focus:border-fjord-400 focus:outline-none focus:ring-2 focus:ring-fjord-500/20 dark:focus:ring-fjord-400/20"
+                className="w-full rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 py-2 pl-10 pr-4 text-sm text-gray-900 dark:text-gray-100 placeholder:text-gray-400 dark:placeholder:text-gray-500 focus:border-sky-500 dark:focus:border-sky-400 focus:outline-none focus:ring-2 focus:ring-sky-500/20 dark:focus:ring-sky-400/20"
               />
               {searchQuery && (
                 <button
@@ -316,7 +316,7 @@ export default function TrackerPage(): JSX.Element {
                 id="sort-by"
                 value={sortBy}
                 onChange={(e) => setSortBy(e.target.value as SortOption)}
-                className="rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 px-3 py-2 text-sm text-gray-900 dark:text-gray-100 focus:border-fjord-500 dark:focus:border-fjord-400 focus:outline-none focus:ring-2 focus:ring-fjord-500/20 dark:focus:ring-fjord-400/20"
+                className="rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 px-3 py-2 text-sm text-gray-900 dark:text-gray-100 focus:border-sky-500 dark:focus:border-sky-400 focus:outline-none focus:ring-2 focus:ring-sky-500/20 dark:focus:ring-sky-400/20"
               >
                 {SORT_OPTIONS.map((option) => (
                   <option key={option.value} value={option.value}>
@@ -333,7 +333,7 @@ export default function TrackerPage(): JSX.Element {
               onClick={() => setStatusFilter("all")}
               className={`rounded-full px-4 py-1.5 text-sm font-medium transition-colors ${
                 statusFilter === "all"
-                  ? "bg-fjord-600 text-white"
+                  ? "bg-sky-600 text-white"
                   : "bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600"
               }`}
             >
@@ -345,7 +345,7 @@ export default function TrackerPage(): JSX.Element {
                 onClick={() => setStatusFilter(value)}
                 className={`rounded-full px-4 py-1.5 text-sm font-medium transition-colors ${
                   statusFilter === value
-                    ? "bg-fjord-600 text-white"
+                    ? "bg-sky-600 text-white"
                     : "bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600"
                 }`}
               >
@@ -456,7 +456,7 @@ export default function TrackerPage(): JSX.Element {
                               handleStatusChange(app.id, e.target.value as ApplicationStatus)
                             }
                             disabled={updatingStatusId === app.id}
-                            className={`cursor-pointer rounded-md border px-3 py-1.5 text-sm transition-colors focus:outline-none focus:ring-2 focus:ring-fjord-500 focus:ring-offset-1
+                            className={`cursor-pointer rounded-md border px-3 py-1.5 text-sm transition-colors focus:outline-none focus:ring-2 focus:ring-sky-500 focus:ring-offset-1
                               ${getStatusBadgeVariant(app.status)}
                               ${updatingStatusId === app.id ? "cursor-wait opacity-50" : "hover:border-gray-400"}`}
                             aria-label={`Change status for ${app.company} - ${app.role}`}
@@ -510,7 +510,7 @@ export default function TrackerPage(): JSX.Element {
                             onChange={(e) => setNotesDraft(e.target.value)}
                             placeholder="Add notes about this application..."
                             rows={3}
-                            className="w-full rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 px-3 py-2 text-sm text-gray-900 dark:text-gray-100 placeholder:text-gray-400 dark:placeholder:text-gray-500 focus:border-fjord-500 dark:focus:border-fjord-400 focus:outline-none focus:ring-2 focus:ring-fjord-500/20 dark:focus:ring-fjord-400/20"
+                            className="w-full rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 px-3 py-2 text-sm text-gray-900 dark:text-gray-100 placeholder:text-gray-400 dark:placeholder:text-gray-500 focus:border-sky-500 dark:focus:border-sky-400 focus:outline-none focus:ring-2 focus:ring-sky-500/20 dark:focus:ring-sky-400/20"
                             autoFocus
                           />
                           <div className="flex gap-2">

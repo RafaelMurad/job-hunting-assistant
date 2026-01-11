@@ -8,22 +8,22 @@ import { describe, expect, it } from "vitest";
 describe("Color System", () => {
   describe("Nordic Palette - Fjord Blue (Primary)", () => {
     const fjordColors = {
-      "--color-fjord-50": "#f0f9ff",
-      "--color-fjord-100": "#e0f2fe",
-      "--color-fjord-200": "#bae6fd",
-      "--color-fjord-300": "#7dd3fc",
-      "--color-fjord-400": "#38bdf8",
-      "--color-fjord-500": "#0ea5e9",
-      "--color-fjord-600": "#0284c7",
-      "--color-fjord-700": "#0369a1",
-      "--color-fjord-800": "#075985",
-      "--color-fjord-900": "#0c4a6e",
+      "--color-sky-50": "#f0f9ff",
+      "--color-sky-100": "#e0f2fe",
+      "--color-sky-200": "#bae6fd",
+      "--color-sky-300": "#7dd3fc",
+      "--color-sky-400": "#38bdf8",
+      "--color-sky-500": "#0ea5e9",
+      "--color-sky-600": "#0284c7",
+      "--color-sky-700": "#0369a1",
+      "--color-sky-800": "#075985",
+      "--color-sky-900": "#0c4a6e",
     };
 
     it("should define complete fjord color scale (50-900)", () => {
       const steps = [50, 100, 200, 300, 400, 500, 600, 700, 800, 900];
       steps.forEach((step) => {
-        expect(fjordColors[`--color-fjord-${step}` as keyof typeof fjordColors]).toBeDefined();
+        expect(fjordColors[`--color-sky-${step}` as keyof typeof fjordColors]).toBeDefined();
       });
     });
 
@@ -37,22 +37,22 @@ describe("Color System", () => {
 
   describe("Nordic Palette - Forest Green (Success)", () => {
     const forestColors = {
-      "--color-forest-50": "#f0fdf4",
-      "--color-forest-100": "#dcfce7",
-      "--color-forest-200": "#bbf7d0",
-      "--color-forest-300": "#86efac",
-      "--color-forest-400": "#4ade80",
-      "--color-forest-500": "#22c55e",
-      "--color-forest-600": "#16a34a",
-      "--color-forest-700": "#15803d",
-      "--color-forest-800": "#166534",
-      "--color-forest-900": "#14532d",
+      "--color-emerald-50": "#f0fdf4",
+      "--color-emerald-100": "#dcfce7",
+      "--color-emerald-200": "#bbf7d0",
+      "--color-emerald-300": "#86efac",
+      "--color-emerald-400": "#4ade80",
+      "--color-emerald-500": "#22c55e",
+      "--color-emerald-600": "#16a34a",
+      "--color-emerald-700": "#15803d",
+      "--color-emerald-800": "#166534",
+      "--color-emerald-900": "#14532d",
     };
 
     it("should define complete forest color scale (50-900)", () => {
       const steps = [50, 100, 200, 300, 400, 500, 600, 700, 800, 900];
       steps.forEach((step) => {
-        expect(forestColors[`--color-forest-${step}` as keyof typeof forestColors]).toBeDefined();
+        expect(forestColors[`--color-emerald-${step}` as keyof typeof forestColors]).toBeDefined();
       });
     });
 
@@ -99,22 +99,22 @@ describe("Color System", () => {
 
   describe("Nordic Palette - Clay Red (Destructive)", () => {
     const clayColors = {
-      "--color-clay-50": "#fef2f2",
-      "--color-clay-100": "#fee2e2",
-      "--color-clay-200": "#fecaca",
-      "--color-clay-300": "#fca5a5",
-      "--color-clay-400": "#f87171",
-      "--color-clay-500": "#ef4444",
-      "--color-clay-600": "#dc2626",
-      "--color-clay-700": "#b91c1c",
-      "--color-clay-800": "#991b1b",
-      "--color-clay-900": "#7f1d1d",
+      "--color-red-50": "#fef2f2",
+      "--color-red-100": "#fee2e2",
+      "--color-red-200": "#fecaca",
+      "--color-red-300": "#fca5a5",
+      "--color-red-400": "#f87171",
+      "--color-red-500": "#ef4444",
+      "--color-red-600": "#dc2626",
+      "--color-red-700": "#b91c1c",
+      "--color-red-800": "#991b1b",
+      "--color-red-900": "#7f1d1d",
     };
 
     it("should define complete clay color scale (50-900)", () => {
       const steps = [50, 100, 200, 300, 400, 500, 600, 700, 800, 900];
       steps.forEach((step) => {
-        expect(clayColors[`--color-clay-${step}` as keyof typeof clayColors]).toBeDefined();
+        expect(clayColors[`--color-red-${step}` as keyof typeof clayColors]).toBeDefined();
       });
     });
 

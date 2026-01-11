@@ -2,7 +2,7 @@
  * @fileoverview Tests for dark mode / theme toggle functionality
  */
 
-import { render, screen, waitFor } from "@testing-library/react";
+import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
@@ -55,86 +55,59 @@ describe("Theme System", () => {
   });
 
   describe("ThemeToggle", () => {
-    it("should render theme toggle button", () => {
+    it("should render theme toggle as radiogroup", () => {
       render(<ThemeToggle />);
 
-      expect(screen.getByRole("button", { name: /toggle theme/i })).toBeInTheDocument();
+      expect(screen.getByRole("radiogroup", { name: /theme selection/i })).toBeInTheDocument();
     });
 
-    it("should open dropdown menu when clicked", async () => {
+    it("should render all three theme options as radio buttons", () => {
+      render(<ThemeToggle />);
+
+      expect(screen.getByRole("radio", { name: /light mode/i })).toBeInTheDocument();
+      expect(screen.getByRole("radio", { name: /system preference/i })).toBeInTheDocument();
+      expect(screen.getByRole("radio", { name: /dark mode/i })).toBeInTheDocument();
+    });
+
+    it("should set theme to light when Light button is clicked", async () => {
       const user = userEvent.setup();
       render(<ThemeToggle />);
 
-      const button = screen.getByRole("button", { name: /toggle theme/i });
-      await user.click(button);
-
-      await waitFor(() => {
-        expect(screen.getByText("Light")).toBeInTheDocument();
-        expect(screen.getByText("Dark")).toBeInTheDocument();
-        expect(screen.getByText("System")).toBeInTheDocument();
-      });
-    });
-
-    it("should set theme to light when Light is clicked", async () => {
-      const user = userEvent.setup();
-      render(<ThemeToggle />);
-
-      const button = screen.getByRole("button", { name: /toggle theme/i });
-      await user.click(button);
-
-      await waitFor(() => {
-        expect(screen.getByText("Light")).toBeInTheDocument();
-      });
-
-      await user.click(screen.getByText("Light"));
+      const lightButton = screen.getByRole("radio", { name: /light mode/i });
+      await user.click(lightButton);
 
       expect(mockSetTheme).toHaveBeenCalledWith("light");
     });
 
-    it("should set theme to dark when Dark is clicked", async () => {
+    it("should set theme to dark when Dark button is clicked", async () => {
       const user = userEvent.setup();
       render(<ThemeToggle />);
 
-      const button = screen.getByRole("button", { name: /toggle theme/i });
-      await user.click(button);
-
-      await waitFor(() => {
-        expect(screen.getByText("Dark")).toBeInTheDocument();
-      });
-
-      await user.click(screen.getByText("Dark"));
+      const darkButton = screen.getByRole("radio", { name: /dark mode/i });
+      await user.click(darkButton);
 
       expect(mockSetTheme).toHaveBeenCalledWith("dark");
     });
 
-    it("should set theme to system when System is clicked", async () => {
+    it("should set theme to system when System button is clicked", async () => {
       const user = userEvent.setup();
       render(<ThemeToggle />);
 
-      const button = screen.getByRole("button", { name: /toggle theme/i });
-      await user.click(button);
-
-      await waitFor(() => {
-        expect(screen.getByText("System")).toBeInTheDocument();
-      });
-
-      await user.click(screen.getByText("System"));
+      const systemButton = screen.getByRole("radio", { name: /system preference/i });
+      await user.click(systemButton);
 
       expect(mockSetTheme).toHaveBeenCalledWith("system");
     });
 
-    it("should highlight current theme option", async () => {
+    it("should mark current theme as selected (aria-checked)", () => {
       mockTheme = "dark";
-      const user = userEvent.setup();
       render(<ThemeToggle />);
 
-      const button = screen.getByRole("button", { name: /toggle theme/i });
-      await user.click(button);
+      const darkButton = screen.getByRole("radio", { name: /dark mode/i });
+      expect(darkButton).toHaveAttribute("aria-checked", "true");
 
-      await waitFor(() => {
-        const darkOption = screen.getByText("Dark").closest("[role='menuitem']");
-        expect(darkOption).toHaveClass("bg-accent");
-      });
+      const lightButton = screen.getByRole("radio", { name: /light mode/i });
+      expect(lightButton).toHaveAttribute("aria-checked", "false");
     });
   });
 
@@ -226,15 +199,16 @@ describe("Theme System", () => {
   });
 
   describe("Hydration Safety", () => {
-    it("ThemeToggle should show disabled button before mount", () => {
-      // The component handles hydration internally with useState
+    it("ThemeToggle should render loading state before mount", () => {
+      // The component handles hydration internally with useSyncExternalStore
       // This test ensures the component renders without crashing
       render(<ThemeToggle />);
-      expect(screen.getByRole("button")).toBeInTheDocument();
+      // The loading state doesn't have radiogroup role
+      expect(screen.getByLabelText(/theme selection|loading/i)).toBeInTheDocument();
     });
 
-    it("ThemeToggleSimple should show disabled button before mount", () => {
-      // The component handles hydration internally with useState
+    it("ThemeToggleSimple should render button before mount", () => {
+      // The component handles hydration internally with useSyncExternalStore
       // This test ensures the component renders without crashing
       render(<ThemeToggleSimple />);
       expect(screen.getByRole("button")).toBeInTheDocument();

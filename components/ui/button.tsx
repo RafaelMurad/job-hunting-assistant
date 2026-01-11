@@ -8,16 +8,16 @@ const buttonVariants = cva(
     variants: {
       variant: {
         default:
-          "bg-fjord-600 text-white hover:bg-fjord-700 focus-visible:ring-fjord-500 dark:bg-fjord-500 dark:hover:bg-fjord-600",
+          "bg-sky-600 text-white hover:bg-sky-700 focus-visible:ring-sky-500 dark:bg-cyan-400 dark:text-slate-900 dark:hover:bg-cyan-300 dark:shadow-lg dark:shadow-cyan-400/30 dark:focus-visible:ring-cyan-400",
         destructive:
-          "bg-clay-600 text-white hover:bg-clay-700 focus-visible:ring-clay-500 dark:bg-clay-500 dark:hover:bg-clay-600",
+          "bg-red-600 text-white hover:bg-red-700 focus-visible:ring-red-500 dark:bg-red-500 dark:hover:bg-red-400 dark:shadow-lg dark:shadow-red-500/30",
         outline:
-          "border-2 border-fjord-600 bg-transparent text-fjord-700 hover:bg-fjord-50 focus-visible:ring-fjord-500 dark:border-fjord-400 dark:text-fjord-300 dark:hover:bg-slate-800",
+          "border-2 border-sky-600 bg-transparent text-sky-700 hover:bg-sky-50 focus-visible:ring-sky-500 dark:border-cyan-400 dark:text-cyan-400 dark:hover:bg-cyan-400/10",
         secondary:
-          "bg-forest-600 text-white hover:bg-forest-700 focus-visible:ring-forest-500 dark:bg-forest-500 dark:hover:bg-forest-600",
+          "bg-emerald-600 text-white hover:bg-emerald-700 focus-visible:ring-emerald-500 dark:bg-emerald-400 dark:text-slate-900 dark:hover:bg-emerald-300 dark:shadow-lg dark:shadow-emerald-400/30",
         ghost:
-          "hover:bg-nordic-neutral-100 text-nordic-neutral-700 focus-visible:ring-nordic-neutral-400 dark:text-slate-300 dark:hover:bg-slate-800",
-        link: "text-fjord-600 underline-offset-4 hover:underline hover:text-fjord-700 dark:text-fjord-400 dark:hover:text-fjord-300",
+          "hover:bg-slate-100 text-slate-700 focus-visible:ring-slate-400 dark:text-slate-300 dark:hover:bg-slate-800",
+        link: "text-sky-600 underline-offset-4 hover:underline hover:text-sky-700 dark:text-cyan-400 dark:hover:text-cyan-300",
       },
       size: {
         default: "h-11 px-6 py-3",

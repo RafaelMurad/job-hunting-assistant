@@ -70,7 +70,7 @@ const SelectTrigger = forwardRef<
   <SelectPrimitive.Trigger
     ref={ref}
     className={cn(
-      "flex h-10 w-full items-center justify-between rounded-md border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 ring-offset-white placeholder:text-gray-500 focus:outline-none focus:ring-2 focus:ring-fjord-500 focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 [&>span]:line-clamp-1 dark:border-slate-600 dark:bg-slate-700 dark:text-slate-100 dark:ring-offset-slate-900 dark:placeholder:text-slate-400",
+      "flex h-10 w-full items-center justify-between rounded-md border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 ring-offset-white placeholder:text-gray-500 focus:outline-none focus:ring-2 focus:ring-sky-500 focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 [&>span]:line-clamp-1 dark:border-slate-600 dark:bg-slate-700 dark:text-slate-100 dark:ring-offset-slate-900 dark:placeholder:text-slate-400",
       className
     )}
     {...props}
@@ -154,14 +154,14 @@ const SelectItem = forwardRef<
   <SelectPrimitive.Item
     ref={ref}
     className={cn(
-      "relative flex w-full cursor-pointer select-none items-center rounded-sm py-1.5 pl-8 pr-2 text-sm outline-none hover:bg-gray-100 focus:bg-gray-100 data-[state=checked]:bg-fjord-50 data-[state=checked]:text-fjord-700 data-disabled:pointer-events-none data-disabled:opacity-50 dark:hover:bg-slate-700 dark:focus:bg-slate-700 dark:data-[state=checked]:bg-fjord-900 dark:data-[state=checked]:text-fjord-200",
+      "relative flex w-full cursor-pointer select-none items-center rounded-sm py-1.5 pl-8 pr-2 text-sm outline-none hover:bg-gray-100 focus:bg-gray-100 data-[state=checked]:bg-sky-50 data-[state=checked]:text-sky-700 data-disabled:pointer-events-none data-disabled:opacity-50 dark:hover:bg-slate-700 dark:focus:bg-slate-700 dark:data-[state=checked]:bg-sky-900 dark:data-[state=checked]:text-sky-200",
       className
     )}
     {...props}
   >
     <span className="absolute left-2 flex h-3.5 w-3.5 items-center justify-center">
       <SelectPrimitive.ItemIndicator>
-        <CheckIcon className="h-4 w-4 text-fjord-600" />
+        <CheckIcon className="h-4 w-4 text-sky-600" />
       </SelectPrimitive.ItemIndicator>
     </span>
 

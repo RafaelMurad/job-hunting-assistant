@@ -164,8 +164,8 @@ export function FileUpload({
         className={cn(
           "relative flex min-h-[200px] cursor-pointer flex-col items-center justify-center rounded-lg border-2 border-dashed p-8 transition-all duration-200",
           isDragging
-            ? "border-fjord-500 bg-fjord-50 dark:bg-fjord-900/30"
-            : "border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-800 hover:border-fjord-400 dark:hover:border-fjord-500 hover:bg-gray-100 dark:hover:bg-gray-700",
+            ? "border-sky-500 bg-sky-50 dark:bg-sky-900/30"
+            : "border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-800 hover:border-sky-400 dark:hover:border-sky-500 hover:bg-gray-100 dark:hover:bg-gray-700",
           disabled && "cursor-not-allowed opacity-50",
           isUploading && "pointer-events-none"
         )}
@@ -185,9 +185,7 @@ export function FileUpload({
             <svg
               className={cn(
                 "mx-auto mb-4 h-12 w-12 transition-colors",
-                isDragging
-                  ? "text-fjord-600 dark:text-fjord-400"
-                  : "text-gray-400 dark:text-gray-500"
+                isDragging ? "text-sky-600 dark:text-sky-400" : "text-gray-400 dark:text-gray-500"
               )}
               fill="none"
               viewBox="0 0 24 24"
@@ -214,7 +212,7 @@ export function FileUpload({
             {/* Spinner */}
             <div className="mx-auto mb-4 h-12 w-12">
               <svg
-                className="h-full w-full animate-spin text-fjord-600"
+                className="h-full w-full animate-spin text-sky-600"
                 fill="none"
                 viewBox="0 0 24 24"
               >
@@ -242,7 +240,7 @@ export function FileUpload({
             {/* Progress bar */}
             <div className="mb-2 h-2 w-full overflow-hidden rounded-full bg-gray-200 dark:bg-gray-700">
               <div
-                className="h-full rounded-full bg-fjord-600 transition-all duration-300"
+                className="h-full rounded-full bg-sky-600 transition-all duration-300"
                 style={{ width: `${progress.progress}%` }}
               />
             </div>
@@ -262,9 +260,9 @@ export function FileUpload({
         {/* Complete State */}
         {progress.status === "complete" && (
           <div className="text-center">
-            <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-forest-100 dark:bg-forest-900/50">
+            <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-emerald-100 dark:bg-emerald-900/50">
               <svg
-                className="h-6 w-6 text-forest-600 dark:text-forest-400"
+                className="h-6 w-6 text-emerald-600 dark:text-emerald-400"
                 fill="none"
                 viewBox="0 0 24 24"
                 stroke="currentColor"
@@ -277,7 +275,7 @@ export function FileUpload({
                 />
               </svg>
             </div>
-            <p className="mb-1 font-medium text-forest-700 dark:text-forest-300">
+            <p className="mb-1 font-medium text-emerald-700 dark:text-emerald-300">
               Upload Complete!
             </p>
             <p className="text-sm text-gray-500 dark:text-gray-400">

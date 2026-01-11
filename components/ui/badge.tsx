@@ -3,12 +3,12 @@ import { cva, type VariantProps } from "class-variance-authority";
 import { type HTMLAttributes, type JSX } from "react";
 
 const badgeVariants = cva(
-  "inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-fjord-500 focus:ring-offset-2 dark:focus:ring-offset-slate-900",
+  "inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-sky-500 focus:ring-offset-2 dark:focus:ring-offset-slate-900",
   {
     variants: {
       variant: {
         default:
-          "border-transparent bg-fjord-600 text-white hover:bg-fjord-700 dark:bg-fjord-500 dark:hover:bg-fjord-600",
+          "border-transparent bg-sky-600 text-white hover:bg-sky-700 dark:bg-sky-500 dark:hover:bg-sky-600",
         secondary:
           "border-transparent bg-gray-100 text-gray-800 hover:bg-gray-200 dark:bg-slate-700 dark:text-slate-200 dark:hover:bg-slate-600",
         destructive:

@@ -1,258 +1,51 @@
 @import "tailwindcss";
 @import "@neondatabase/auth/ui/tailwind";
 
+/* Enable class-based dark mode for next-themes compatibility */
+@variant dark (&:where(.dark, .dark *));
+
 @theme {
-  /* Nordic Neutrals */
-  --color-snow: #ffffff;
-  --color-frost: #f9fafb;
-  --color-mist: #f3f4f6;
-  --color-ash: #e5e7eb;
+  /* 
+   * Geist Font Integration
+   * The --font-geist-sans and --font-geist-mono variables are set dynamically 
+   * by the geist package in layout.tsx. This provides optimized font loading.
+   */
+  --font-family-sans:
+    var(--font-geist-sans), system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  --font-family-mono:
+    var(--font-geist-mono), ui-monospace, "SF Mono", Menlo, Monaco, "Cascadia Code", monospace;
 
-  /* Text Scale */
-  --color-midnight: #111827;
-  --color-midnight-light: #374151;
-  --color-slate: #64748b;
-  --color-stone: #9ca3af;
-
-  /* Nordic Blue (Fjords) */
-  --color-fjord-50: #f0f9ff;
-  --color-fjord-100: #e0f2fe;
-  --color-fjord-200: #bae6fd;
-  --color-fjord-300: #7dd3fc;
-  --color-fjord-400: #38bdf8;
-  --color-fjord-500: #0ea5e9;
-  --color-fjord-600: #0284c7;
-  --color-fjord-700: #0369a1;
-  --color-fjord-800: #075985;
-  --color-fjord-900: #0c4a6e;
-
-  /* Nordic Green (Forest) */
-  --color-forest-50: #f0fdf4;
-  --color-forest-100: #dcfce7;
-  --color-forest-200: #bbf7d0;
-  --color-forest-300: #86efac;
-  --color-forest-400: #4ade80;
-  --color-forest-500: #22c55e;
-  --color-forest-600: #16a34a;
-  --color-forest-700: #15803d;
-  --color-forest-800: #166534;
-  --color-forest-900: #14532d;
-
-  /* Nordic Yellow (Amber/Warning) */
-  --color-amber-50: #fffbeb;
-  --color-amber-100: #fef3c7;
-  --color-amber-200: #fde68a;
-  --color-amber-300: #fcd34d;
-  --color-amber-400: #fbbf24;
-  --color-amber-500: #f59e0b;
-  --color-amber-600: #d97706;
-  --color-amber-700: #b45309;
-  --color-amber-800: #92400e;
-  --color-amber-900: #78350f;
-
-  /* Nordic Red (Clay) */
-  --color-clay-50: #fef2f2;
-  --color-clay-100: #fee2e2;
-  --color-clay-200: #fecaca;
-  --color-clay-300: #fca5a5;
-  --color-clay-400: #f87171;
-  --color-clay-500: #ef4444;
-  --color-clay-600: #dc2626;
-  --color-clay-700: #b91c1c;
-  --color-clay-800: #991b1b;
-  --color-clay-900: #7f1d1d;
-
-  /* Application Status Colors (Semantic) */
+  /* Application Status Colors (Semantic) - Keep these as they are app-specific */
   --color-status-applied: #3b82f6; /* Blue - Waiting for response */
   --color-status-interviewing: #8b5cf6; /* Violet - In progress */
   --color-status-offered: #22c55e; /* Green - Success */
   --color-status-rejected: #f87171; /* Red (soft) - Unsuccessful */
   --color-status-withdrawn: #94a3b8; /* Slate - Cancelled by user */
-
-  /* Nordic Neutrals (Extended) */
-  --color-nordic-neutral-50: #f9fafb;
-  --color-nordic-neutral-100: #f3f4f6;
-  --color-nordic-neutral-200: #e5e7eb;
-  --color-nordic-neutral-300: #d1d5db;
-  --color-nordic-neutral-400: #9ca3af;
-  --color-nordic-neutral-500: #6b7280;
-  --color-nordic-neutral-600: #4b5563;
-  --color-nordic-neutral-700: #374151;
-  --color-nordic-neutral-800: #1f2937;
-  --color-nordic-neutral-900: #111827;
-
-  /* Nordic Typography - Font Families (Geist) */
-  --font-family-sans:
-    var(--font-geist-sans), system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-  --font-family-mono:
-    var(--font-geist-mono), ui-monospace, "SF Mono", Menlo, Monaco, "Cascadia Code", monospace;
-  --font-family-display: var(--font-geist-sans), system-ui, sans-serif;
-
-  /* Geist Typography - Headings (single-line, display text) */
-  --text-heading-32: 2rem; /* 32px - Page titles */
-  --text-heading-24: 1.5rem; /* 24px - Section headers */
-  --text-heading-20: 1.25rem; /* 20px - Card titles */
-  --text-heading-16: 1rem; /* 16px - Small headings */
-
-  /* Geist Typography - Labels (UI elements, buttons, navigation) */
-  --text-label-16: 1rem; /* 16px - Large buttons */
-  --text-label-14: 0.875rem; /* 14px - Default buttons, menu items */
-  --text-label-13: 0.8125rem; /* 13px - Secondary labels, tabs */
-  --text-label-12: 0.75rem; /* 12px - Badges, small labels */
-
-  /* Geist Typography - Copy (multi-line, body text) */
-  --text-copy-16: 1rem; /* 16px - Primary body text */
-  --text-copy-14: 0.875rem; /* 14px - Secondary body text */
-  --text-copy-13: 0.8125rem; /* 13px - Compact views, descriptions */
-  --text-copy-12: 0.75rem; /* 12px - Captions, helper text */
-
-  /* Nordic Typography - Font Sizes (Modular Scale 1.25 - Major Third) */
-  --font-size-xs: 0.75rem; /* 12px */
-  --font-size-sm: 0.875rem; /* 14px */
-  --font-size-base: 1rem; /* 16px */
-  --font-size-lg: 1.125rem; /* 18px */
-  --font-size-xl: 1.25rem; /* 20px */
-  --font-size-2xl: 1.563rem; /* 25px */
-  --font-size-3xl: 1.953rem; /* 31px */
-  --font-size-4xl: 2.441rem; /* 39px */
-  --font-size-5xl: 3.052rem; /* 49px */
-
-  /* Nordic Typography - Font Weights (Minimalist approach) */
-  --font-weight-normal: 400;
-  --font-weight-medium: 500;
-  --font-weight-semibold: 600;
-  --font-weight-bold: 700;
-
-  /* Nordic Typography - Line Heights (Generous for readability) */
-  --line-height-tight: 1.25;
-  --line-height-snug: 1.375;
-  --line-height-normal: 1.5;
-  --line-height-relaxed: 1.625;
-  --line-height-loose: 2;
-
-  /* Geist Typography - Line Heights for specific tokens */
-  --leading-heading: 1.2; /* Headings */
-  --leading-label: 1; /* Labels (single-line) */
-  --leading-copy: 1.5; /* Copy (multi-line) */
-
-  /* Nordic Typography - Letter Spacing (Subtle, breathable) */
-  --letter-spacing-tighter: -0.05em;
-  --letter-spacing-tight: -0.025em;
-  --letter-spacing-normal: 0;
-  --letter-spacing-wide: 0.025em;
-  --letter-spacing-wider: 0.05em;
-  --letter-spacing-widest: 0.1em;
-
-  /* Nordic Spacing - Generous Whitespace (Base 8px scale) */
-  --spacing-0: 0;
-  --spacing-px: 1px;
-  --spacing-0\.5: 0.125rem; /* 2px */
-  --spacing-1: 0.25rem; /* 4px */
-  --spacing-1\.5: 0.375rem; /* 6px */
-  --spacing-2: 0.5rem; /* 8px - Base unit */
-  --spacing-3: 0.75rem; /* 12px */
-  --spacing-4: 1rem; /* 16px */
-  --spacing-5: 1.25rem; /* 20px */
-  --spacing-6: 1.5rem; /* 24px */
-  --spacing-8: 2rem; /* 32px */
-  --spacing-10: 2.5rem; /* 40px */
-  --spacing-12: 3rem; /* 48px */
-  --spacing-16: 4rem; /* 64px */
-  --spacing-20: 5rem; /* 80px */
-  --spacing-24: 6rem; /* 96px */
-  --spacing-32: 8rem; /* 128px */
-  --spacing-40: 10rem; /* 160px */
-  --spacing-48: 12rem; /* 192px */
-  --spacing-56: 14rem; /* 224px */
-  --spacing-64: 16rem; /* 256px */
-
-  /* Nordic Spacing - Container Widths */
-  --container-sm: 640px;
-  --container-md: 768px;
-  --container-lg: 1024px;
-  --container-xl: 1280px;
-  --container-2xl: 1536px;
-
-  /* Nordic Spacing - Border Radius (Subtle curves) */
-  --radius-none: 0;
-  --radius-sm: 0.125rem; /* 2px */
-  --radius-default: 0.25rem; /* 4px */
-  --radius-md: 0.375rem; /* 6px */
-  --radius-lg: 0.5rem; /* 8px */
-  --radius-xl: 0.75rem; /* 12px */
-  --radius-2xl: 1rem; /* 16px */
-  --radius-full: 9999px;
 }
 
-/* 
- * Geist Font Integration
- * The --font-geist-sans and --font-geist-mono variables are set dynamically 
- * by the geist package in layout.tsx. This provides optimized font loading.
- */
-
+/* Base body styles */
 body {
-  /* Use Geist font via CSS variable, fallback to system fonts */
   font-family: var(--font-family-sans);
-  font-size: var(--text-copy-14);
-  font-weight: var(--font-weight-normal);
-  line-height: var(--leading-copy);
-  letter-spacing: var(--letter-spacing-normal);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
 
-/* Geist Typography Utilities */
-h1,
-h2,
-h3,
-h4,
-h5,
-h6 {
-  font-family: var(--font-family-display);
-  font-weight: var(--font-weight-semibold);
-  line-height: var(--leading-heading);
-  letter-spacing: var(--letter-spacing-tight);
-  color: var(--color-midnight);
+/* Heading styles */
+h1, h2, h3, h4, h5, h6 {
+  font-family: var(--font-family-sans);
+  @apply font-semibold tracking-tight text-slate-900 dark:text-slate-100;
 }
 
-.dark h1,
-.dark h2,
-.dark h3,
-.dark h4,
-.dark h5,
-.dark h6 {
-  color: hsl(var(--foreground));
-}
+h1 { @apply text-3xl tracking-tighter; }
+h2 { @apply text-2xl; }
+h3 { @apply text-xl; }
+h4 { @apply text-base; }
+h5 { @apply text-sm font-medium; }
+h6 { @apply text-sm font-medium; }
 
-h1 {
-  font-size: var(--text-heading-32);
-  letter-spacing: var(--letter-spacing-tighter);
-}
-
-h2 {
-  font-size: var(--text-heading-24);
-}
-
-h3 {
-  font-size: var(--text-heading-20);
-}
-
-h4 {
-  font-size: var(--text-heading-16);
-}
-
-h5 {
-  font-size: var(--text-label-14);
-  font-weight: var(--font-weight-medium);
-}
-
-h6 {
-  font-size: var(--text-label-13);
-  font-weight: var(--font-weight-medium);
-}
-
+/* Paragraph styles */
 p {
-  line-height: var(--line-height-relaxed);
+  @apply leading-relaxed;
 }
 
 /* Custom scrollbar */
@@ -261,28 +54,27 @@ p {
 }
 
 ::-webkit-scrollbar-track {
-  background: #f1f5f9;
+  @apply bg-slate-100;
 }
 
 ::-webkit-scrollbar-thumb {
-  background: #cbd5e1;
-  border-radius: 4px;
+  @apply bg-slate-300 rounded;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: #94a3b8;
+  @apply bg-slate-400;
 }
 
 .dark ::-webkit-scrollbar-track {
-  background: #1e293b;
+  @apply bg-slate-800;
 }
 
 .dark ::-webkit-scrollbar-thumb {
-  background: #475569;
+  @apply bg-slate-600;
 }
 
 .dark ::-webkit-scrollbar-thumb:hover {
-  background: #64748b;
+  @apply bg-slate-500;
 }
 
 /* Shadcn UI CSS Variables */
@@ -337,74 +129,4 @@ p {
   --border: 217 33% 17%;
   --input: 217 33% 17%;
   --ring: 213 27% 84%;
-}
-
-/* Dark Mode: Page Background Override 
- * These override custom theme colors when dark mode is active
- */
-.dark .bg-nordic-neutral-50,
-.dark .bg-frost,
-.dark .bg-mist {
-  background-color: #0f172a !important; /* slate-900 */
-}
-
-.dark .bg-nordic-neutral-100 {
-  background-color: #1e293b !important; /* slate-800 */
-}
-
-.dark .bg-white {
-  background-color: #1e293b !important;
-}
-
-/* Dark Mode: Text Color Overrides */
-.dark .text-nordic-neutral-900,
-.dark .text-midnight {
-  color: #f1f5f9 !important; /* slate-100 */
-}
-
-.dark .text-nordic-neutral-600,
-.dark .text-nordic-neutral-500,
-.dark .text-slate {
-  color: #94a3b8 !important; /* slate-400 */
-}
-
-.dark .text-nordic-neutral-700 {
-  color: #cbd5e1 !important; /* slate-300 */
-}
-
-/* Dark Mode: Border Overrides */
-.dark .border-nordic-neutral-200,
-.dark .border-gray-200,
-.dark .border-gray-300 {
-  border-color: #334155 !important; /* slate-700 */
-}
-
-.dark .border-nordic-neutral-100 {
-  border-color: #475569 !important; /* slate-600 */
-}
-
-/* Dark Mode: Card and Form Backgrounds */
-.dark .bg-clay-50,
-.dark .bg-forest-50,
-.dark .bg-amber-50,
-.dark .bg-fjord-50 {
-  background-color: #1e293b !important;
-}
-
-.dark .border-clay-200,
-.dark .border-forest-200,
-.dark .border-amber-200 {
-  border-color: #475569 !important;
-}
-
-.dark .text-clay-900,
-.dark .text-forest-900 {
-  color: #f1f5f9 !important;
-}
-
-.dark .text-clay-700,
-.dark .text-forest-700,
-.dark .text-clay-600,
-.dark .text-forest-600 {
-  color: #94a3b8 !important;
 }

@@ -181,7 +181,7 @@ describe("Badge Component", () => {
     it("renders default variant", () => {
       render(<Badge variant="default">Default</Badge>);
       const badge = screen.getByText("Default");
-      expect(badge).toHaveClass("bg-fjord-600");
+      expect(badge).toHaveClass("bg-sky-600");
     });
 
     it("renders secondary variant", () => {

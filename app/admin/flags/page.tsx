@@ -25,11 +25,11 @@ export default function FeatureFlagsAdminPage(): JSX.Element {
 
   if (!isHydrated) {
     return (
-      <div className="min-h-screen bg-nordic-neutral-50 p-8">
+      <div className="min-h-screen bg-slate-50 p-8">
         <div className="mx-auto max-w-4xl">
           <div className="animate-pulse">
-            <div className="h-8 w-48 rounded bg-nordic-neutral-200" />
-            <div className="mt-4 h-4 w-96 rounded bg-nordic-neutral-200" />
+            <div className="h-8 w-48 rounded bg-slate-200" />
+            <div className="mt-4 h-4 w-96 rounded bg-slate-200" />
           </div>
         </div>
       </div>
@@ -53,24 +53,24 @@ function FeatureFlagsContent({
   resetAll: () => void;
 }): JSX.Element {
   const categories: Array<{ key: FeatureFlag["category"]; label: string; color: string }> = [
-    { key: "core", label: "Core Features", color: "bg-fjord-100 border-fjord-300" },
-    { key: "experimental", label: "Experimental", color: "bg-forest-100 border-forest-300" },
+    { key: "core", label: "Core Features", color: "bg-sky-100 border-sky-300" },
+    { key: "experimental", label: "Experimental", color: "bg-emerald-100 border-emerald-300" },
     { key: "beta", label: "Beta", color: "bg-amber-100 border-amber-300" },
-    { key: "deprecated", label: "Deprecated", color: "bg-clay-100 border-clay-300" },
+    { key: "deprecated", label: "Deprecated", color: "bg-red-100 border-red-300" },
   ];
 
   const enabledCount = Object.values(flags).filter(Boolean).length;
   const totalCount = FEATURE_FLAGS.length;
 
   return (
-    <div className="min-h-screen bg-nordic-neutral-50 p-4 md:p-8">
+    <div className="min-h-screen bg-slate-50 p-4 md:p-8">
       <div className="mx-auto max-w-4xl">
         {/* Admin Navigation */}
         <div className="mb-4 flex gap-4 text-sm">
-          <Link href="/admin/flags" className="font-medium text-fjord-600">
+          <Link href="/admin/flags" className="font-medium text-sky-600">
             Feature Flags
           </Link>
-          <Link href="/admin/ux-planner" className="text-nordic-neutral-500 hover:text-fjord-600">
+          <Link href="/admin/ux-planner" className="text-slate-500 hover:text-sky-600">
             UX Planner
           </Link>
         </div>
@@ -79,18 +79,18 @@ function FeatureFlagsContent({
         <div className="mb-8">
           <div className="flex items-center justify-between">
             <div>
-              <h1 className="text-3xl font-bold text-nordic-neutral-900">Feature Flags</h1>
-              <p className="mt-1 text-nordic-neutral-600">
+              <h1 className="text-3xl font-bold text-slate-900">Feature Flags</h1>
+              <p className="mt-1 text-slate-600">
                 Toggle features on and off for development and testing
               </p>
             </div>
             <div className="text-right">
-              <div className="text-sm text-nordic-neutral-500">
+              <div className="text-sm text-slate-500">
                 {enabledCount} of {totalCount} enabled
               </div>
               <button
                 onClick={resetAll}
-                className="mt-2 rounded-lg border border-nordic-neutral-300 bg-white px-4 py-2 text-sm font-medium text-nordic-neutral-700 shadow-sm transition-colors hover:bg-nordic-neutral-50"
+                className="mt-2 rounded-lg border border-slate-300 bg-white px-4 py-2 text-sm font-medium text-slate-700 shadow-sm transition-colors hover:bg-slate-50"
               >
                 Reset All to Defaults
               </button>
@@ -132,9 +132,7 @@ function FeatureFlagsContent({
 
             return (
               <div key={category.key}>
-                <h2 className="mb-3 text-lg font-semibold text-nordic-neutral-800">
-                  {category.label}
-                </h2>
+                <h2 className="mb-3 text-lg font-semibold text-slate-800">{category.label}</h2>
                 <div className="space-y-3">
                   {categoryFlags.map((flag) => (
                     <FlagToggle
@@ -152,15 +150,13 @@ function FeatureFlagsContent({
         </div>
 
         {/* Quick Copy Section */}
-        <div className="mt-8 rounded-lg border border-nordic-neutral-200 bg-white p-6">
-          <h3 className="mb-3 font-semibold text-nordic-neutral-800">
-            Environment Variable Overrides
-          </h3>
-          <p className="mb-4 text-sm text-nordic-neutral-600">
-            Add these to your <code className="rounded bg-nordic-neutral-100 px-1">.env.local</code>{" "}
-            to enable flags server-side:
+        <div className="mt-8 rounded-lg border border-slate-200 bg-white p-6">
+          <h3 className="mb-3 font-semibold text-slate-800">Environment Variable Overrides</h3>
+          <p className="mb-4 text-sm text-slate-600">
+            Add these to your <code className="rounded bg-slate-100 px-1">.env.local</code> to
+            enable flags server-side:
           </p>
-          <pre className="overflow-x-auto rounded-lg bg-nordic-neutral-900 p-4 text-sm text-nordic-neutral-100">
+          <pre className="overflow-x-auto rounded-lg bg-slate-900 p-4 text-sm text-slate-100">
             {FEATURE_FLAGS.map(
               (flag) =>
                 `NEXT_PUBLIC_FF_${flag.key.toUpperCase()}=${flags[flag.key] ? "true" : "false"}`
@@ -170,7 +166,7 @@ function FeatureFlagsContent({
 
         {/* Back Link */}
         <div className="mt-8">
-          <Link href="/" className="text-fjord-600 hover:text-fjord-700 hover:underline">
+          <Link href="/" className="text-sky-600 hover:text-sky-700 hover:underline">
             &larr; Back to Application
           </Link>
         </div>
@@ -190,23 +186,23 @@ function FlagToggle({ flag, isEnabled, onToggle, categoryColor }: FlagToggleProp
   return (
     <div
       className={`rounded-lg border ${categoryColor} p-4 transition-all ${
-        isEnabled ? "ring-2 ring-fjord-500 ring-offset-2" : ""
+        isEnabled ? "ring-2 ring-sky-500 ring-offset-2" : ""
       }`}
     >
       <div className="flex items-center justify-between">
         <div className="flex-1">
           <div className="flex items-center gap-2">
-            <h3 className="font-medium text-nordic-neutral-900">{flag.name}</h3>
-            <code className="rounded bg-nordic-neutral-200 px-1.5 py-0.5 text-xs text-nordic-neutral-600">
+            <h3 className="font-medium text-slate-900">{flag.name}</h3>
+            <code className="rounded bg-slate-200 px-1.5 py-0.5 text-xs text-slate-600">
               {flag.key}
             </code>
           </div>
-          <p className="mt-1 text-sm text-nordic-neutral-600">{flag.description}</p>
+          <p className="mt-1 text-sm text-slate-600">{flag.description}</p>
         </div>
         <button
           onClick={onToggle}
-          className={`relative ml-4 inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-fjord-500 focus:ring-offset-2 ${
-            isEnabled ? "bg-fjord-600" : "bg-nordic-neutral-300"
+          className={`relative ml-4 inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-sky-500 focus:ring-offset-2 ${
+            isEnabled ? "bg-sky-600" : "bg-slate-300"
           }`}
           role="switch"
           aria-checked={isEnabled}

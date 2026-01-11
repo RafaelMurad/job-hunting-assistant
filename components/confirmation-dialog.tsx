@@ -47,7 +47,7 @@ export function ConfirmationDialog({
           <DialogTitle className="flex items-center gap-2">
             {variant === "destructive" ? (
               <svg
-                className="h-5 w-5 text-clay-600"
+                className="h-5 w-5 text-red-600"
                 fill="none"
                 strokeLinecap="round"
                 strokeLinejoin="round"

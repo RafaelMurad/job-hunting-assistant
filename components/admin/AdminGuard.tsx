@@ -27,8 +27,8 @@ export function AdminGuard({
     return (
       <div className="flex min-h-[400px] items-center justify-center">
         <div className="text-center">
-          <div className="mx-auto mb-4 h-8 w-8 animate-spin rounded-full border-4 border-fjord-200 border-t-fjord-600" />
-          <p className="text-sm text-nordic-neutral-500">Checking access...</p>
+          <div className="mx-auto mb-4 h-8 w-8 animate-spin rounded-full border-4 border-sky-200 border-t-sky-600" />
+          <p className="text-sm text-slate-500">Checking access...</p>
         </div>
       </div>
     );
@@ -56,8 +56,8 @@ export function AdminGuard({
               />
             </svg>
           </div>
-          <h2 className="mb-2 text-xl font-semibold text-nordic-neutral-900">Access Denied</h2>
-          <p className="text-nordic-neutral-600">
+          <h2 className="mb-2 text-xl font-semibold text-slate-900">Access Denied</h2>
+          <p className="text-slate-600">
             {access?.reason || "You don't have permission to access this page."}
           </p>
         </div>
@@ -87,10 +87,8 @@ export function AdminGuard({
               />
             </svg>
           </div>
-          <h2 className="mb-2 text-xl font-semibold text-nordic-neutral-900">
-            Owner Access Required
-          </h2>
-          <p className="text-nordic-neutral-600">This action requires owner-level permissions.</p>
+          <h2 className="mb-2 text-xl font-semibold text-slate-900">Owner Access Required</h2>
+          <p className="text-slate-600">This action requires owner-level permissions.</p>
         </div>
       </div>
     );
