@@ -52,8 +52,9 @@ next-env.d.ts
 /test-results/
 /e2e/.auth/
 
-# Local Copilot instructions (private collaboration context)
+# Local AI instructions (private collaboration context)
 .copilot-local.md
+.cursor/
 .env*.local
 
 *storybook.log
