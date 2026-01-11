@@ -41,8 +41,8 @@ export function MobileMenu({ className }: MobileMenuProps): JSX.Element {
         onClick={() => setIsOpen(!isOpen)}
         className={cn(
           "md:hidden inline-flex items-center justify-center h-11 w-11",
-          "text-nordic-neutral-700 hover:bg-nordic-neutral-100",
-          "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-fjord-500 focus-visible:ring-offset-2",
+          "text-slate-700 hover:bg-slate-100",
+          "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-500 focus-visible:ring-offset-2",
           "transition-all duration-200",
           className
         )}
@@ -65,7 +65,7 @@ export function MobileMenu({ className }: MobileMenuProps): JSX.Element {
       {/* Backdrop Overlay */}
       {isOpen && (
         <div
-          className="fixed inset-0 bg-midnight/50 z-40 md:hidden transition-opacity duration-300"
+          className="fixed inset-0 bg-slate-900/50 z-40 md:hidden transition-opacity duration-300"
           onClick={() => setIsOpen(false)}
           aria-hidden="true"
         />
@@ -93,8 +93,8 @@ export function MobileMenu({ className }: MobileMenuProps): JSX.Element {
             onClick={() => setIsOpen(false)}
             className={cn(
               "inline-flex items-center justify-center h-10 w-10 rounded-lg",
-              "text-nordic-neutral-600 hover:bg-nordic-neutral-100",
-              "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-fjord-500",
+              "text-slate-600 hover:bg-slate-100",
+              "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-500",
               "transition-colors duration-200"
             )}
             aria-label="Close menu"
@@ -123,10 +123,10 @@ export function MobileMenu({ className }: MobileMenuProps): JSX.Element {
                 href={link.href}
                 className={cn(
                   "flex items-center px-4 py-3 rounded-lg font-medium transition-all duration-200",
-                  "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-fjord-500 focus-visible:ring-offset-2",
+                  "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-500 focus-visible:ring-offset-2",
                   isActive
-                    ? "bg-fjord-50 text-fjord-700 border-l-4 border-fjord-600"
-                    : "text-nordic-neutral-700 hover:bg-nordic-neutral-50 hover:text-nordic-neutral-900"
+                    ? "bg-sky-50 text-sky-700 border-l-4 border-sky-600"
+                    : "text-slate-700 hover:bg-slate-50 hover:text-slate-900"
                 )}
                 onClick={() => setIsOpen(false)}
               >
@@ -137,7 +137,7 @@ export function MobileMenu({ className }: MobileMenuProps): JSX.Element {
         </nav>
 
         {/* Menu Footer */}
-        <div className="absolute bottom-0 left-0 right-0 p-4 border-t border-slate-200 bg-nordic-neutral-50">
+        <div className="absolute bottom-0 left-0 right-0 p-4 border-t border-slate-200 bg-slate-50">
           <p className="text-sm text-slate-500 text-center">
             Job Hunt AI &copy; {new Date().getFullYear()}
           </p>

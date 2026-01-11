@@ -13,9 +13,9 @@
 
 "use client";
 
-import { useState, useCallback, useRef, type JSX, type DragEvent, type ChangeEvent } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+import { useCallback, useRef, useState, type ChangeEvent, type DragEvent, type JSX } from "react";
 
 interface ExtractedProfile {
   name: string;
@@ -144,7 +144,7 @@ export function CVUpload({ onExtracted, onCancel }: CVUploadProps): JSX.Element 
   };
 
   return (
-    <Card className="border-2 border-dashed border-nordic-neutral-300">
+    <Card className="border-2 border-dashed border-slate-300 dark:border-gray-600">
       <CardContent className="p-6">
         {/* Hidden file input */}
         <input
@@ -163,17 +163,17 @@ export function CVUpload({ onExtracted, onCancel }: CVUploadProps): JSX.Element 
           onClick={status === "idle" ? handleClick : undefined}
           className={`
             relative flex flex-col items-center justify-center p-8 rounded-lg transition-all
-            ${status === "idle" ? "cursor-pointer hover:bg-nordic-neutral-50" : ""}
-            ${isDragOver ? "bg-fjord-50 border-fjord-400" : ""}
-            ${status === "error" ? "bg-clay-50" : ""}
-            ${status === "success" ? "bg-forest-50" : ""}
+            ${status === "idle" ? "cursor-pointer hover:bg-slate-50 dark:hover:bg-gray-800" : ""}
+            ${isDragOver ? "bg-sky-50 dark:bg-sky-900/30 border-sky-400 dark:border-sky-500" : ""}
+            ${status === "error" ? "bg-red-50 dark:bg-red-900/30" : ""}
+            ${status === "success" ? "bg-emerald-50 dark:bg-emerald-900/30" : ""}
           `}
         >
           {/* Idle State */}
           {status === "idle" && (
             <>
               <svg
-                className="w-12 h-12 text-nordic-neutral-400 mb-4"
+                className="w-12 h-12 text-slate-400 dark:text-gray-500 mb-4"
                 fill="none"
                 stroke="currentColor"
                 viewBox="0 0 24 24"
@@ -185,10 +185,10 @@ export function CVUpload({ onExtracted, onCancel }: CVUploadProps): JSX.Element 
                   d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"
                 />
               </svg>
-              <p className="text-nordic-neutral-900 font-medium mb-1">
+              <p className="text-slate-900 dark:text-gray-100 font-medium mb-1">
                 Drop your CV here or click to browse
               </p>
-              <p className="text-sm text-nordic-neutral-500">
+              <p className="text-sm text-slate-500 dark:text-gray-400">
                 Supports PDF and DOCX files up to 5MB
               </p>
             </>
@@ -197,12 +197,12 @@ export function CVUpload({ onExtracted, onCancel }: CVUploadProps): JSX.Element 
           {/* Uploading/Processing State */}
           {(status === "uploading" || status === "processing") && (
             <>
-              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-fjord-600 mb-4"></div>
-              <p className="text-nordic-neutral-900 font-medium mb-1">
+              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-sky-600 mb-4"></div>
+              <p className="text-slate-900 dark:text-gray-100 font-medium mb-1">
                 {status === "uploading" ? "Uploading..." : "Extracting profile data..."}
               </p>
-              <p className="text-sm text-nordic-neutral-500">{fileName}</p>
-              <p className="text-xs text-nordic-neutral-400 mt-2">
+              <p className="text-sm text-slate-500 dark:text-gray-400">{fileName}</p>
+              <p className="text-xs text-slate-400 dark:text-gray-500 mt-2">
                 {status === "processing" && "This may take a few seconds..."}
               </p>
             </>
@@ -212,7 +212,7 @@ export function CVUpload({ onExtracted, onCancel }: CVUploadProps): JSX.Element 
           {status === "success" && (
             <>
               <svg
-                className="w-12 h-12 text-forest-600 mb-4"
+                className="w-12 h-12 text-emerald-600 dark:text-emerald-400 mb-4"
                 fill="none"
                 stroke="currentColor"
                 viewBox="0 0 24 24"
@@ -224,8 +224,12 @@ export function CVUpload({ onExtracted, onCancel }: CVUploadProps): JSX.Element 
                   d="M5 13l4 4L19 7"
                 />
               </svg>
-              <p className="text-forest-900 font-medium mb-1">CV processed successfully!</p>
-              <p className="text-sm text-forest-700">Populating your profile...</p>
+              <p className="text-emerald-900 dark:text-emerald-100 font-medium mb-1">
+                CV processed successfully!
+              </p>
+              <p className="text-sm text-emerald-700 dark:text-emerald-300">
+                Populating your profile...
+              </p>
             </>
           )}
 
@@ -233,7 +237,7 @@ export function CVUpload({ onExtracted, onCancel }: CVUploadProps): JSX.Element 
           {status === "error" && (
             <>
               <svg
-                className="w-12 h-12 text-clay-600 mb-4"
+                className="w-12 h-12 text-red-600 dark:text-red-400 mb-4"
                 fill="none"
                 stroke="currentColor"
                 viewBox="0 0 24 24"
@@ -245,8 +249,8 @@ export function CVUpload({ onExtracted, onCancel }: CVUploadProps): JSX.Element 
                   d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
                 />
               </svg>
-              <p className="text-clay-900 font-medium mb-1">Upload failed</p>
-              <p className="text-sm text-clay-700 mb-4">{error}</p>
+              <p className="text-red-900 dark:text-red-100 font-medium mb-1">Upload failed</p>
+              <p className="text-sm text-red-700 dark:text-red-300 mb-4">{error}</p>
               <div className="flex gap-2">
                 <Button onClick={handleRetry} variant="outline" size="sm">
                   Try Again

@@ -1,5 +1,5 @@
-import { forwardRef, type LabelHTMLAttributes } from "react";
 import { cn } from "@/lib/utils";
+import { forwardRef, type LabelHTMLAttributes } from "react";
 
 // Shadcn pattern: Empty interface allows future prop customization
 // eslint-disable-next-line @typescript-eslint/no-empty-object-type
@@ -9,7 +9,7 @@ const Label = forwardRef<HTMLLabelElement, LabelProps>(({ className, ...props },
   <label
     ref={ref}
     className={cn(
-      "text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70",
+      "text-sm font-medium leading-none text-slate-900 peer-disabled:cursor-not-allowed peer-disabled:opacity-70 dark:text-slate-100",
       className
     )}
     {...props}
