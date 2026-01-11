@@ -10,19 +10,19 @@ import type { JSX } from "react";
  */
 function SettingsLoadingSkeleton(): JSX.Element {
   return (
-    <div className="min-h-screen bg-gray-50 py-12">
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 py-12">
       <div className="mx-auto max-w-4xl px-4">
         <div className="mb-8">
-          <div className="h-10 w-48 bg-gray-200 rounded animate-pulse mb-2" />
-          <div className="h-5 w-72 bg-gray-200 rounded animate-pulse" />
+          <div className="h-10 w-48 bg-gray-200 dark:bg-gray-700 rounded animate-pulse mb-2" />
+          <div className="h-5 w-72 bg-gray-200 dark:bg-gray-700 rounded animate-pulse" />
         </div>
         <Card>
           <CardHeader>
-            <div className="h-6 w-40 bg-gray-200 rounded animate-pulse mb-2" />
-            <div className="h-4 w-64 bg-gray-200 rounded animate-pulse" />
+            <div className="h-6 w-40 bg-gray-200 dark:bg-gray-700 rounded animate-pulse mb-2" />
+            <div className="h-4 w-64 bg-gray-200 dark:bg-gray-700 rounded animate-pulse" />
           </CardHeader>
           <CardContent>
-            <div className="h-20 bg-gray-100 rounded animate-pulse" />
+            <div className="h-20 bg-gray-100 dark:bg-gray-800 rounded animate-pulse" />
           </CardContent>
         </Card>
       </div>
@@ -43,11 +43,11 @@ export default function SettingsPage(): JSX.Element {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 py-12">
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 py-12">
       <div className="mx-auto max-w-4xl px-4">
         <div className="mb-8">
-          <h1 className="text-4xl font-bold mb-2">Settings</h1>
-          <p className="text-gray-600">Manage your account</p>
+          <h1 className="text-4xl font-bold mb-2 text-gray-900 dark:text-gray-100">Settings</h1>
+          <p className="text-gray-600 dark:text-gray-400">Manage your account</p>
         </div>
 
         {/* Account Settings */}
@@ -58,10 +58,12 @@ export default function SettingsPage(): JSX.Element {
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
-              <div className="flex items-center justify-between rounded-lg border border-gray-200 p-4">
+              <div className="flex items-center justify-between rounded-lg border border-gray-200 dark:border-gray-700 p-4">
                 <div>
-                  <h3 className="font-semibold text-gray-900">Profile Information</h3>
-                  <p className="text-sm text-gray-500">
+                  <h3 className="font-semibold text-gray-900 dark:text-gray-100">
+                    Profile Information
+                  </h3>
+                  <p className="text-sm text-gray-500 dark:text-gray-400">
                     {userData?.user?.name ?? "Not set"} ({userData?.user?.email ?? "No email"})
                   </p>
                 </div>

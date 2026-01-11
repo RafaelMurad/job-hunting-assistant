@@ -215,6 +215,15 @@ h6 {
   color: var(--color-midnight);
 }
 
+.dark h1,
+.dark h2,
+.dark h3,
+.dark h4,
+.dark h5,
+.dark h6 {
+  color: hsl(var(--foreground));
+}
+
 h1 {
   font-size: var(--text-heading-32);
   letter-spacing: var(--letter-spacing-tighter);
@@ -262,6 +271,18 @@ p {
 
 ::-webkit-scrollbar-thumb:hover {
   background: #94a3b8;
+}
+
+.dark ::-webkit-scrollbar-track {
+  background: #1e293b;
+}
+
+.dark ::-webkit-scrollbar-thumb {
+  background: #475569;
+}
+
+.dark ::-webkit-scrollbar-thumb:hover {
+  background: #64748b;
 }
 
 /* Shadcn UI CSS Variables */
@@ -316,4 +337,74 @@ p {
   --border: 217 33% 17%;
   --input: 217 33% 17%;
   --ring: 213 27% 84%;
+}
+
+/* Dark Mode: Page Background Override 
+ * These override custom theme colors when dark mode is active
+ */
+.dark .bg-nordic-neutral-50,
+.dark .bg-frost,
+.dark .bg-mist {
+  background-color: #0f172a !important; /* slate-900 */
+}
+
+.dark .bg-nordic-neutral-100 {
+  background-color: #1e293b !important; /* slate-800 */
+}
+
+.dark .bg-white {
+  background-color: #1e293b !important;
+}
+
+/* Dark Mode: Text Color Overrides */
+.dark .text-nordic-neutral-900,
+.dark .text-midnight {
+  color: #f1f5f9 !important; /* slate-100 */
+}
+
+.dark .text-nordic-neutral-600,
+.dark .text-nordic-neutral-500,
+.dark .text-slate {
+  color: #94a3b8 !important; /* slate-400 */
+}
+
+.dark .text-nordic-neutral-700 {
+  color: #cbd5e1 !important; /* slate-300 */
+}
+
+/* Dark Mode: Border Overrides */
+.dark .border-nordic-neutral-200,
+.dark .border-gray-200,
+.dark .border-gray-300 {
+  border-color: #334155 !important; /* slate-700 */
+}
+
+.dark .border-nordic-neutral-100 {
+  border-color: #475569 !important; /* slate-600 */
+}
+
+/* Dark Mode: Card and Form Backgrounds */
+.dark .bg-clay-50,
+.dark .bg-forest-50,
+.dark .bg-amber-50,
+.dark .bg-fjord-50 {
+  background-color: #1e293b !important;
+}
+
+.dark .border-clay-200,
+.dark .border-forest-200,
+.dark .border-amber-200 {
+  border-color: #475569 !important;
+}
+
+.dark .text-clay-900,
+.dark .text-forest-900 {
+  color: #f1f5f9 !important;
+}
+
+.dark .text-clay-700,
+.dark .text-forest-700,
+.dark .text-clay-600,
+.dark .text-forest-600 {
+  color: #94a3b8 !important;
 }

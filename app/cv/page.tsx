@@ -552,17 +552,17 @@ export default function CVEditorPage(): JSX.Element {
         <div
           className={`fixed top-4 right-4 z-50 p-4 rounded-lg shadow-lg max-w-md flex items-start gap-3 ${
             toast.type === "success"
-              ? "bg-green-50 text-green-800 border border-green-200"
+              ? "bg-green-50 dark:bg-green-900/50 text-green-800 dark:text-green-200 border border-green-200 dark:border-green-700"
               : toast.type === "error"
-                ? "bg-red-50 text-red-800 border border-red-300"
-                : "bg-blue-50 text-blue-800 border border-blue-200"
+                ? "bg-red-50 dark:bg-red-900/50 text-red-800 dark:text-red-200 border border-red-300 dark:border-red-700"
+                : "bg-blue-50 dark:bg-blue-900/50 text-blue-800 dark:text-blue-200 border border-blue-200 dark:border-blue-700"
           }`}
         >
           {/* Icon */}
           <span className="shrink-0 mt-0.5">
             {toast.type === "success" && (
               <svg
-                className="w-5 h-5 text-green-600"
+                className="w-5 h-5 text-green-600 dark:text-green-400"
                 fill="none"
                 stroke="currentColor"
                 viewBox="0 0 24 24"
@@ -577,7 +577,7 @@ export default function CVEditorPage(): JSX.Element {
             )}
             {toast.type === "error" && (
               <svg
-                className="w-5 h-5 text-red-600"
+                className="w-5 h-5 text-red-600 dark:text-red-400"
                 fill="none"
                 stroke="currentColor"
                 viewBox="0 0 24 24"
@@ -592,7 +592,7 @@ export default function CVEditorPage(): JSX.Element {
             )}
             {toast.type === "info" && (
               <svg
-                className="w-5 h-5 text-blue-600"
+                className="w-5 h-5 text-blue-600 dark:text-blue-400"
                 fill="none"
                 stroke="currentColor"
                 viewBox="0 0 24 24"
@@ -611,7 +611,7 @@ export default function CVEditorPage(): JSX.Element {
           {/* Dismiss button */}
           <button
             onClick={dismissToast}
-            className="shrink-0 ml-2 text-gray-400 hover:text-gray-600"
+            className="shrink-0 ml-2 text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300"
             aria-label="Dismiss"
           >
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -986,10 +986,10 @@ export default function CVEditorPage(): JSX.Element {
                         key={index}
                         className={`p-3 rounded-lg border ${
                           issue.severity === "error"
-                            ? "bg-red-50 border-red-200"
+                            ? "bg-red-50 dark:bg-red-900/30 border-red-200 dark:border-red-700"
                             : issue.severity === "warning"
-                              ? "bg-yellow-50 border-yellow-200"
-                              : "bg-blue-50 border-blue-200"
+                              ? "bg-yellow-50 dark:bg-yellow-900/30 border-yellow-200 dark:border-yellow-700"
+                              : "bg-blue-50 dark:bg-blue-900/30 border-blue-200 dark:border-blue-700"
                         }`}
                       >
                         <div className="flex items-start gap-2">

@@ -164,16 +164,16 @@ export default function TrackerPage(): JSX.Element {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50 py-12">
+      <div className="min-h-screen bg-gray-50 dark:bg-gray-900 py-12">
         <div className="mx-auto max-w-7xl px-4">
           <div className="animate-pulse">
-            <div className="mb-8 h-10 w-64 rounded bg-gray-200" />
+            <div className="mb-8 h-10 w-64 rounded bg-gray-200 dark:bg-gray-700" />
             <div className="mb-6 grid grid-cols-5 gap-4">
               {[...Array(5)].map((_, i) => (
-                <div key={i} className="h-24 rounded-lg bg-gray-200" />
+                <div key={i} className="h-24 rounded-lg bg-gray-200 dark:bg-gray-700" />
               ))}
             </div>
-            <div className="h-96 rounded-lg bg-gray-200" />
+            <div className="h-96 rounded-lg bg-gray-200 dark:bg-gray-700" />
           </div>
         </div>
       </div>
@@ -181,7 +181,7 @@ export default function TrackerPage(): JSX.Element {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 py-12">
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 py-12">
       <div className="mx-auto max-w-7xl px-4">
         <ConfirmationDialog
           open={isDeleteDialogOpen}
@@ -201,8 +201,12 @@ export default function TrackerPage(): JSX.Element {
         {/* Header */}
         <div className="mb-8 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
           <div>
-            <h1 className="text-4xl font-bold mb-2">Application Tracker</h1>
-            <p className="text-gray-600">Track all your job applications in one place</p>
+            <h1 className="text-4xl font-bold mb-2 text-gray-900 dark:text-gray-100">
+              Application Tracker
+            </h1>
+            <p className="text-gray-600 dark:text-gray-400">
+              Track all your job applications in one place
+            </p>
           </div>
           <div className="flex gap-3">
             <Button variant="outline" onClick={() => router.push("/profile")}>
@@ -259,12 +263,12 @@ export default function TrackerPage(): JSX.Element {
         </div>
 
         {/* Search and Filters */}
-        <div className="mb-6 rounded-lg border border-gray-200 bg-white p-4">
+        <div className="mb-6 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 p-4">
           <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
             {/* Search */}
             <div className="relative flex-1 max-w-md">
               <svg
-                className="absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-gray-400"
+                className="absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-gray-400 dark:text-gray-500"
                 fill="none"
                 viewBox="0 0 24 24"
                 stroke="currentColor"
@@ -281,12 +285,12 @@ export default function TrackerPage(): JSX.Element {
                 placeholder="Search by company, role, or notes..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full rounded-lg border border-gray-300 py-2 pl-10 pr-4 text-sm focus:border-fjord-500 focus:outline-none focus:ring-2 focus:ring-fjord-500/20"
+                className="w-full rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 py-2 pl-10 pr-4 text-sm text-gray-900 dark:text-gray-100 placeholder:text-gray-400 dark:placeholder:text-gray-500 focus:border-fjord-500 dark:focus:border-fjord-400 focus:outline-none focus:ring-2 focus:ring-fjord-500/20 dark:focus:ring-fjord-400/20"
               />
               {searchQuery && (
                 <button
                   onClick={() => setSearchQuery("")}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 dark:text-gray-500 dark:hover:text-gray-300"
                 >
                   <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path
@@ -302,14 +306,17 @@ export default function TrackerPage(): JSX.Element {
 
             {/* Sort */}
             <div className="flex items-center gap-3">
-              <label htmlFor="sort-by" className="text-sm font-medium text-gray-700">
+              <label
+                htmlFor="sort-by"
+                className="text-sm font-medium text-gray-700 dark:text-gray-300"
+              >
                 Sort by:
               </label>
               <select
                 id="sort-by"
                 value={sortBy}
                 onChange={(e) => setSortBy(e.target.value as SortOption)}
-                className="rounded-md border border-gray-300 bg-white px-3 py-2 text-sm focus:border-fjord-500 focus:outline-none focus:ring-2 focus:ring-fjord-500/20"
+                className="rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 px-3 py-2 text-sm text-gray-900 dark:text-gray-100 focus:border-fjord-500 dark:focus:border-fjord-400 focus:outline-none focus:ring-2 focus:ring-fjord-500/20 dark:focus:ring-fjord-400/20"
               >
                 {SORT_OPTIONS.map((option) => (
                   <option key={option.value} value={option.value}>
@@ -327,7 +334,7 @@ export default function TrackerPage(): JSX.Element {
               className={`rounded-full px-4 py-1.5 text-sm font-medium transition-colors ${
                 statusFilter === "all"
                   ? "bg-fjord-600 text-white"
-                  : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                  : "bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600"
               }`}
             >
               All ({statusCounts.all})
@@ -339,7 +346,7 @@ export default function TrackerPage(): JSX.Element {
                 className={`rounded-full px-4 py-1.5 text-sm font-medium transition-colors ${
                   statusFilter === value
                     ? "bg-fjord-600 text-white"
-                    : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                    : "bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600"
                 }`}
               >
                 {label} ({statusCounts[value] || 0})
@@ -371,11 +378,11 @@ export default function TrackerPage(): JSX.Element {
           </CardHeader>
           <CardContent>
             {filteredAndSortedApplications.length === 0 ? (
-              <div className="py-12 text-center text-gray-500">
+              <div className="py-12 text-center text-gray-500 dark:text-gray-400">
                 {applications.length === 0 ? (
                   <>
                     <svg
-                      className="mx-auto mb-4 h-12 w-12 text-gray-300"
+                      className="mx-auto mb-4 h-12 w-12 text-gray-300 dark:text-gray-600"
                       fill="none"
                       viewBox="0 0 24 24"
                       stroke="currentColor"
@@ -388,7 +395,7 @@ export default function TrackerPage(): JSX.Element {
                       />
                     </svg>
                     <p className="mb-4 text-lg font-medium">No applications tracked yet</p>
-                    <p className="mb-6 text-sm text-gray-400">
+                    <p className="mb-6 text-sm text-gray-400 dark:text-gray-500">
                       Start by analyzing a job to see how well you match
                     </p>
                     <Button onClick={() => router.push("/analyze")}>Analyze Your First Job</Button>
@@ -396,7 +403,7 @@ export default function TrackerPage(): JSX.Element {
                 ) : (
                   <>
                     <svg
-                      className="mx-auto mb-4 h-12 w-12 text-gray-300"
+                      className="mx-auto mb-4 h-12 w-12 text-gray-300 dark:text-gray-600"
                       fill="none"
                       viewBox="0 0 24 24"
                       stroke="currentColor"
@@ -409,7 +416,9 @@ export default function TrackerPage(): JSX.Element {
                       />
                     </svg>
                     <p className="mb-2 text-lg font-medium">No matching applications</p>
-                    <p className="text-sm text-gray-400">Try adjusting your search or filters</p>
+                    <p className="text-sm text-gray-400 dark:text-gray-500">
+                      Try adjusting your search or filters
+                    </p>
                   </>
                 )}
               </div>
@@ -418,7 +427,7 @@ export default function TrackerPage(): JSX.Element {
                 {filteredAndSortedApplications.map((app) => (
                   <div
                     key={app.id}
-                    className="group rounded-lg border border-gray-200 bg-white p-5 transition-all duration-200 hover:border-gray-300 hover:shadow-sm"
+                    className="group rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 p-5 transition-all duration-200 hover:border-gray-300 dark:hover:border-gray-600 hover:shadow-sm"
                   >
                     <div className="flex justify-between gap-4">
                       <div className="flex-1 min-w-0">
@@ -432,10 +441,10 @@ export default function TrackerPage(): JSX.Element {
                             </span>
                           </div>
                           <div className="flex-1 min-w-0">
-                            <h3 className="text-lg font-semibold text-gray-900 truncate">
+                            <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 truncate">
                               {app.company}
                             </h3>
-                            <p className="text-gray-600 truncate">{app.role}</p>
+                            <p className="text-gray-600 dark:text-gray-400 truncate">{app.role}</p>
                           </div>
                         </div>
 
@@ -462,7 +471,7 @@ export default function TrackerPage(): JSX.Element {
                       </div>
 
                       <div className="flex flex-col items-end gap-2">
-                        <p className="text-sm text-gray-500">
+                        <p className="text-sm text-gray-500 dark:text-gray-400">
                           {app.appliedAt
                             ? `Applied ${formatDate(new Date(app.appliedAt))}`
                             : `Saved ${formatDate(new Date(app.createdAt))}`}
@@ -471,7 +480,7 @@ export default function TrackerPage(): JSX.Element {
                         {/* Delete button */}
                         <button
                           onClick={() => handleRequestDelete(app.id)}
-                          className="p-1 text-gray-400 opacity-0 transition-opacity hover:text-red-500 group-hover:opacity-100"
+                          className="p-1 text-gray-400 dark:text-gray-500 opacity-0 transition-opacity hover:text-red-500 dark:hover:text-red-400 group-hover:opacity-100"
                           aria-label={`Delete application for ${app.company}`}
                           title="Delete application"
                         >
@@ -493,7 +502,7 @@ export default function TrackerPage(): JSX.Element {
                     </div>
 
                     {/* Notes Section */}
-                    <div className="mt-4 border-t border-gray-100 pt-4">
+                    <div className="mt-4 border-t border-gray-100 dark:border-gray-700 pt-4">
                       {editingNotesId === app.id ? (
                         <div className="space-y-2">
                           <textarea
@@ -501,7 +510,7 @@ export default function TrackerPage(): JSX.Element {
                             onChange={(e) => setNotesDraft(e.target.value)}
                             placeholder="Add notes about this application..."
                             rows={3}
-                            className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-fjord-500 focus:outline-none focus:ring-2 focus:ring-fjord-500/20"
+                            className="w-full rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 px-3 py-2 text-sm text-gray-900 dark:text-gray-100 placeholder:text-gray-400 dark:placeholder:text-gray-500 focus:border-fjord-500 dark:focus:border-fjord-400 focus:outline-none focus:ring-2 focus:ring-fjord-500/20 dark:focus:ring-fjord-400/20"
                             autoFocus
                           />
                           <div className="flex gap-2">
@@ -527,12 +536,12 @@ export default function TrackerPage(): JSX.Element {
                             setEditingNotesId(app.id);
                             setNotesDraft(app.notes || "");
                           }}
-                          className="w-full text-left text-sm text-gray-500 hover:text-gray-700"
+                          className="w-full text-left text-sm text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300"
                         >
                           {app.notes ? (
                             <p className="line-clamp-2">{app.notes}</p>
                           ) : (
-                            <p className="italic text-gray-400">+ Add notes</p>
+                            <p className="italic text-gray-400 dark:text-gray-500">+ Add notes</p>
                           )}
                         </button>
                       )}

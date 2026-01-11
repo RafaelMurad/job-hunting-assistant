@@ -13,11 +13,11 @@
 // Force dynamic rendering - this page uses Prisma which requires DATABASE_URL at runtime
 export const dynamic = "force-dynamic";
 
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { prisma } from "@/lib/db";
 import Link from "next/link";
 import type { JSX } from "react";
-import { prisma } from "@/lib/db";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
 
 /**
  * Fetch dashboard data on the server.
@@ -83,21 +83,21 @@ export default async function DashboardPage(): Promise<JSX.Element> {
     : 0;
 
   return (
-    <div className="min-h-screen bg-nordic-neutral-50 py-8">
+    <div className="min-h-screen bg-nordic-neutral-50 dark:bg-slate-900 py-8">
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Header */}
         <div className="mb-8">
-          <h1 className="text-3xl font-bold text-nordic-neutral-900 mb-2">
+          <h1 className="text-3xl font-bold text-nordic-neutral-900 dark:text-white mb-2">
             {user?.name ? `Welcome back, ${user.name.split(" ")[0]}!` : "Welcome to Job Hunt AI"}
           </h1>
-          <p className="text-nordic-neutral-600">
+          <p className="text-nordic-neutral-600 dark:text-slate-400">
             Your command center for finding the perfect job.
           </p>
         </div>
 
         {/* Profile Completion Alert */}
         {!isProfileComplete && (
-          <div className="mb-6 bg-clay-50 border border-clay-200 rounded-lg p-4">
+          <div className="mb-6 bg-clay-50 dark:bg-clay-900/20 border border-clay-200 dark:border-clay-800 rounded-lg p-4">
             <div className="flex items-center justify-between">
               <div className="flex items-start gap-3">
                 <svg
@@ -112,8 +112,10 @@ export default async function DashboardPage(): Promise<JSX.Element> {
                   />
                 </svg>
                 <div>
-                  <h3 className="font-medium text-clay-900">Complete Your Profile</h3>
-                  <p className="text-sm text-clay-700 mt-1">
+                  <h3 className="font-medium text-clay-900 dark:text-clay-100">
+                    Complete Your Profile
+                  </h3>
+                  <p className="text-sm text-clay-700 dark:text-clay-300 mt-1">
                     Your profile is {profileCompletionPercent}% complete. Fill in all fields to
                     unlock AI features.
                   </p>
@@ -218,25 +220,29 @@ export default async function DashboardPage(): Promise<JSX.Element> {
                   {recentApplications.map((app) => (
                     <div
                       key={app.id}
-                      className="flex items-center justify-between p-3 bg-nordic-neutral-50 rounded-lg"
+                      className="flex items-center justify-between p-3 bg-nordic-neutral-50 dark:bg-gray-800 rounded-lg"
                     >
                       <div>
-                        <p className="font-medium text-nordic-neutral-900">{app.role}</p>
-                        <p className="text-sm text-nordic-neutral-600">{app.company}</p>
+                        <p className="font-medium text-nordic-neutral-900 dark:text-gray-100">
+                          {app.role}
+                        </p>
+                        <p className="text-sm text-nordic-neutral-600 dark:text-gray-400">
+                          {app.company}
+                        </p>
                       </div>
                       <div className="flex items-center gap-3">
                         <span
                           className={`text-xs px-2 py-1 rounded-full ${
                             app.status === "interviewing"
-                              ? "bg-forest-100 text-forest-700"
+                              ? "bg-forest-100 dark:bg-forest-900/50 text-forest-700 dark:text-forest-300"
                               : app.status === "applied"
-                                ? "bg-fjord-100 text-fjord-700"
-                                : "bg-nordic-neutral-100 text-nordic-neutral-700"
+                                ? "bg-fjord-100 dark:bg-fjord-900/50 text-fjord-700 dark:text-fjord-300"
+                                : "bg-nordic-neutral-100 dark:bg-gray-700 text-nordic-neutral-700 dark:text-gray-300"
                           }`}
                         >
                           {app.status}
                         </span>
-                        <span className="text-sm text-nordic-neutral-500">
+                        <span className="text-sm text-nordic-neutral-500 dark:text-gray-400">
                           {app.matchScore}% match
                         </span>
                       </div>
@@ -246,7 +252,7 @@ export default async function DashboardPage(): Promise<JSX.Element> {
               ) : (
                 <div className="text-center py-8">
                   <svg
-                    className="w-12 h-12 text-nordic-neutral-300 mx-auto mb-3"
+                    className="w-12 h-12 text-nordic-neutral-300 dark:text-gray-600 mx-auto mb-3"
                     fill="none"
                     stroke="currentColor"
                     viewBox="0 0 24 24"
@@ -258,7 +264,9 @@ export default async function DashboardPage(): Promise<JSX.Element> {
                       d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"
                     />
                   </svg>
-                  <p className="text-nordic-neutral-600 mb-4">No applications yet</p>
+                  <p className="text-nordic-neutral-600 dark:text-gray-400 mb-4">
+                    No applications yet
+                  </p>
                   <Link href="/analyze">
                     <Button>Analyze Your First Job →</Button>
                   </Link>
@@ -287,13 +295,19 @@ export default async function DashboardPage(): Promise<JSX.Element> {
             <CardContent>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
-                  <h4 className="text-sm font-medium text-nordic-neutral-500 mb-1">Contact</h4>
-                  <p className="text-nordic-neutral-900">{user.name}</p>
-                  <p className="text-nordic-neutral-600 text-sm">{user.email}</p>
-                  <p className="text-nordic-neutral-600 text-sm">{user.location}</p>
+                  <h4 className="text-sm font-medium text-nordic-neutral-500 dark:text-gray-400 mb-1">
+                    Contact
+                  </h4>
+                  <p className="text-nordic-neutral-900 dark:text-gray-100">{user.name}</p>
+                  <p className="text-nordic-neutral-600 dark:text-gray-400 text-sm">{user.email}</p>
+                  <p className="text-nordic-neutral-600 dark:text-gray-400 text-sm">
+                    {user.location}
+                  </p>
                 </div>
                 <div>
-                  <h4 className="text-sm font-medium text-nordic-neutral-500 mb-1">Skills</h4>
+                  <h4 className="text-sm font-medium text-nordic-neutral-500 dark:text-gray-400 mb-1">
+                    Skills
+                  </h4>
                   <div className="flex flex-wrap gap-1">
                     {user.skills
                       .split(",")
@@ -301,13 +315,13 @@ export default async function DashboardPage(): Promise<JSX.Element> {
                       .map((skill, i) => (
                         <span
                           key={i}
-                          className="text-xs bg-fjord-50 text-fjord-700 px-2 py-1 rounded"
+                          className="text-xs bg-fjord-50 dark:bg-fjord-900/50 text-fjord-700 dark:text-fjord-300 px-2 py-1 rounded"
                         >
                           {skill.trim()}
                         </span>
                       ))}
                     {user.skills.split(",").length > 8 && (
-                      <span className="text-xs text-nordic-neutral-500">
+                      <span className="text-xs text-nordic-neutral-500 dark:text-gray-400">
                         +{user.skills.split(",").length - 8} more
                       </span>
                     )}

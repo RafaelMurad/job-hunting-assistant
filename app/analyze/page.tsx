@@ -122,10 +122,11 @@ export default function AnalyzePage(): JSX.Element {
   };
 
   const getMatchColor = (score: number): string => {
-    if (score >= 80) return "bg-green-100 text-green-800";
-    if (score >= 60) return "bg-blue-100 text-blue-800";
-    if (score >= 40) return "bg-yellow-100 text-yellow-800";
-    return "bg-red-100 text-red-800";
+    if (score >= 80) return "bg-green-100 dark:bg-green-900/50 text-green-800 dark:text-green-200";
+    if (score >= 60) return "bg-blue-100 dark:bg-blue-900/50 text-blue-800 dark:text-blue-200";
+    if (score >= 40)
+      return "bg-yellow-100 dark:bg-yellow-900/50 text-yellow-800 dark:text-yellow-200";
+    return "bg-red-100 dark:bg-red-900/50 text-red-800 dark:text-red-200";
   };
 
   // Generate actionable tips for skill gaps
@@ -193,12 +194,16 @@ export default function AnalyzePage(): JSX.Element {
   const displayError = inputError || analyzeError;
 
   return (
-    <div className="min-h-screen bg-gray-50 py-12">
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 py-12">
       <div className="max-w-6xl mx-auto px-4">
         <div className="mb-8 flex justify-between items-center">
           <div>
-            <h1 className="text-4xl font-bold mb-2">Analyze Job</h1>
-            <p className="text-gray-600">Paste a job description to get AI-powered analysis</p>
+            <h1 className="text-4xl font-bold mb-2 text-gray-900 dark:text-gray-100">
+              Analyze Job
+            </h1>
+            <p className="text-gray-600 dark:text-gray-400">
+              Paste a job description to get AI-powered analysis
+            </p>
           </div>
           <Button variant="outline" onClick={() => router.push("/")}>
             ← Back to Profile
@@ -282,7 +287,11 @@ export default function AnalyzePage(): JSX.Element {
                       <Label className="text-base mb-2 block">Your Matching Skills</Label>
                       <div className="flex flex-wrap gap-2">
                         {analysis.skillsMatch.map((skill, i) => (
-                          <Badge key={i} variant="secondary" className="bg-green-100">
+                          <Badge
+                            key={i}
+                            variant="secondary"
+                            className="bg-green-100 dark:bg-green-900/50 text-green-800 dark:text-green-200"
+                          >
                             {skill}
                           </Badge>
                         ))}
@@ -297,10 +306,13 @@ export default function AnalyzePage(): JSX.Element {
                           {analysis.gaps.map((gap, i) => (
                             <div
                               key={i}
-                              className="p-3 rounded-lg border bg-yellow-50 border-yellow-200 space-y-2"
+                              className="p-3 rounded-lg border bg-yellow-50 dark:bg-yellow-900/30 border-yellow-200 dark:border-yellow-700 space-y-2"
                             >
                               <div className="flex items-start justify-between gap-2">
-                                <Badge variant="outline" className="bg-yellow-100 shrink-0">
+                                <Badge
+                                  variant="outline"
+                                  className="bg-yellow-100 dark:bg-yellow-900/50 text-yellow-800 dark:text-yellow-200 shrink-0"
+                                >
                                   {gap}
                                 </Badge>
                               </div>
@@ -417,7 +429,7 @@ export default function AnalyzePage(): JSX.Element {
 
             {!analysis && (
               <Card>
-                <CardContent className="py-12 text-center text-gray-500">
+                <CardContent className="py-12 text-center text-gray-500 dark:text-gray-400">
                   <p>Paste a job description and click &quot;Analyze&quot; to get started</p>
                 </CardContent>
               </Card>

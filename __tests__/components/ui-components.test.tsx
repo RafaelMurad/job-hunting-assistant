@@ -181,25 +181,25 @@ describe("Badge Component", () => {
     it("renders default variant", () => {
       render(<Badge variant="default">Default</Badge>);
       const badge = screen.getByText("Default");
-      expect(badge).toHaveClass("bg-primary");
+      expect(badge).toHaveClass("bg-fjord-600");
     });
 
     it("renders secondary variant", () => {
       render(<Badge variant="secondary">Secondary</Badge>);
       const badge = screen.getByText("Secondary");
-      expect(badge).toHaveClass("bg-secondary");
+      expect(badge).toHaveClass("bg-gray-100");
     });
 
     it("renders destructive variant", () => {
       render(<Badge variant="destructive">Destructive</Badge>);
       const badge = screen.getByText("Destructive");
-      expect(badge).toHaveClass("bg-destructive");
+      expect(badge).toHaveClass("bg-red-500");
     });
 
     it("renders outline variant", () => {
       render(<Badge variant="outline">Outline</Badge>);
       const badge = screen.getByText("Outline");
-      expect(badge).toHaveClass("text-foreground");
+      expect(badge).toHaveClass("text-gray-900");
     });
   });
 
