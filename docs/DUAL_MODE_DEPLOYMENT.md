@@ -93,13 +93,13 @@ Demo mode is for portfolio showcases. Deploy once to Vercel and share the link.
 
 ```bash
 # Link to your Vercel account
-vercel link --project careerpal-demo
+vercel link --project job-hunting-assistant
 ```
 
 Or via Vercel Dashboard:
 
 1. Import from GitHub → Select your repo
-2. Project name: `careerpal-demo`
+2. Project name: `job-hunting-assistant`
 
 ### Step 2: Configure Environment Variables
 
@@ -146,7 +146,7 @@ vercel env add BLOB_READ_WRITE_TOKEN production
 ### Step 3: Configure Domain (Optional)
 
 1. Vercel Dashboard → Your Project → Settings → Domains
-2. Add: `demo.careerpal.app` (or your domain)
+2. Add your custom domain (optional - Vercel provides `job-hunting-assistant.vercel.app`)
 3. Configure DNS as instructed
 
 ### Step 4: Deploy

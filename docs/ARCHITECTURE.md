@@ -56,7 +56,7 @@ The application runs from a single codebase but adapts behavior based on `NEXT_P
 │  Auth: None               │  Auth: Neon Auth (OAuth)              │
 │  Data: Browser only       │  Data: Resets daily                   │
 │  Deploy: Self-hosted      │  Deploy: Vercel                       │
-│  (clone & run locally)    │  (demo.careerpal.app)                 │
+│  (clone & run locally)    │  (job-hunting-assistant.vercel.app)  │
 └───────────────────────────┴──────────────────────────────────────┘
 ```
 

@@ -32,7 +32,7 @@ What if the same app could run in two completely different ways?
 │                    Single Codebase                           │
 ├───────────────────────────┬─────────────────────────────────┤
 │       LOCAL MODE          │          DEMO MODE               │
-│   (Self-Hosted)           │   demo.careerpal.app             │
+│   (Self-Hosted)           │   job-hunting-assistant.vercel   │
 ├───────────────────────────┼─────────────────────────────────┤
 │   🔒 Privacy-First        │   🎭 Portfolio Showcase          │
 │   Data: Browser only      │   Data: PostgreSQL               │
