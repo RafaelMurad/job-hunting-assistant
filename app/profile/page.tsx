@@ -49,7 +49,7 @@ export default function ProfilePage(): JSX.Element {
     deleting: cvDeleting,
     remove: removeCV,
     setActive: setActiveCV,
-    create: createCV,
+    refetch,
     canAddMore,
     maxCVs,
   } = useCV();
@@ -161,61 +161,67 @@ export default function ProfilePage(): JSX.Element {
 
     try {
       // Upload and extract CV data
-      const formDataUpload = new FormData();
-      formDataUpload.append("file", file);
+      // Step 1: Store the CV (uploads to blob, extracts LaTeX, creates CV record)
+      const storeFormData = new FormData();
+      storeFormData.append("file", file);
+      storeFormData.append("template", "tech-minimalist"); // Default template
 
-      const response = await fetch("/api/cv/upload", {
+      const storeResponse = await fetch("/api/cv/store", {
         method: "POST",
-        body: formDataUpload,
+        body: storeFormData,
       });
 
-      if (!response.ok) {
-        throw new Error("Failed to upload CV");
+      if (!storeResponse.ok) {
+        const storeResult = await storeResponse.json();
+        throw new Error(storeResult.error || "Failed to store CV");
       }
 
-      const result = (await response.json()) as { data?: ExtractedCVData; error?: string };
+      // Step 2: Also extract profile data from the CV
+      const uploadFormData = new FormData();
+      uploadFormData.append("file", file);
 
-      if (result.error) {
-        throw new Error(result.error);
+      const uploadResponse = await fetch("/api/cv/upload", {
+        method: "POST",
+        body: uploadFormData,
+      });
+
+      if (uploadResponse.ok) {
+        const result = (await uploadResponse.json()) as { data?: ExtractedCVData; error?: string };
+
+        if (result.data) {
+          // Update form data with extracted info
+          const extractedData = result.data;
+          const updatedData: User = {
+            id: formData?.id || "",
+            name: extractedData.name || formData?.name || "",
+            email: extractedData.email || formData?.email || "",
+            phone: extractedData.phone || formData?.phone || "",
+            location: extractedData.location || formData?.location || "",
+            summary: extractedData.summary || formData?.summary || "",
+            experience: extractedData.experience || formData?.experience || "",
+            skills: extractedData.skills || formData?.skills || "",
+          };
+
+          setFormData(updatedData);
+
+          // Auto-save the extracted data to profile
+          save({
+            name: updatedData.name,
+            email: updatedData.email,
+            location: updatedData.location,
+            summary: updatedData.summary,
+            experience: updatedData.experience,
+            skills: updatedData.skills,
+            ...(updatedData.phone ? { phone: updatedData.phone } : {}),
+          });
+        }
       }
 
-      if (result.data) {
-        // Update form data with extracted info
-        const extractedData = result.data;
-        const updatedData: User = {
-          id: formData?.id || "",
-          name: extractedData.name || formData?.name || "",
-          email: extractedData.email || formData?.email || "",
-          phone: extractedData.phone || formData?.phone || "",
-          location: extractedData.location || formData?.location || "",
-          summary: extractedData.summary || formData?.summary || "",
-          experience: extractedData.experience || formData?.experience || "",
-          skills: extractedData.skills || formData?.skills || "",
-        };
+      // Refetch CVs to pick up the newly created CV
+      refetch();
 
-        setFormData(updatedData);
-
-        // Auto-save the extracted data to profile
-        save({
-          name: updatedData.name,
-          email: updatedData.email,
-          location: updatedData.location,
-          summary: updatedData.summary,
-          experience: updatedData.experience,
-          skills: updatedData.skills,
-          ...(updatedData.phone ? { phone: updatedData.phone } : {}),
-        });
-
-        // Create a CV record to track the uploaded file
-        const cvName = file.name.replace(/\.[^/.]+$/, "") || "Uploaded CV";
-        await createCV({
-          name: cvName,
-          isActive: true,
-        });
-
-        showToast("success", "CV uploaded and profile updated!");
-        setIsEditing(false);
-      }
+      showToast("success", "CV uploaded and profile updated!");
+      setIsEditing(false);
     } catch (err) {
       showToast("error", err instanceof Error ? err.message : "Failed to process CV");
     } finally {
