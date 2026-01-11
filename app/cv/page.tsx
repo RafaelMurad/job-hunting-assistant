@@ -1002,15 +1002,15 @@ export default function CVEditorPage(): JSX.Element {
         </header>
 
         {/* Mobile Control Bar - CV Selector + View Toggle */}
-        <div className="bg-slate-100 dark:bg-slate-900/50 border-b border-slate-200 dark:border-slate-800 px-3 py-2">
-          <div className="flex items-center gap-2">
-            {/* CV Selector - Flexible width */}
+        <div className="bg-slate-100 dark:bg-slate-900/50 border-b border-slate-200 dark:border-slate-800 px-4 py-2">
+          <div className="flex items-center gap-2 max-w-full">
+            {/* CV Selector - Flexible width with min-w-0 for truncation */}
             <Select
               value={currentCV?.id ?? ""}
               onValueChange={(id) => void handleCVSwitch(id)}
               disabled={isSwitchingCV || cvs.length === 0}
             >
-              <SelectTrigger className="flex-1 h-10 px-3 bg-slate-200 dark:bg-slate-800 border-0 rounded-lg text-slate-700 dark:text-slate-200 hover:bg-slate-300 dark:hover:bg-slate-700 gap-2">
+              <SelectTrigger className="min-w-0 flex-1 h-9 px-3 bg-slate-200 dark:bg-slate-800 border-0 rounded-lg text-slate-700 dark:text-slate-200 hover:bg-slate-300 dark:hover:bg-slate-700 gap-2">
                 <span className="truncate text-sm font-medium">
                   {currentCV?.name ?? (cvs.length === 0 ? "No CVs" : "Select CV")}
                 </span>
@@ -1032,14 +1032,14 @@ export default function CVEditorPage(): JSX.Element {
               </SelectContent>
             </Select>
 
-            {/* View Mode Toggle - Fixed width */}
-            <div className="flex items-center bg-slate-200 dark:bg-slate-800 rounded-lg p-1 shrink-0">
+            {/* View Mode Toggle - Compact */}
+            <div className="flex items-center bg-slate-200 dark:bg-slate-800 rounded-lg p-0.5 shrink-0">
               {(["pdf", "latex"] as const).map((mode) => (
                 <button
                   key={mode}
                   onClick={() => setMobileViewMode(mode)}
                   className={cn(
-                    "px-4 py-1.5 rounded-md text-sm font-medium transition-all",
+                    "px-3 py-1.5 rounded-md text-sm font-medium transition-all",
                     mobileViewMode === mode
                       ? "bg-cyan-500 text-slate-900"
                       : "text-slate-600 dark:text-slate-400"
