@@ -2,6 +2,7 @@
 
 import { Button } from "@/components/ui/button";
 import { neonSignOut, useNeonSession } from "@/lib/auth/neon-client";
+import { useIsLocalMode } from "@/lib/storage/provider";
 import Link from "next/link";
 import { useSyncExternalStore, type JSX } from "react";
 
@@ -11,12 +12,35 @@ import { useSyncExternalStore, type JSX } from "react";
 const emptySubscribe = (): (() => void) => () => {};
 
 /**
+ * User icon for local mode
+ */
+function UserIcon({ className }: { className?: string }): JSX.Element {
+  return (
+    <svg
+      className={className}
+      fill="none"
+      viewBox="0 0 24 24"
+      stroke="currentColor"
+      strokeWidth={2}
+    >
+      <path
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
+      />
+    </svg>
+  );
+}
+
+/**
  * User Menu Component
  *
  * Displays login button when unauthenticated, or user avatar with
- * dropdown menu when authenticated.
+ * dropdown menu when authenticated. In local mode, shows a simple
+ * "Local User" indicator since no auth is needed.
  */
 export function UserMenu(): JSX.Element {
+  const isLocalMode = useIsLocalMode();
   const { data: session, isPending } = useNeonSession();
 
   // Detect client mount without causing cascading renders
@@ -30,6 +54,20 @@ export function UserMenu(): JSX.Element {
   // Show placeholder until client-side to prevent hydration mismatch
   if (!isClient || isPending) {
     return <div className="h-8 w-8 rounded-full bg-slate-200 animate-pulse" />;
+  }
+
+  // Local mode - show "Local User" indicator (no auth needed)
+  if (isLocalMode) {
+    return (
+      <Link href="/settings" className="flex items-center gap-2 group">
+        <div className="h-8 w-8 rounded-full bg-emerald-100 dark:bg-emerald-900 flex items-center justify-center">
+          <UserIcon className="h-4 w-4 text-emerald-600 dark:text-emerald-400" />
+        </div>
+        <span className="hidden sm:inline text-sm text-slate-600 dark:text-slate-400 group-hover:text-slate-900 dark:group-hover:text-slate-200">
+          Local User
+        </span>
+      </Link>
+    );
   }
 
   // Unauthenticated - show login button
