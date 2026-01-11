@@ -2,18 +2,50 @@
  * LaTeX Extraction Module
  *
  * Shared LaTeX extraction and validation logic.
+ * Includes automatic retry with fallback models on rate limit errors.
  */
 
-import { AI_CONFIG, isModelAvailable, getModelInfo } from "../config";
-import type { LatexExtractionModel, LatexExtractionResult, ATSAnalysisResult } from "../types";
-import { atsAnalysisSchema } from "../schemas";
+import { AI_CONFIG, getModelInfo, isModelAvailable, LATEX_MODELS } from "../config";
+import { ATS_ANALYSIS_PROMPT, LATEX_MODIFY_PROMPT } from "../prompts";
 import { extractLatexWithGemini } from "../providers/gemini";
 import { extractLatexWithOpenRouter } from "../providers/openrouter";
-import { ATS_ANALYSIS_PROMPT, LATEX_MODIFY_PROMPT } from "../prompts";
+import { atsAnalysisSchema } from "../schemas";
+import type { ATSAnalysisResult, LatexExtractionModel, LatexExtractionResult } from "../types";
 import { cleanAndValidateLatex, extractJsonFromText, parseJsonOrThrow } from "../utils";
 
 // Re-export for backward compatibility
 export { cleanAndValidateLatex };
+
+// =============================================================================
+// RATE LIMIT DETECTION
+// =============================================================================
+
+/**
+ * Check if an error is a rate limit error
+ */
+function isRateLimitError(error: unknown): boolean {
+  if (error instanceof Error) {
+    const message = error.message.toLowerCase();
+    return (
+      message.includes("rate limit") ||
+      message.includes("rate_limit") ||
+      message.includes("quota exceeded") ||
+      message.includes("too many requests") ||
+      message.includes("429") ||
+      message.includes("resource exhausted")
+    );
+  }
+  return false;
+}
+
+/**
+ * Get ordered list of available fallback models (excluding the failed one)
+ */
+function getAvailableFallbackModels(excludeModel: LatexExtractionModel): LatexExtractionModel[] {
+  return LATEX_MODELS.filter((m) => m.id !== excludeModel && isModelAvailable(m.id)).map(
+    (m) => m.id as LatexExtractionModel
+  );
+}
 
 // =============================================================================
 // LEGACY EXTRACTION FUNCTIONS (for backward compatibility)
@@ -51,8 +83,34 @@ export async function extractLatexFromDocx(docxBuffer: Buffer): Promise<string> 
 // =============================================================================
 
 /**
+ * Extract LaTeX using a specific model
+ */
+async function extractWithModel(
+  base64Data: string,
+  mimeType: string,
+  model: LatexExtractionModel
+): Promise<string> {
+  switch (model) {
+    case "gemini-2.5-flash":
+      return extractLatexWithGemini(base64Data, mimeType, model);
+    case "nova-2-lite":
+    case "mistral-small-3.1":
+    case "gemma-3-27b":
+    case "gemini-2.0-flash-or": {
+      const modelInfo = getModelInfo(model);
+      if (!modelInfo?.openrouterModel) {
+        throw new Error(`OpenRouter model not configured for ${model}`);
+      }
+      return extractLatexWithOpenRouter(base64Data, mimeType, modelInfo.openrouterModel);
+    }
+    default:
+      throw new Error(`Unsupported model: ${model}`);
+  }
+}
+
+/**
  * Main entry point: Extract LaTeX from document using specified model
- * with automatic fallback to Gemini 2.5 Flash on failure
+ * with automatic fallback to other available models on rate limit errors
  */
 export async function extractLatexWithModel(
   buffer: Buffer,
@@ -60,61 +118,65 @@ export async function extractLatexWithModel(
   model: LatexExtractionModel = AI_CONFIG.defaultLatexModel
 ): Promise<LatexExtractionResult> {
   const base64Data = buffer.toString("base64");
+  const triedModels: LatexExtractionModel[] = [];
 
   // Check if requested model is available
   if (!isModelAvailable(model)) {
-    console.warn(`[extractLatexWithModel] Model ${model} not available, using fallback`);
-    model = "gemini-2.5-flash"; // Fallback to free model
+    console.warn(`[extractLatexWithModel] Model ${model} not available, finding fallback`);
+    const fallbacks = getAvailableFallbackModels(model);
+    const firstFallback = fallbacks[0];
+    if (!firstFallback) {
+      throw new Error("No AI models available. Please configure at least one API key.");
+    }
+    model = firstFallback;
   }
 
+  // Try the requested model first
   try {
-    let latex: string;
-
-    switch (model) {
-      case "gemini-2.5-flash":
-        latex = await extractLatexWithGemini(base64Data, mimeType, model);
-        break;
-      case "nova-2-lite":
-      case "mistral-small-3.1":
-      case "gemma-3-27b":
-      case "gemini-2.0-flash-or": {
-        const modelInfo = getModelInfo(model);
-        if (!modelInfo?.openrouterModel) {
-          throw new Error(`OpenRouter model not configured for ${model}`);
-        }
-        latex = await extractLatexWithOpenRouter(base64Data, mimeType, modelInfo.openrouterModel);
-        break;
-      }
-      default:
-        throw new Error(`Unsupported model: ${model}`);
-    }
-
+    const latex = await extractWithModel(base64Data, mimeType, model);
     return {
       latex,
       modelUsed: model,
       fallbackUsed: false,
     };
   } catch (error) {
-    // If not already using fallback, try Gemini 2.5 Flash (free)
-    if (model !== "gemini-2.5-flash" && isModelAvailable("gemini-2.5-flash")) {
-      console.error(
-        `[extractLatexWithModel] ${model} failed, falling back to Gemini 2.5 Flash:`,
-        error
-      );
+    triedModels.push(model);
 
-      try {
-        const latex = await extractLatexWithGemini(base64Data, mimeType, "gemini-2.5-flash");
-        return {
-          latex,
-          modelUsed: "gemini-2.5-flash",
-          fallbackUsed: true,
-        };
-      } catch {
-        // Fallback also failed, throw original error
-        throw error;
+    // If rate limited, try other available models
+    if (isRateLimitError(error)) {
+      console.warn(`[extractLatexWithModel] ${model} rate limited, trying fallback models...`);
+
+      const fallbacks = getAvailableFallbackModels(model);
+      for (const fallbackModel of fallbacks) {
+        if (triedModels.includes(fallbackModel)) continue;
+
+        console.warn(`[extractLatexWithModel] Trying fallback: ${fallbackModel}`);
+        try {
+          const latex = await extractWithModel(base64Data, mimeType, fallbackModel);
+          console.warn(`[extractLatexWithModel] Fallback ${fallbackModel} succeeded`);
+          return {
+            latex,
+            modelUsed: fallbackModel,
+            fallbackUsed: true,
+          };
+        } catch (fallbackError) {
+          triedModels.push(fallbackModel);
+          if (isRateLimitError(fallbackError)) {
+            console.warn(`[extractLatexWithModel] ${fallbackModel} also rate limited`);
+            continue; // Try next model
+          }
+          // Non-rate-limit error, throw it
+          throw fallbackError;
+        }
       }
+
+      // All models rate limited
+      throw new Error(
+        `All available AI models are rate limited. Tried: ${triedModels.join(", ")}. Please wait a moment and try again.`
+      );
     }
 
+    // Not a rate limit error, throw as-is
     throw error;
   }
 }
@@ -125,24 +187,66 @@ export async function extractLatexWithModel(
 
 /**
  * Modify LaTeX CV based on user instructions using AI
+ * Includes automatic fallback to OpenRouter on rate limit
  */
 export async function modifyLatexWithAI(
   currentLatex: string,
   instruction: string
 ): Promise<string> {
-  const { GoogleGenerativeAI } = await import("@google/generative-ai");
+  const prompt = LATEX_MODIFY_PROMPT(currentLatex, instruction);
 
-  const genAI = new GoogleGenerativeAI(AI_CONFIG.apiKeys.gemini!);
-  const model = genAI.getGenerativeModel({
-    model: AI_CONFIG.models.gemini,
-    generationConfig: {
-      maxOutputTokens: 16384, // Handle long CVs without truncation
-    },
-  });
+  // Try Gemini first
+  if (isModelAvailable("gemini-2.5-flash")) {
+    try {
+      const { GoogleGenerativeAI } = await import("@google/generative-ai");
+      const genAI = new GoogleGenerativeAI(AI_CONFIG.apiKeys.gemini!);
+      const model = genAI.getGenerativeModel({
+        model: AI_CONFIG.models.gemini,
+        generationConfig: {
+          maxOutputTokens: 16384,
+        },
+      });
 
-  const result = await model.generateContent(LATEX_MODIFY_PROMPT(currentLatex, instruction));
+      const result = await model.generateContent(prompt);
+      return cleanAndValidateLatex(result.response.text());
+    } catch (error) {
+      if (!isRateLimitError(error)) throw error;
+      console.warn("[modifyLatexWithAI] Gemini rate limited, trying OpenRouter fallback...");
+    }
+  }
 
-  return cleanAndValidateLatex(result.response.text());
+  // Fallback to OpenRouter models
+  const fallbacks = getAvailableFallbackModels("gemini-2.5-flash");
+  for (const fallbackModel of fallbacks) {
+    const modelInfo = getModelInfo(fallbackModel);
+    if (!modelInfo?.openrouterModel) continue;
+
+    try {
+      const { OpenAI } = await import("openai");
+      const openrouter = new OpenAI({
+        baseURL: "https://openrouter.ai/api/v1",
+        apiKey: AI_CONFIG.apiKeys.openrouter,
+      });
+
+      const response = await openrouter.chat.completions.create({
+        model: modelInfo.openrouterModel,
+        messages: [{ role: "user", content: prompt }],
+        max_tokens: 16384,
+      });
+
+      const content = response.choices[0]?.message?.content;
+      if (!content) throw new Error("Empty response from OpenRouter");
+      return cleanAndValidateLatex(content);
+    } catch (fallbackError) {
+      if (isRateLimitError(fallbackError)) {
+        console.warn(`[modifyLatexWithAI] ${fallbackModel} also rate limited`);
+        continue;
+      }
+      throw fallbackError;
+    }
+  }
+
+  throw new Error("All AI models are rate limited. Please wait a moment and try again.");
 }
 
 // =============================================================================
@@ -151,20 +255,66 @@ export async function modifyLatexWithAI(
 
 /**
  * Analyze LaTeX CV for ATS compliance
+ * Includes automatic fallback to OpenRouter on rate limit
  */
 export async function analyzeATSCompliance(latexContent: string): Promise<ATSAnalysisResult> {
-  const { GoogleGenerativeAI } = await import("@google/generative-ai");
+  const prompt = ATS_ANALYSIS_PROMPT(latexContent);
 
-  const genAI = new GoogleGenerativeAI(AI_CONFIG.apiKeys.gemini!);
-  const model = genAI.getGenerativeModel({
-    model: AI_CONFIG.models.gemini,
-  });
+  // Try Gemini first
+  if (isModelAvailable("gemini-2.5-flash")) {
+    try {
+      const { GoogleGenerativeAI } = await import("@google/generative-ai");
+      const genAI = new GoogleGenerativeAI(AI_CONFIG.apiKeys.gemini!);
+      const model = genAI.getGenerativeModel({
+        model: AI_CONFIG.models.gemini,
+      });
 
-  const result = await model.generateContent(ATS_ANALYSIS_PROMPT(latexContent));
-  const jsonText = extractJsonFromText(result.response.text());
-  if (!jsonText) {
-    throw new Error("Could not parse ATS analysis response as JSON");
+      const result = await model.generateContent(prompt);
+      const jsonText = extractJsonFromText(result.response.text());
+      if (!jsonText) {
+        throw new Error("Could not parse ATS analysis response as JSON");
+      }
+      return parseJsonOrThrow(jsonText, atsAnalysisSchema, "ATS compliance analysis");
+    } catch (error) {
+      if (!isRateLimitError(error)) throw error;
+      console.warn("[analyzeATSCompliance] Gemini rate limited, trying OpenRouter fallback...");
+    }
   }
 
-  return parseJsonOrThrow(jsonText, atsAnalysisSchema, "ATS compliance analysis");
+  // Fallback to OpenRouter models
+  const fallbacks = getAvailableFallbackModels("gemini-2.5-flash");
+  for (const fallbackModel of fallbacks) {
+    const modelInfo = getModelInfo(fallbackModel);
+    if (!modelInfo?.openrouterModel) continue;
+
+    try {
+      const { OpenAI } = await import("openai");
+      const openrouter = new OpenAI({
+        baseURL: "https://openrouter.ai/api/v1",
+        apiKey: AI_CONFIG.apiKeys.openrouter,
+      });
+
+      const response = await openrouter.chat.completions.create({
+        model: modelInfo.openrouterModel,
+        messages: [{ role: "user", content: prompt }],
+      });
+
+      const content = response.choices[0]?.message?.content;
+      if (!content) throw new Error("Empty response from OpenRouter");
+
+      const jsonText = extractJsonFromText(content);
+      if (!jsonText) {
+        throw new Error("Could not parse ATS analysis response as JSON");
+      }
+      return parseJsonOrThrow(jsonText, atsAnalysisSchema, "ATS compliance analysis");
+    } catch (fallbackError) {
+      if (isRateLimitError(fallbackError)) {
+        console.warn(`[analyzeATSCompliance] ${fallbackModel} also rate limited`);
+        continue;
+      }
+      throw fallbackError;
+    }
+  }
+
+  throw new Error("All AI models are rate limited. Please wait a moment and try again.");
 }

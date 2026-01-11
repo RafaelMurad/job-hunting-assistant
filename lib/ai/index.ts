@@ -77,6 +77,9 @@ export {
   extractedCVContentSchema,
 } from "./extraction/content";
 
+// CV data extraction (with rate-limit fallback)
+export { parseCVWithFallback, parseCVTextWithFallback } from "./extraction/cv-data";
+
 // =============================================================================
 // GENERATION EXPORTS (unified API)
 // =============================================================================
