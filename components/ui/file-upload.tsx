@@ -164,8 +164,8 @@ export function FileUpload({
         className={cn(
           "relative flex min-h-[200px] cursor-pointer flex-col items-center justify-center rounded-lg border-2 border-dashed p-8 transition-all duration-200",
           isDragging
-            ? "border-sky-500 bg-sky-50 dark:bg-sky-900/30"
-            : "border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-800 hover:border-sky-400 dark:hover:border-sky-500 hover:bg-gray-100 dark:hover:bg-gray-700",
+            ? "border-cyan-500 bg-cyan-50 dark:bg-cyan-900/20"
+            : "border-slate-300 dark:border-slate-600 bg-slate-50 dark:bg-slate-800/50 hover:border-cyan-400 dark:hover:border-cyan-500 hover:bg-slate-100 dark:hover:bg-slate-700/50",
           disabled && "cursor-not-allowed opacity-50",
           isUploading && "pointer-events-none"
         )}
@@ -185,7 +185,9 @@ export function FileUpload({
             <svg
               className={cn(
                 "mx-auto mb-4 h-12 w-12 transition-colors",
-                isDragging ? "text-sky-600 dark:text-sky-400" : "text-gray-400 dark:text-gray-500"
+                isDragging
+                  ? "text-cyan-600 dark:text-cyan-400"
+                  : "text-slate-400 dark:text-slate-500"
               )}
               fill="none"
               viewBox="0 0 24 24"
@@ -198,9 +200,9 @@ export function FileUpload({
                 d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"
               />
             </svg>
-            <p className="mb-1 text-lg font-medium text-gray-700 dark:text-gray-200">{title}</p>
-            <p className="text-sm text-gray-500 dark:text-gray-400">{description}</p>
-            <p className="mt-2 text-xs text-gray-400 dark:text-gray-500">
+            <p className="mb-1 text-lg font-medium text-slate-700 dark:text-slate-200">{title}</p>
+            <p className="text-sm text-slate-500 dark:text-slate-400">{description}</p>
+            <p className="mt-2 text-xs text-slate-400 dark:text-slate-500">
               Accepted: {accept} (max {formatFileSize(maxSize)})
             </p>
           </div>
@@ -212,7 +214,7 @@ export function FileUpload({
             {/* Spinner */}
             <div className="mx-auto mb-4 h-12 w-12">
               <svg
-                className="h-full w-full animate-spin text-sky-600"
+                className="h-full w-full animate-spin text-cyan-500"
                 fill="none"
                 viewBox="0 0 24 24"
               >
@@ -233,26 +235,26 @@ export function FileUpload({
             </div>
 
             {/* Step indicator */}
-            <p className="mb-2 font-medium text-gray-700 dark:text-gray-200">
+            <p className="mb-2 font-medium text-slate-700 dark:text-slate-200">
               {progress.step || "Processing..."}
             </p>
 
             {/* Progress bar */}
-            <div className="mb-2 h-2 w-full overflow-hidden rounded-full bg-gray-200 dark:bg-gray-700">
+            <div className="mb-2 h-2 w-full overflow-hidden rounded-full bg-slate-200 dark:bg-slate-700">
               <div
-                className="h-full rounded-full bg-sky-600 transition-all duration-300"
+                className="h-full rounded-full bg-cyan-500 transition-all duration-300"
                 style={{ width: `${progress.progress}%` }}
               />
             </div>
 
             {/* Progress percentage */}
-            <p className="text-sm text-gray-500 dark:text-gray-400">
+            <p className="text-sm text-slate-500 dark:text-slate-400">
               {progress.progress}% complete
             </p>
 
             {/* Optional message */}
             {progress.message && (
-              <p className="mt-2 text-xs text-gray-400 dark:text-gray-500">{progress.message}</p>
+              <p className="mt-2 text-xs text-slate-400 dark:text-slate-500">{progress.message}</p>
             )}
           </div>
         )}
@@ -260,7 +262,7 @@ export function FileUpload({
         {/* Complete State */}
         {progress.status === "complete" && (
           <div className="text-center">
-            <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-emerald-100 dark:bg-emerald-900/50">
+            <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-emerald-100 dark:bg-emerald-900/30">
               <svg
                 className="h-6 w-6 text-emerald-600 dark:text-emerald-400"
                 fill="none"
@@ -275,10 +277,10 @@ export function FileUpload({
                 />
               </svg>
             </div>
-            <p className="mb-1 font-medium text-emerald-700 dark:text-emerald-300">
+            <p className="mb-1 font-medium text-emerald-700 dark:text-emerald-400">
               Upload Complete!
             </p>
-            <p className="text-sm text-gray-500 dark:text-gray-400">
+            <p className="text-sm text-slate-500 dark:text-slate-400">
               {progress.message || "Your file has been processed successfully"}
             </p>
           </div>
@@ -287,7 +289,7 @@ export function FileUpload({
         {/* Error State */}
         {progress.status === "error" && (
           <div className="text-center">
-            <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-red-100 dark:bg-red-900/50">
+            <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-red-100 dark:bg-red-900/30">
               <svg
                 className="h-6 w-6 text-red-600 dark:text-red-400"
                 fill="none"
@@ -302,13 +304,13 @@ export function FileUpload({
                 />
               </svg>
             </div>
-            <p className="mb-1 font-medium text-red-700 dark:text-red-300">Upload Failed</p>
+            <p className="mb-1 font-medium text-red-700 dark:text-red-400">Upload Failed</p>
             <p className="text-sm text-red-600 dark:text-red-400">
               {progress.message || "Please try again"}
             </p>
             <button
               onClick={handleClick}
-              className="mt-4 rounded-md bg-red-100 dark:bg-red-900/50 px-4 py-2 text-sm font-medium text-red-700 dark:text-red-300 hover:bg-red-200 dark:hover:bg-red-800/50"
+              className="mt-4 rounded-md bg-red-100 dark:bg-red-900/30 px-4 py-2 text-sm font-medium text-red-700 dark:text-red-400 hover:bg-red-200 dark:hover:bg-red-800/50"
             >
               Try Again
             </button>

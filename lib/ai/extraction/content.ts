@@ -3,14 +3,54 @@
  *
  * Template-based CV extraction with structured JSON output.
  * Uses Zod for robust validation to fix type guard issues.
+ * Includes automatic rate-limit fallback across available models.
  */
 
+import { type ExtractedCVContent, generateLatexFromContent } from "@/lib/cv-templates";
 import { z } from "zod";
-import { AI_CONFIG, isModelAvailable, getModelInfo } from "../config";
-import type { LatexExtractionModel, TemplateExtractionResult, CVTemplateId } from "../types";
+import { AI_CONFIG, getModelInfo, isModelAvailable, LATEX_MODELS } from "../config";
 import { extractContentWithGemini } from "../providers/gemini";
 import { extractContentWithOpenRouter } from "../providers/openrouter";
-import { type ExtractedCVContent, generateLatexFromContent } from "@/lib/cv-templates";
+import type { CVTemplateId, LatexExtractionModel, TemplateExtractionResult } from "../types";
+
+// =============================================================================
+// RATE LIMIT DETECTION
+// =============================================================================
+
+/**
+ * Check if an error is a rate limit error
+ */
+function isRateLimitError(error: unknown): boolean {
+  const errorString = String(error).toLowerCase();
+  const message = error instanceof Error ? error.message.toLowerCase() : "";
+  const combined = errorString + " " + message;
+
+  const isRateLimit =
+    combined.includes("rate limit") ||
+    combined.includes("rate_limit") ||
+    combined.includes("quota exceeded") ||
+    combined.includes("too many requests") ||
+    combined.includes("429") ||
+    combined.includes("resource exhausted") ||
+    combined.includes("exhausted") ||
+    combined.includes("limit exceeded") ||
+    combined.includes("requests per minute");
+
+  if (isRateLimit) {
+    console.warn("[isRateLimitError] Detected rate limit error:", message.substring(0, 200));
+  }
+
+  return isRateLimit;
+}
+
+/**
+ * Get ordered list of available fallback models (excluding the failed one)
+ */
+function getAvailableFallbackModels(excludeModel: LatexExtractionModel): LatexExtractionModel[] {
+  return LATEX_MODELS.filter((m) => m.id !== excludeModel && isModelAvailable(m.id)).map(
+    (m) => m.id as LatexExtractionModel
+  );
+}
 
 // =============================================================================
 // VALIDATION SCHEMAS (Zod - fixes "Unsound type guard check")
@@ -23,9 +63,9 @@ const contactSchema = z.object({
   email: z.string().default(""),
   phone: z.string().default(""),
   location: z.string().default(""),
-  linkedin: z.string().optional(),
-  github: z.string().optional(),
-  website: z.string().optional(),
+  linkedin: z.string().nullish(), // Accept null, undefined, or string
+  github: z.string().nullish(),
+  website: z.string().nullish(),
 });
 
 /**
@@ -134,8 +174,41 @@ export function parseExtractedContent(responseText: string): ExtractedCVContent 
 // =============================================================================
 
 /**
+ * Extract content using a specific model
+ */
+async function extractContentWithModel(
+  base64Data: string,
+  mimeType: string,
+  model: LatexExtractionModel
+): Promise<ExtractedCVContent> {
+  switch (model) {
+    case "gemini-2.5-flash": {
+      const rawContent = await extractContentWithGemini(base64Data, mimeType, model);
+      return parseExtractedContent(JSON.stringify(rawContent));
+    }
+    case "qwen-2.5-vl":
+    case "mistral-small-3.1":
+    case "gemma-3-27b":
+    case "gemini-2.0-flash-or": {
+      const modelInfo = getModelInfo(model);
+      if (!modelInfo?.openrouterModel) {
+        throw new Error(`OpenRouter model not configured for ${model}`);
+      }
+      const rawContent = await extractContentWithOpenRouter(
+        base64Data,
+        mimeType,
+        modelInfo.openrouterModel
+      );
+      return parseExtractedContent(JSON.stringify(rawContent));
+    }
+    default:
+      throw new Error(`Unsupported model: ${model}`);
+  }
+}
+
+/**
  * Main entry point: Extract CV content and generate LaTeX using template
- * This is the new template-based approach (preferred)
+ * Includes automatic rate-limit fallback across all available models
  */
 export async function extractWithTemplate(
   buffer: Buffer,
@@ -144,43 +217,22 @@ export async function extractWithTemplate(
   model: LatexExtractionModel = AI_CONFIG.defaultLatexModel
 ): Promise<TemplateExtractionResult> {
   const base64Data = buffer.toString("base64");
+  const triedModels: LatexExtractionModel[] = [];
 
   // Check if requested model is available
   if (!isModelAvailable(model)) {
-    console.warn(`[extractWithTemplate] Model ${model} not available, using fallback`);
-    model = "gemini-2.5-flash";
+    console.warn(`[extractWithTemplate] Model ${model} not available, finding fallback`);
+    const fallbacks = getAvailableFallbackModels(model);
+    const firstFallback = fallbacks[0];
+    if (!firstFallback) {
+      throw new Error("No AI models available. Please configure at least one API key.");
+    }
+    model = firstFallback;
   }
 
+  // Try the requested model first
   try {
-    let content: ExtractedCVContent;
-
-    switch (model) {
-      case "gemini-2.5-flash": {
-        const rawContent = await extractContentWithGemini(base64Data, mimeType, model);
-        content = parseExtractedContent(JSON.stringify(rawContent));
-        break;
-      }
-      case "nova-2-lite":
-      case "mistral-small-3.1":
-      case "gemma-3-27b":
-      case "gemini-2.0-flash-or": {
-        const modelInfo = getModelInfo(model);
-        if (!modelInfo?.openrouterModel) {
-          throw new Error(`OpenRouter model not configured for ${model}`);
-        }
-        const rawContent = await extractContentWithOpenRouter(
-          base64Data,
-          mimeType,
-          modelInfo.openrouterModel
-        );
-        content = parseExtractedContent(JSON.stringify(rawContent));
-        break;
-      }
-      default:
-        throw new Error(`Unsupported model: ${model}`);
-    }
-
-    // Generate LaTeX from content using template
+    const content = await extractContentWithModel(base64Data, mimeType, model);
     const latex = generateLatexFromContent(content, templateId);
 
     return {
@@ -191,30 +243,47 @@ export async function extractWithTemplate(
       fallbackUsed: false,
     };
   } catch (error) {
-    // Fallback to Gemini 2.5 Flash
-    if (model !== "gemini-2.5-flash" && isModelAvailable("gemini-2.5-flash")) {
-      console.error(
-        `[extractWithTemplate] ${model} failed, falling back to Gemini 2.5 Flash:`,
-        error
-      );
+    triedModels.push(model);
 
-      try {
-        const rawContent = await extractContentWithGemini(base64Data, mimeType, "gemini-2.5-flash");
-        const content = parseExtractedContent(JSON.stringify(rawContent));
-        const latex = generateLatexFromContent(content, templateId);
+    // If rate limited, try other available models
+    if (isRateLimitError(error)) {
+      console.warn(`[extractWithTemplate] ${model} rate limited, trying fallback models...`);
 
-        return {
-          latex,
-          content,
-          templateId,
-          modelUsed: "gemini-2.5-flash",
-          fallbackUsed: true,
-        };
-      } catch {
-        throw error;
+      const fallbacks = getAvailableFallbackModels(model);
+      for (const fallbackModel of fallbacks) {
+        if (triedModels.includes(fallbackModel)) continue;
+
+        console.warn(`[extractWithTemplate] Trying fallback: ${fallbackModel}`);
+        try {
+          const content = await extractContentWithModel(base64Data, mimeType, fallbackModel);
+          const latex = generateLatexFromContent(content, templateId);
+
+          console.warn(`[extractWithTemplate] Fallback ${fallbackModel} succeeded`);
+          return {
+            latex,
+            content,
+            templateId,
+            modelUsed: fallbackModel,
+            fallbackUsed: true,
+          };
+        } catch (fallbackError) {
+          triedModels.push(fallbackModel);
+          if (isRateLimitError(fallbackError)) {
+            console.warn(`[extractWithTemplate] ${fallbackModel} also rate limited`);
+            continue;
+          }
+          // Non-rate-limit error, throw it
+          throw fallbackError;
+        }
       }
+
+      // All models rate limited
+      throw new Error(
+        `All available AI models are rate limited. Tried: ${triedModels.join(", ")}. Please wait a moment and try again.`
+      );
     }
 
+    // Not a rate limit error, throw as-is
     throw error;
   }
 }

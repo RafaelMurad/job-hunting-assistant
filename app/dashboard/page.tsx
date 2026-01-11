@@ -88,7 +88,7 @@ export default async function DashboardPage(): Promise<JSX.Element> {
         {/* Header */}
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-slate-900 dark:text-white mb-2">
-            {user?.name ? `Welcome back, ${user.name.split(" ")[0]}!` : "Welcome to Job Hunt AI"}
+            {user?.name ? `Welcome back, ${user.name.split(" ")[0]}!` : "Welcome to CareerPal"}
           </h1>
           <p className="text-slate-600 dark:text-slate-400">
             Your command center for finding the perfect job.

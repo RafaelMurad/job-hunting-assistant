@@ -151,7 +151,7 @@ describe("MobileMenu", () => {
 
       await user.click(screen.getByRole("button", { name: /toggle mobile menu/i }));
 
-      const logoLink = screen.getByRole("link", { name: /job hunt ai/i });
+      const logoLink = screen.getByRole("link", { name: /careerpal/i });
       expect(logoLink).toBeInTheDocument();
       expect(logoLink).toHaveAttribute("href", "/");
     });

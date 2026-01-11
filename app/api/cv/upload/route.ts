@@ -19,7 +19,7 @@
 
 import { type NextRequest, NextResponse } from "next/server";
 import mammoth from "mammoth";
-import { parseCVWithGeminiVision, parseCVWithGeminiText } from "@/lib/ai";
+import { parseCVWithFallback, parseCVTextWithFallback } from "@/lib/ai";
 
 /**
  * Extract text from DOCX buffer using mammoth.
@@ -71,10 +71,10 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
       let profileData;
 
       if (file.type === "application/pdf") {
-        // PDF: Use centralized Gemini vision function
-        profileData = await parseCVWithGeminiVision(buffer);
+        // PDF: Use CV parsing with automatic rate-limit fallback
+        profileData = await parseCVWithFallback(buffer);
       } else {
-        // DOCX: Extract text first, then use centralized Gemini text function
+        // DOCX: Extract text first, then parse with fallback
         const docxText = await extractFromDOCX(buffer);
 
         if (!docxText || docxText.trim().length < 50) {
@@ -87,7 +87,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
           );
         }
 
-        profileData = await parseCVWithGeminiText(docxText);
+        profileData = await parseCVTextWithFallback(docxText);
       }
 
       return NextResponse.json({

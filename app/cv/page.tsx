@@ -8,28 +8,25 @@
  *
  * HOW:
  * 1. Upload PDF → AI extracts LaTeX → Creates CV record
- * 2. View PDF preview + edit LaTeX in textarea
- * 3. AI-assisted modifications via natural language
+ * 2. View PDF preview + edit LaTeX in split view
+ * 3. AI-assisted modifications via prominent input bar
  * 4. Compile LaTeX → Download or save
  * 5. Check ATS compliance score
  */
 
 "use client";
 
+import { AIInputBar } from "@/components/cv/ai-input-bar";
+import { EditorToolbar } from "@/components/cv/editor-toolbar";
 import { LaTeXEditor } from "@/components/latex-editor";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { FileUpload, type UploadProgress } from "@/components/ui/file-upload";
 import { Input } from "@/components/ui/input";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+import { Select, SelectContent, SelectItem, SelectTrigger } from "@/components/ui/select";
 import { useCV, type CVItem } from "@/lib/hooks/useCV";
+import { CheckCircle, Loader2, Upload, X, XCircle } from "lucide-react";
 import { useCallback, useEffect, useState, type ChangeEvent, type JSX } from "react";
 
 // ============================================
@@ -78,13 +75,18 @@ type ViewMode = "pdf" | "latex" | "split";
 export default function CVEditorPage(): JSX.Element {
   // CV hook for data management
   const {
+    cvs,
     activeCV,
     loading: cvsLoading,
     updating: cvUpdating,
     update: updateCV,
+    setActive: setActiveCV,
     refetch: refetchCVs,
     canAddMore,
   } = useCV();
+
+  // CV switching state
+  const [isSwitchingCV, setIsSwitchingCV] = useState(false);
 
   // Current CV being edited
   const [currentCV, setCurrentCV] = useState<CVItem | null>(null);
@@ -92,18 +94,12 @@ export default function CVEditorPage(): JSX.Element {
   const [previewPdfUrl, setPreviewPdfUrl] = useState<string | null>(null);
   const [viewMode, setViewMode] = useState<ViewMode>("split");
   const [atsAnalysis, setAtsAnalysis] = useState<ATSAnalysis | null>(null);
-  const [aiInstruction, setAiInstruction] = useState<string>("");
   const [toast, setToast] = useState<Toast | null>(null);
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
-
-  // Advanced Mode toggle - hides LaTeX editor and AI tools by default
-  const [advancedMode, setAdvancedMode] = useState<boolean>(false);
 
   // Model selection state
   const [availableModels, setAvailableModels] = useState<ModelInfo[]>([]);
   const [selectedModel, setSelectedModel] = useState<string>("gemini-2.5-flash");
-  const [modelUsed, setModelUsed] = useState<string | null>(null);
-  const [fallbackUsed, setFallbackUsed] = useState<boolean>(false);
 
   // Template selection state
   const [availableTemplates, setAvailableTemplates] = useState<TemplateInfo[]>([]);
@@ -128,14 +124,17 @@ export default function CVEditorPage(): JSX.Element {
   useEffect(() => {
     if (cvsLoading) return;
 
-    // Load active CV if available
     if (activeCV) {
       setCurrentCV(activeCV);
       setLatexContent(activeCV.latexContent ?? "");
       setPreviewPdfUrl(activeCV.pdfUrl);
       setHasUnsavedChanges(false);
+
+      // Auto-compile if we have LaTeX content but no PDF URL
+      if (activeCV.latexContent && !activeCV.pdfUrl) {
+        void compileLatexForPreview(activeCV.latexContent);
+      }
     } else {
-      // No CV to load - fresh state for new upload
       setCurrentCV(null);
       setLatexContent("");
       setPreviewPdfUrl(null);
@@ -161,7 +160,6 @@ export default function CVEditorPage(): JSX.Element {
 
   const showToast = (type: Toast["type"], message: string): void => {
     setToast({ type, message });
-    // Show errors longer (8s) than success/info (4s)
     const duration = type === "error" ? 8000 : 4000;
     setTimeout(() => setToast(null), duration);
   };
@@ -170,13 +168,42 @@ export default function CVEditorPage(): JSX.Element {
     setToast(null);
   };
 
+  /**
+   * Compile LaTeX content for preview (without saving).
+   * Used to auto-generate PDF preview when loading CV with LaTeX but no PDF URL.
+   */
+  const compileLatexForPreview = async (latex: string): Promise<void> => {
+    if (!latex.trim()) return;
+
+    try {
+      setCompiling(true);
+      const response = await fetch("/api/cv/compile", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ latexContent: latex, save: false }),
+      });
+
+      const result = await response.json();
+
+      if (response.ok && result.pdfBase64) {
+        const pdfBlob = base64ToBlob(result.pdfBase64, "application/pdf");
+        const blobUrl = URL.createObjectURL(pdfBlob);
+        setPreviewPdfUrl(blobUrl);
+      }
+    } catch (error) {
+      console.error("Auto-compile preview error:", error);
+      // Don't show toast for auto-compile - it's a background operation
+    } finally {
+      setCompiling(false);
+    }
+  };
+
   const loadAvailableModels = async (): Promise<void> => {
     try {
       const response = await fetch("/api/cv/models");
       if (response.ok) {
         const result = await response.json();
         setAvailableModels(result.data.models);
-        // Set default model to first available one
         const firstAvailable = result.data.models.find((m: ModelInfo) => m.available);
         if (firstAvailable) {
           setSelectedModel(firstAvailable.id);
@@ -203,15 +230,10 @@ export default function CVEditorPage(): JSX.Element {
   // HANDLERS
   // ============================================
 
-  /**
-   * Handle template change - regenerates LaTeX from extracted content
-   * This is instant (no AI call) if we have extractedContent
-   */
   const handleTemplateChange = useCallback(
     async (newTemplateId: string): Promise<void> => {
       setSelectedTemplate(newTemplateId);
 
-      // If we have extracted content, regenerate LaTeX with new template instantly
       if (extractedContent) {
         try {
           const response = await fetch("/api/cv/template", {
@@ -227,8 +249,6 @@ export default function CVEditorPage(): JSX.Element {
             const result = await response.json();
             setLatexContent(result.data.latexContent);
             showToast("success", `Switched to ${newTemplateId.replace("-", " ")} template`);
-
-            // Clear preview to force recompile
             setPreviewPdfUrl(null);
           } else {
             showToast("error", "Failed to switch template");
@@ -238,7 +258,6 @@ export default function CVEditorPage(): JSX.Element {
           showToast("error", "Failed to switch template");
         }
       }
-      // If no extracted content yet, the template will be used on next upload
     },
     [extractedContent]
   );
@@ -248,16 +267,11 @@ export default function CVEditorPage(): JSX.Element {
       const file = e.target.files?.[0];
       if (!file) return;
 
-      // Check if user can add more CVs
       if (!currentCV && !canAddMore) {
-        showToast(
-          "error",
-          "Maximum of 5 CVs reached. Please delete one before uploading a new CV."
-        );
+        showToast("error", "Maximum of 5 CVs reached. Please delete one before uploading.");
         return;
       }
 
-      // Validate file type - now supports PDF, DOCX, TEX
       const validTypes = [
         "application/pdf",
         "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
@@ -271,80 +285,157 @@ export default function CVEditorPage(): JSX.Element {
 
       try {
         setUploading(true);
-        const formData = new FormData();
-        formData.append("file", file);
-        formData.append("model", selectedModel);
-        formData.append("template", selectedTemplate);
 
-        // If editing existing CV, include the ID
-        if (currentCV) {
-          formData.append("cvId", currentCV.id);
-        }
+        // Get list of models to try (selected first, then others)
+        const modelsToTry = [
+          selectedModel,
+          ...availableModels.filter((m) => m.available && m.id !== selectedModel).map((m) => m.id),
+        ];
 
-        const response = await fetch("/api/cv/store", {
-          method: "POST",
-          body: formData,
-        });
+        let lastError: string | null = null;
+        const totalModels = modelsToTry.length;
 
-        const result = await response.json();
+        // Try each model until one succeeds
+        for (let i = 0; i < modelsToTry.length; i++) {
+          const modelToTry = modelsToTry[i];
+          if (!modelToTry) continue;
 
-        if (!response.ok) {
-          showToast("error", result.error || "Upload failed");
-          return;
-        }
+          const modelName = availableModels.find((m) => m.id === modelToTry)?.name || modelToTry;
+          const attemptNumber = i + 1;
 
-        // Update state with new CV data
-        setLatexContent(result.data.latexContent || "");
-        setPreviewPdfUrl(result.data.pdfUrl);
-        setAtsAnalysis(null); // Clear old analysis
-        setHasUnsavedChanges(false);
+          // Update progress with model info
+          setUploadProgress({
+            status: "processing",
+            progress: Math.round((attemptNumber / totalModels) * 50),
+            step: `Extracting with ${modelName}...`,
+            message:
+              attemptNumber > 1
+                ? `Attempt ${attemptNumber}/${totalModels} - Previous model was rate limited`
+                : `Using ${modelName}`,
+          });
 
-        // Store extracted content for template switching
-        if (result.data.extractedContent) {
-          setExtractedContent(result.data.extractedContent);
-        }
+          const formData = new FormData();
+          formData.append("file", file);
+          formData.append("model", modelToTry);
+          formData.append("template", selectedTemplate);
 
-        // Refetch CVs to get the new/updated CV record
-        refetchCVs();
-
-        // Track which model was used
-        if (result.data.modelUsed) {
-          setModelUsed(result.data.modelUsed);
-          setFallbackUsed(result.data.fallbackUsed || false);
-
-          if (result.data.fallbackUsed) {
-            showToast(
-              "info",
-              `CV uploaded! Used ${result.data.modelUsed} (fallback from ${selectedModel})`
-            );
-          } else {
-            showToast("success", `CV uploaded using ${result.data.modelUsed}!`);
+          if (currentCV) {
+            formData.append("cvId", currentCV.id);
           }
-        } else {
-          // TEX file - no model used
-          setModelUsed(null);
-          setFallbackUsed(false);
-          showToast("success", "LaTeX file loaded!");
+
+          try {
+            const response = await fetch("/api/cv/store", {
+              method: "POST",
+              body: formData,
+            });
+
+            const result = await response.json();
+
+            if (response.ok) {
+              // Success!
+              setUploadProgress({
+                status: "complete",
+                progress: 100,
+                step: "Complete!",
+                message: `Extracted successfully with ${modelName}`,
+              });
+
+              setLatexContent(result.data.latexContent || "");
+              setPreviewPdfUrl(result.data.pdfUrl);
+              setAtsAnalysis(null);
+              setHasUnsavedChanges(false);
+
+              if (result.data.extractedContent) {
+                setExtractedContent(result.data.extractedContent);
+              }
+
+              refetchCVs();
+              const usedModel = result.data.modelUsed || modelToTry;
+              showToast(
+                "success",
+                attemptNumber > 1
+                  ? `CV uploaded! (Used ${usedModel} after ${attemptNumber - 1} retries)`
+                  : "CV uploaded successfully!"
+              );
+              return;
+            }
+
+            // Check if we should retry with another model
+            const errorMsg = result.error || "Upload failed";
+            const errorLower = errorMsg.toLowerCase();
+
+            // Retry on rate limits OR any server error (500s are often transient)
+            const shouldRetry =
+              response.status >= 500 ||
+              errorLower.includes("rate limit") ||
+              errorLower.includes("quota") ||
+              errorLower.includes("429") ||
+              errorLower.includes("exhausted") ||
+              errorLower.includes("error occurred") ||
+              errorLower.includes("try again");
+
+            if (shouldRetry && i < modelsToTry.length - 1) {
+              console.warn(
+                `[Upload] ${modelToTry} failed (${response.status}): ${errorMsg}, trying next model...`
+              );
+              lastError = errorMsg;
+
+              // Show retry feedback
+              setUploadProgress({
+                status: "processing",
+                progress: Math.round(((i + 1) / totalModels) * 50),
+                step: `${modelName} failed`,
+                message: `Retrying with next model... (${i + 1}/${totalModels})`,
+              });
+
+              // Small delay before retry
+              await new Promise((r) => setTimeout(r, 1000));
+              continue;
+            }
+
+            // No more models to try or non-retryable error
+            setUploadProgress({
+              status: "error",
+              progress: 0,
+              step: "Failed",
+              message: errorMsg,
+            });
+            showToast("error", errorMsg);
+            return;
+          } catch (fetchError) {
+            console.error(`[Upload] Fetch error for ${modelToTry}:`, fetchError);
+            lastError = "Network error";
+            if (i < modelsToTry.length - 1) continue;
+          }
         }
+
+        // All models failed
+        setUploadProgress({
+          status: "error",
+          progress: 0,
+          step: "All models failed",
+          message: "All AI models are rate limited",
+        });
+        showToast(
+          "error",
+          lastError || "All AI models are rate limited. Please wait and try again."
+        );
       } catch (error) {
         console.error("Upload error:", error);
         showToast("error", "Upload failed. Please try again.");
         setUploadProgress({ status: "error", progress: 0, message: "Upload failed" });
       } finally {
         setUploading(false);
-        // Reset progress after a delay
         setTimeout(() => {
           setUploadProgress({ status: "idle", progress: 0 });
         }, 2000);
       }
     },
-    [selectedModel, selectedTemplate, currentCV, canAddMore, refetchCVs]
+    [selectedModel, selectedTemplate, currentCV, canAddMore, refetchCVs, availableModels]
   );
 
-  // Handler for FileUpload component (drag-and-drop)
   const handleFileSelect = useCallback(
     (file: File): void => {
-      // Validate file type
       const validTypes = [
         "application/pdf",
         "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
@@ -356,20 +447,14 @@ export default function CVEditorPage(): JSX.Element {
         return;
       }
 
-      // Create a synthetic event to reuse handleUpload logic
       const syntheticEvent = {
-        target: {
-          files: [file],
-        },
+        target: { files: [file] },
       } as unknown as ChangeEvent<HTMLInputElement>;
 
-      // Update progress
-      setUploadProgress({ status: "uploading", progress: 30, step: "Uploading file..." });
+      setUploadProgress({ status: "uploading", progress: 10, step: "Starting upload..." });
 
-      // Call the existing handler
-      void handleUpload(syntheticEvent).then(() => {
-        setUploadProgress({ status: "complete", progress: 100, step: "Done!" });
-      });
+      // Don't override progress - handleUpload manages its own progress state
+      void handleUpload(syntheticEvent);
     },
     [handleUpload]
   );
@@ -402,7 +487,6 @@ export default function CVEditorPage(): JSX.Element {
         setPreviewPdfUrl(result.pdfUrl);
         showToast("success", "CV compiled and saved!");
       } else {
-        // Create blob URL from base64 for preview
         const pdfBlob = base64ToBlob(result.pdfBase64, "application/pdf");
         const blobUrl = URL.createObjectURL(pdfBlob);
         setPreviewPdfUrl(blobUrl);
@@ -416,14 +500,9 @@ export default function CVEditorPage(): JSX.Element {
     }
   };
 
-  const handleAIModify = async (): Promise<void> => {
+  const handleAIModify = async (instruction: string): Promise<void> => {
     if (!latexContent.trim()) {
-      showToast("error", "No LaTeX content to modify.");
-      return;
-    }
-
-    if (!aiInstruction.trim()) {
-      showToast("error", "Please enter an instruction for the AI.");
+      showToast("error", "No LaTeX content to modify. Upload a CV first.");
       return;
     }
 
@@ -432,7 +511,7 @@ export default function CVEditorPage(): JSX.Element {
       const response = await fetch("/api/cv/modify", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ latexContent, instruction: aiInstruction }),
+        body: JSON.stringify({ latexContent, instruction }),
       });
 
       const result = await response.json();
@@ -443,8 +522,10 @@ export default function CVEditorPage(): JSX.Element {
       }
 
       setLatexContent(result.latexContent);
-      setAiInstruction("");
-      showToast("success", "CV modified! Click 'Preview' to see changes.");
+      showToast("success", "CV modified! Preview will update shortly.");
+
+      // Auto-compile after modification
+      void handleCompile(false);
     } catch (error) {
       console.error("Modify error:", error);
       showToast("error", "Modification failed. Please try again.");
@@ -455,7 +536,7 @@ export default function CVEditorPage(): JSX.Element {
 
   const handleATSCheck = async (): Promise<void> => {
     if (!latexContent.trim()) {
-      showToast("error", "No LaTeX content to analyze.");
+      showToast("error", "No LaTeX content to analyze. Upload a CV first.");
       return;
     }
 
@@ -475,7 +556,7 @@ export default function CVEditorPage(): JSX.Element {
       }
 
       setAtsAnalysis(result.data);
-      showToast("success", "ATS analysis complete!");
+      showToast("success", `ATS Score: ${result.data.score}/100`);
     } catch (error) {
       console.error("ATS check error:", error);
       showToast("error", "Analysis failed. Please try again.");
@@ -502,16 +583,12 @@ export default function CVEditorPage(): JSX.Element {
       return;
     }
 
-    // Overleaf accepts URL-encoded LaTeX via snip parameter
     const encoded = encodeURIComponent(latexContent);
     const overleafUrl = `https://www.overleaf.com/docs?snip=${encoded}`;
-
-    // Open in new tab
     window.open(overleafUrl, "_blank");
-    showToast("info", "Opening in Overleaf. You can compile and download the PDF there.");
+    showToast("info", "Opening in Overleaf...");
   };
 
-  // Save current CV to database
   const handleSaveCV = async (): Promise<void> => {
     if (!currentCV || !hasUnsavedChanges) return;
 
@@ -528,498 +605,302 @@ export default function CVEditorPage(): JSX.Element {
     }
   };
 
+  /**
+   * Switch to a different CV
+   */
+  const handleCVSwitch = async (cvId: string): Promise<void> => {
+    if (cvId === currentCV?.id) return;
+
+    // Warn about unsaved changes
+    if (hasUnsavedChanges) {
+      const confirmed = window.confirm(
+        "You have unsaved changes. Switch CV anyway? Changes will be lost."
+      );
+      if (!confirmed) return;
+    }
+
+    setIsSwitchingCV(true);
+    try {
+      const success = await setActiveCV(cvId);
+      if (success) {
+        // The useEffect will handle loading the new CV when activeCV changes
+        setHasUnsavedChanges(false);
+        showToast("success", "Switched to selected CV");
+      } else {
+        showToast("error", "Failed to switch CV");
+      }
+    } finally {
+      setIsSwitchingCV(false);
+    }
+  };
+
   // ============================================
-  // RENDER
+  // RENDER: LOADING STATE
   // ============================================
 
   if (cvsLoading) {
     return (
-      <div className="container mx-auto py-8 px-4 max-w-7xl">
-        <div className="flex items-center justify-center h-64">
-          <div className="text-center">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4" />
-            <p className="text-muted-foreground">Loading CV editor...</p>
-          </div>
+      <div className="min-h-screen bg-slate-50 dark:bg-slate-900 flex items-center justify-center">
+        <div className="text-center">
+          <Loader2 className="h-10 w-10 text-cyan-500 animate-spin mx-auto mb-4" />
+          <p className="text-slate-600 dark:text-slate-400">Loading CV editor...</p>
         </div>
       </div>
     );
   }
 
+  // ============================================
+  // RENDER: MAIN PAGE
+  // ============================================
+
   return (
-    <div className="container mx-auto py-8 px-4 max-w-7xl">
-      {/* Toast notification */}
+    <div className="min-h-screen bg-slate-50 dark:bg-slate-900 flex flex-col">
+      {/* Toast Notification */}
       {toast && (
         <div
-          className={`fixed top-4 right-4 z-50 p-4 rounded-lg shadow-lg max-w-md flex items-start gap-3 ${
+          className={`fixed top-4 right-4 z-50 p-4 rounded-lg shadow-lg max-w-md flex items-start gap-3 animate-in slide-in-from-right ${
             toast.type === "success"
-              ? "bg-green-50 dark:bg-green-900/50 text-green-800 dark:text-green-200 border border-green-200 dark:border-green-700"
+              ? "bg-emerald-50 dark:bg-emerald-900/90 text-emerald-800 dark:text-emerald-100 border border-emerald-200 dark:border-emerald-700"
               : toast.type === "error"
-                ? "bg-red-50 dark:bg-red-900/50 text-red-800 dark:text-red-200 border border-red-300 dark:border-red-700"
-                : "bg-blue-50 dark:bg-blue-900/50 text-blue-800 dark:text-blue-200 border border-blue-200 dark:border-blue-700"
+                ? "bg-red-50 dark:bg-red-900/90 text-red-800 dark:text-red-100 border border-red-200 dark:border-red-700"
+                : "bg-sky-50 dark:bg-sky-900/90 text-sky-800 dark:text-sky-100 border border-sky-200 dark:border-sky-700"
           }`}
         >
-          {/* Icon */}
           <span className="shrink-0 mt-0.5">
             {toast.type === "success" && (
-              <svg
-                className="w-5 h-5 text-green-600 dark:text-green-400"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M5 13l4 4L19 7"
-                />
-              </svg>
+              <CheckCircle className="w-5 h-5 text-emerald-600 dark:text-emerald-400" />
             )}
             {toast.type === "error" && (
-              <svg
-                className="w-5 h-5 text-red-600 dark:text-red-400"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-                />
-              </svg>
+              <XCircle className="w-5 h-5 text-red-600 dark:text-red-400" />
             )}
             {toast.type === "info" && (
-              <svg
-                className="w-5 h-5 text-blue-600 dark:text-blue-400"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-                />
-              </svg>
+              <Loader2 className="w-5 h-5 text-sky-600 dark:text-sky-400" />
             )}
           </span>
-          {/* Message */}
           <span className="flex-1 text-sm">{toast.message}</span>
-          {/* Dismiss button */}
           <button
             onClick={dismissToast}
-            className="shrink-0 ml-2 text-gray-400 dark:text-slate-500 hover:text-slate-600 dark:hover:text-slate-300"
+            className="shrink-0 text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200"
             aria-label="Dismiss"
           >
-            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M6 18L18 6M6 6l12 12"
-              />
-            </svg>
+            <X className="w-4 h-4" />
           </button>
         </div>
       )}
 
       {/* Header */}
-      <div className="mb-8">
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-          <div>
-            <h1 className="text-3xl font-bold mb-2">CV Editor</h1>
-            <p className="text-muted-foreground">
-              {advancedMode
-                ? "Edit LaTeX source, use AI assistance, and check ATS compatibility."
-                : "Upload your CV, choose a template, and download a polished PDF."}
-            </p>
+      <header className="border-b border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800/50 px-6 py-4">
+        <div className="max-w-[1600px] mx-auto flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <h1 className="text-xl font-bold text-slate-900 dark:text-slate-100">CV Editor</h1>
+            <span className="text-slate-400 dark:text-slate-600">|</span>
+            {/* CV Selector Dropdown */}
+            <Select
+              value={currentCV?.id ?? ""}
+              onValueChange={(id) => void handleCVSwitch(id)}
+              disabled={isSwitchingCV || cvs.length === 0}
+            >
+              <SelectTrigger className="w-auto max-w-[200px] h-8 bg-transparent border-0 text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 px-2 gap-1">
+                <span className="truncate text-sm font-medium">
+                  {currentCV?.name ?? (cvs.length === 0 ? "No CVs" : "Select CV")}
+                </span>
+              </SelectTrigger>
+              <SelectContent align="start">
+                {cvs.map((cv, index) => (
+                  <SelectItem key={cv.id} value={cv.id} className="py-2">
+                    <div className="flex items-center gap-3">
+                      <span className="w-5 h-5 rounded bg-slate-200 dark:bg-slate-700 flex items-center justify-center text-xs font-medium text-slate-600 dark:text-slate-400">
+                        {index + 1}
+                      </span>
+                      <span className="truncate max-w-[180px]">{cv.name}</span>
+                      {cv.isActive && (
+                        <Badge className="bg-emerald-100 dark:bg-emerald-900/50 text-emerald-700 dark:text-emerald-400 text-[10px] px-1.5 py-0">
+                          Active
+                        </Badge>
+                      )}
+                    </div>
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            {hasUnsavedChanges && (
+              <Badge className="bg-amber-100 dark:bg-amber-600/20 text-amber-700 dark:text-amber-400 border-amber-200 dark:border-amber-600/30 text-xs">
+                Unsaved
+              </Badge>
+            )}
           </div>
-          {/* Advanced Mode Toggle */}
+
           <Button
-            variant={advancedMode ? "default" : "outline"}
-            onClick={() => setAdvancedMode(!advancedMode)}
-            className="shrink-0 w-full sm:w-auto"
+            onClick={() => document.getElementById("cv-upload")?.click()}
+            disabled={uploading}
+            className="h-10"
           >
-            {advancedMode ? "✓ Advanced Mode" : "⚡ Advanced Mode"}
+            {uploading ? (
+              <>
+                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                Uploading...
+              </>
+            ) : (
+              <>
+                <Upload className="w-4 h-4 mr-2" />
+                Upload CV
+              </>
+            )}
           </Button>
+          <Input
+            id="cv-upload"
+            type="file"
+            accept=".pdf,.docx,.tex"
+            className="hidden"
+            onChange={handleUpload}
+            disabled={uploading}
+          />
+        </div>
+      </header>
+
+      {/* AI Input Bar */}
+      <div className="px-4 sm:px-6 pt-4 bg-slate-100 dark:bg-slate-900/50">
+        <div className="max-w-[1600px] mx-auto">
+          <AIInputBar
+            onApply={handleAIModify}
+            onATSCheck={handleATSCheck}
+            isModifying={modifying}
+            isAnalyzing={analyzing}
+            disabled={!latexContent.trim()}
+          />
         </div>
       </div>
 
-      {/* Toolbar - Simplified for Simple Mode, Full for Advanced */}
-      <Card className="mb-6">
-        <CardContent className="py-4 space-y-4">
-          {/* Row 1: Essential controls */}
-          <div className="flex flex-col sm:flex-row flex-wrap items-stretch sm:items-center gap-3 sm:gap-4">
-            {/* Template Selector - Always visible */}
-            <div className="flex items-center gap-2 w-full sm:w-auto">
-              <span className="text-sm text-muted-foreground whitespace-nowrap">Template:</span>
-              <Select
-                value={selectedTemplate}
-                onValueChange={handleTemplateChange}
-                disabled={uploading}
-              >
-                <SelectTrigger className="w-full sm:w-[180px] h-11 sm:h-9">
-                  <SelectValue placeholder="Select template" />
-                </SelectTrigger>
-                <SelectContent>
-                  {availableTemplates.map((template) => (
-                    <SelectItem key={template.id} value={template.id}>
-                      {template.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-
-            {/* Model Selector - Only in Advanced Mode */}
-            {advancedMode && (
-              <div className="flex items-center gap-2 w-full sm:w-auto">
-                <span className="text-sm text-muted-foreground whitespace-nowrap">Model:</span>
-                <Select value={selectedModel} onValueChange={setSelectedModel} disabled={uploading}>
-                  <SelectTrigger className="w-full sm:w-[200px] h-11 sm:h-9">
-                    <SelectValue placeholder="Select model" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {availableModels.map((model) => (
-                      <SelectItem key={model.id} value={model.id} disabled={!model.available}>
-                        {model.name} ({model.cost}){!model.available && " - no key"}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-            )}
-
-            {/* Spacer - hidden on mobile */}
-            <div className="hidden sm:block flex-1" />
-
-            {/* Upload Button */}
-            <Button
-              variant="default"
-              disabled={uploading}
-              onClick={() => document.getElementById("cv-upload")?.click()}
-              className="w-full sm:w-auto h-11 sm:h-9"
-            >
-              {uploading ? "Extracting..." : "📄 Upload CV"}
-            </Button>
-            <Input
-              id="cv-upload"
-              type="file"
-              accept=".pdf,.docx,.tex"
-              className="hidden"
-              onChange={handleUpload}
-              disabled={uploading}
-            />
-
-            {/* Download Button - Always visible when PDF available */}
-            {previewPdfUrl && (
-              <Button
-                variant="secondary"
-                onClick={handleDownload}
-                className="w-full sm:w-auto h-11 sm:h-9"
-              >
-                ⬇️ Download PDF
-              </Button>
-            )}
-
-            {/* View Mode Toggle - Only in Advanced Mode */}
-            {advancedMode && (
-              <div className="flex items-center gap-1 bg-muted rounded-lg p-1 w-full sm:w-auto justify-center">
-                <Button
-                  variant={viewMode === "pdf" ? "default" : "ghost"}
-                  size="sm"
-                  onClick={() => setViewMode("pdf")}
-                  className="h-9 sm:h-7 px-3 flex-1 sm:flex-none"
-                >
-                  PDF
-                </Button>
-                <Button
-                  variant={viewMode === "split" ? "default" : "ghost"}
-                  size="sm"
-                  onClick={() => setViewMode("split")}
-                  className="h-9 sm:h-7 px-3 flex-1 sm:flex-none"
-                >
-                  Split
-                </Button>
-                <Button
-                  variant={viewMode === "latex" ? "default" : "ghost"}
-                  size="sm"
-                  onClick={() => setViewMode("latex")}
-                  className="h-9 sm:h-7 px-3 flex-1 sm:flex-none"
-                >
-                  LaTeX
-                </Button>
-              </div>
-            )}
-          </div>
-
-          {/* Row 2: File info (only shows when CV is loaded) */}
-          {currentCV && (
-            <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2 sm:gap-3 pt-2 border-t">
-              <div className="flex items-center gap-2 flex-wrap">
-                <span className="text-sm font-medium">Current:</span>
-                <span className="text-sm text-muted-foreground">{currentCV.name}</span>
-                {currentCV.isActive && (
-                  <Badge variant="default" className="bg-green-600 text-white text-xs">
-                    Active
-                  </Badge>
-                )}
-                {hasUnsavedChanges && (
-                  <Badge variant="secondary" className="text-xs">
-                    Unsaved changes
-                  </Badge>
-                )}
-                {modelUsed && (
-                  <Badge variant={fallbackUsed ? "secondary" : "outline"} className="text-xs">
-                    {modelUsed}
-                    {fallbackUsed && " (fallback)"}
-                  </Badge>
-                )}
-              </div>
-              <div className="hidden sm:block flex-1" />
-              {hasUnsavedChanges && (
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => void handleSaveCV()}
-                  disabled={cvUpdating}
-                  className="h-9 sm:h-7 w-full sm:w-auto"
-                >
-                  {cvUpdating ? "Saving..." : "Save Changes"}
-                </Button>
-              )}
-            </div>
-          )}
-        </CardContent>
-      </Card>
-
-      {/* Main Editor Area */}
-      <div
-        className={`grid gap-6 mb-6 ${advancedMode && viewMode === "split" ? "lg:grid-cols-2" : "grid-cols-1"}`}
-      >
-        {/* PDF Preview - Always visible in Simple Mode, conditional in Advanced Mode */}
-        {(!advancedMode || viewMode === "pdf" || viewMode === "split") && (
-          <Card className="min-h-[400px] md:min-h-[600px]">
-            <CardHeader className="pb-2">
-              <div className="flex items-center justify-between">
-                <CardTitle className="text-lg">PDF Preview</CardTitle>
-                {advancedMode && (
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={handleDownload}
-                    disabled={!previewPdfUrl}
-                  >
-                    Download PDF
-                  </Button>
-                )}
-              </div>
-            </CardHeader>
-            <CardContent className="h-[350px] md:h-[calc(100%-60px)]">
-              {previewPdfUrl ? (
-                <iframe
-                  src={previewPdfUrl}
-                  className="w-full h-full border rounded"
-                  title="CV Preview"
-                />
-              ) : (
-                <FileUpload
-                  onFileSelect={handleFileSelect}
-                  progress={uploadProgress}
-                  accept=".pdf,.docx,.tex"
-                  maxSize={10 * 1024 * 1024}
-                  disabled={uploading}
-                  title="Upload your CV"
-                  description="Drag and drop or click to browse (PDF, DOCX, or LaTeX)"
-                  className="h-full"
-                />
-              )}
-            </CardContent>
-          </Card>
-        )}
-
-        {/* LaTeX Editor - Only in Advanced Mode */}
-        {advancedMode && (viewMode === "latex" || viewMode === "split") && (
-          <Card className="h-[600px]">
-            <CardHeader className="pb-2">
-              <div className="flex items-center justify-between">
-                <CardTitle className="text-lg">LaTeX Source</CardTitle>
-                <div className="flex gap-2">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => handleCompile(false)}
-                    disabled={compiling || !latexContent}
-                  >
-                    {compiling ? "Compiling..." : "Preview"}
-                  </Button>
-                  <Button
-                    size="sm"
-                    onClick={() => handleCompile(true)}
-                    disabled={compiling || !latexContent}
-                  >
-                    Save
-                  </Button>
-                  <Button
-                    variant="secondary"
-                    size="sm"
-                    onClick={handleOpenInOverleaf}
-                    disabled={!latexContent}
-                    title="Open in Overleaf to compile (fallback if compilation fails)"
-                  >
-                    Open in Overleaf
-                  </Button>
-                </div>
-              </div>
-            </CardHeader>
-            <CardContent className="h-[calc(100%-60px)]">
-              <LaTeXEditor
-                value={latexContent}
-                onChange={setLatexContent}
-                placeholder="Upload a PDF to extract LaTeX, or paste your LaTeX source here..."
-              />
-            </CardContent>
-          </Card>
-        )}
+      {/* Toolbar - Between AI input and editor */}
+      <div className="px-4 sm:px-6 py-3 bg-slate-100 dark:bg-slate-900/50 border-b border-slate-200 dark:border-slate-800">
+        <div className="max-w-[1600px] mx-auto">
+          <EditorToolbar
+            models={availableModels.map((m) => ({
+              id: m.id,
+              name: m.name,
+              cost: m.cost,
+              available: m.available,
+            }))}
+            selectedModel={selectedModel}
+            onModelChange={setSelectedModel}
+            templates={availableTemplates.map((t) => ({ id: t.id, name: t.name }))}
+            selectedTemplate={selectedTemplate}
+            onTemplateChange={(id) => void handleTemplateChange(id)}
+            viewMode={viewMode}
+            onViewModeChange={setViewMode}
+            atsScore={atsAnalysis?.score}
+            onDownload={handleDownload}
+            onOpenOverleaf={handleOpenInOverleaf}
+            downloadDisabled={!previewPdfUrl}
+            disabled={uploading}
+            isSaving={cvUpdating}
+            onSave={() => void handleSaveCV()}
+            hasUnsavedChanges={hasUnsavedChanges}
+            className="border-0 pt-0"
+          />
+        </div>
       </div>
 
-      {/* AI Assistant - Only in Advanced Mode */}
-      {advancedMode && (
-        <Card className="mb-6">
-          <CardHeader>
-            <CardTitle className="text-lg">AI Assistant</CardTitle>
-            <CardDescription>
-              Describe the changes you want to make and AI will modify your CV.
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="flex flex-col sm:flex-row gap-3 sm:gap-4">
-              <Input
-                value={aiInstruction}
-                onChange={(e) => setAiInstruction(e.target.value)}
-                placeholder='e.g., "Add a new skill: Kubernetes" or "Make the summary more concise"'
-                className="flex-1"
-                onKeyDown={(e) => {
-                  if (e.key === "Enter" && !e.shiftKey) {
-                    e.preventDefault();
-                    void handleAIModify();
-                  }
-                }}
-              />
-              <Button
-                onClick={handleAIModify}
-                disabled={modifying || !latexContent || !aiInstruction}
-                className="w-full sm:w-auto"
-              >
-                {modifying ? "Modifying..." : "Apply"}
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
-      )}
-
-      {/* ATS Analysis - Only in Advanced Mode */}
-      {advancedMode && (
-        <Card>
-          <CardHeader>
-            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
-              <div>
-                <CardTitle className="text-lg">ATS Compliance Check</CardTitle>
-                <CardDescription>
-                  Analyze your CV for Applicant Tracking System compatibility.
-                </CardDescription>
-              </div>
-              <Button
-                variant="outline"
-                onClick={handleATSCheck}
-                disabled={analyzing || !latexContent}
-                className="w-full sm:w-auto"
-              >
-                {analyzing ? "Analyzing..." : "Check ATS Score"}
-              </Button>
-            </div>
-          </CardHeader>
-          {atsAnalysis && (
-            <CardContent>
-              <div className="space-y-4">
-                {/* Score */}
-                <div className="flex items-center gap-4">
-                  <div
-                    className={`text-4xl font-bold ${
-                      atsAnalysis.score >= 80
-                        ? "text-green-600"
-                        : atsAnalysis.score >= 60
-                          ? "text-yellow-600"
-                          : "text-red-600"
-                    }`}
-                  >
-                    {atsAnalysis.score}
+      {/* Main Editor Area */}
+      <main className="flex-1 px-4 sm:px-6 py-4 min-h-0">
+        <div className="max-w-[1600px] mx-auto h-full">
+          <div
+            className={`grid gap-4 h-[calc(100vh-340px)] sm:h-[calc(100vh-300px)] min-h-[400px] sm:min-h-[500px] ${
+              viewMode === "split" ? "lg:grid-cols-2" : "grid-cols-1"
+            }`}
+          >
+            {/* PDF Preview Panel */}
+            {(viewMode === "pdf" || viewMode === "split") && (
+              <Card className="bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 flex flex-col overflow-hidden">
+                <CardHeader className="py-3 px-4 bg-slate-50 dark:bg-slate-900/50 border-b border-slate-200 dark:border-slate-700">
+                  <div className="flex items-center justify-between">
+                    <CardTitle className="text-sm font-medium text-slate-600 dark:text-slate-400">
+                      PDF Preview
+                    </CardTitle>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={handleDownload}
+                      disabled={!previewPdfUrl}
+                      className="h-7 text-xs text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200"
+                    >
+                      Download
+                    </Button>
                   </div>
-                  <div className="flex-1">
-                    <div className="h-2 bg-muted rounded-full overflow-hidden">
-                      <div
-                        className={`h-full ${
-                          atsAnalysis.score >= 80
-                            ? "bg-green-500"
-                            : atsAnalysis.score >= 60
-                              ? "bg-yellow-500"
-                              : "bg-red-500"
-                        }`}
-                        style={{ width: `${atsAnalysis.score}%` }}
-                      />
+                </CardHeader>
+                <CardContent className="flex-1 p-4 overflow-hidden">
+                  {previewPdfUrl ? (
+                    <iframe
+                      src={previewPdfUrl}
+                      className="w-full h-full border border-slate-200 dark:border-slate-600 rounded-lg bg-white"
+                      title="CV Preview"
+                    />
+                  ) : (
+                    <FileUpload
+                      onFileSelect={handleFileSelect}
+                      progress={uploadProgress}
+                      accept=".pdf,.docx,.tex"
+                      maxSize={10 * 1024 * 1024}
+                      disabled={uploading}
+                      title={
+                        currentCV && !currentCV.latexContent
+                          ? "Re-upload to enable editing"
+                          : "Upload your CV"
+                      }
+                      description={
+                        currentCV && !currentCV.latexContent
+                          ? "This CV was imported without content. Upload the file again to edit it."
+                          : "Drag and drop or click to browse (PDF, DOCX, or LaTeX)"
+                      }
+                      className="h-full"
+                    />
+                  )}
+                </CardContent>
+              </Card>
+            )}
+
+            {/* LaTeX Editor Panel */}
+            {(viewMode === "latex" || viewMode === "split") && (
+              <Card className="bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 flex flex-col overflow-hidden">
+                <CardHeader className="py-3 px-4 bg-slate-50 dark:bg-slate-900/50 border-b border-slate-200 dark:border-slate-700">
+                  <div className="flex items-center justify-between">
+                    <CardTitle className="text-sm font-medium text-slate-600 dark:text-slate-400">
+                      LaTeX Source
+                    </CardTitle>
+                    <div className="flex gap-2">
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => void handleCompile(false)}
+                        disabled={compiling || !latexContent}
+                        className="h-7 text-xs text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200"
+                      >
+                        {compiling ? "Compiling..." : "Preview"}
+                      </Button>
+                      <Button
+                        size="sm"
+                        onClick={() => void handleCompile(true)}
+                        disabled={compiling || !latexContent}
+                        className="h-7 text-xs"
+                      >
+                        Save
+                      </Button>
                     </div>
                   </div>
-                </div>
-
-                {/* Summary */}
-                <p className="text-sm text-muted-foreground">{atsAnalysis.summary}</p>
-
-                {/* Issues */}
-                {atsAnalysis.issues.length > 0 && (
-                  <div className="space-y-2">
-                    <h4 className="font-medium">Issues Found:</h4>
-                    {atsAnalysis.issues.map((issue, index) => (
-                      <div
-                        key={index}
-                        className={`p-3 rounded-lg border ${
-                          issue.severity === "error"
-                            ? "bg-red-50 dark:bg-red-900/30 border-red-200 dark:border-red-700"
-                            : issue.severity === "warning"
-                              ? "bg-yellow-50 dark:bg-yellow-900/30 border-yellow-200 dark:border-yellow-700"
-                              : "bg-blue-50 dark:bg-blue-900/30 border-blue-200 dark:border-blue-700"
-                        }`}
-                      >
-                        <div className="flex items-start gap-2">
-                          <Badge
-                            variant={
-                              issue.severity === "error"
-                                ? "destructive"
-                                : issue.severity === "warning"
-                                  ? "outline"
-                                  : "secondary"
-                            }
-                          >
-                            {issue.severity}
-                          </Badge>
-                          <div className="flex-1">
-                            <p className="text-sm font-medium">{issue.message}</p>
-                            <p className="text-sm text-muted-foreground mt-1">
-                              💡 {issue.suggestion}
-                            </p>
-                          </div>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </div>
-            </CardContent>
-          )}
-        </Card>
-      )}
+                </CardHeader>
+                <CardContent className="flex-1 p-0 overflow-hidden">
+                  <LaTeXEditor
+                    value={latexContent}
+                    onChange={setLatexContent}
+                    placeholder="Upload a CV to extract LaTeX, or paste your LaTeX source here..."
+                    className="h-full border-0 rounded-none"
+                  />
+                </CardContent>
+              </Card>
+            )}
+          </div>
+        </div>
+      </main>
     </div>
   );
 }

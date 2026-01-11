@@ -25,7 +25,7 @@ test.describe("Authentication Pages", () => {
     });
 
     test("has navigation back to home", async ({ page }) => {
-      const logo = page.getByRole("link", { name: /job hunt ai/i });
+      const logo = page.getByRole("link", { name: /careerpal/i });
       await expect(logo).toBeVisible();
     });
   });

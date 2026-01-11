@@ -1,5 +1,6 @@
 import { AuthProvider } from "@/components/auth-provider";
 import { CommandPalette } from "@/components/command-palette";
+import { Logo } from "@/components/logo";
 import { MobileMenu } from "@/components/mobile-menu";
 import { ThemeProvider } from "@/components/theme-provider";
 import { ThemeToggle } from "@/components/theme-toggle";
@@ -15,8 +16,9 @@ import type { JSX, ReactNode } from "react";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "Job Hunt AI - AI-Powered Job Application Assistant",
-  description: "Analyze jobs, generate cover letters, and track applications with AI",
+  title: "CareerPal - Your AI Job Search Companion",
+  description:
+    "Your friendly AI companion for job hunting. Analyze jobs, generate cover letters, and track applications with ease.",
 };
 
 export default function RootLayout({
@@ -44,9 +46,7 @@ export default function RootLayout({
                         {/* Mobile Menu - Visible only on mobile */}
                         <MobileMenu />
 
-                        <Link href="/" className="text-xl font-bold text-slate-900 dark:text-white">
-                          Job Hunt AI
-                        </Link>
+                        <Logo />
 
                         {/* Desktop Navigation - Hidden on mobile */}
                         <div className="hidden md:flex gap-6 ml-8">

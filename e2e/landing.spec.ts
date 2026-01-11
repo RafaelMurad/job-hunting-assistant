@@ -14,14 +14,14 @@ test.describe("Landing Page", () => {
 
   test("has correct title", async ({ page }) => {
     // Actual title from metadata
-    await expect(page).toHaveTitle(/Job Hunt AI/);
+    await expect(page).toHaveTitle(/CareerPal/);
   });
 
   test("displays hero section", async ({ page }) => {
     // Check for main heading
     const heading = page.getByRole("heading", { level: 1 });
     await expect(heading).toBeVisible();
-    await expect(heading).toContainText(/AI-Powered/i);
+    await expect(heading).toContainText(/CareerPal/i);
   });
 
   test("has call-to-action buttons", async ({ page }) => {
@@ -60,7 +60,8 @@ test.describe("Navigation", () => {
   test("logo links to home", async ({ page }) => {
     await page.goto("/");
 
-    const logo = page.getByRole("link", { name: /job hunt ai/i });
+    // Use exact match to avoid matching "Try CareerPal Free" button
+    const logo = page.getByRole("link", { name: "CareerPal", exact: true });
     await expect(logo).toBeVisible();
     await expect(logo).toHaveAttribute("href", "/");
   });
