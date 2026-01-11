@@ -11,15 +11,15 @@
 
 export type {
   AIProvider,
-  LatexExtractionModel,
-  ModelInfo,
-  JobAnalysisResult,
-  ParsedCVData,
   ATSAnalysisResult,
-  LatexExtractionResult,
-  TemplateExtractionResult,
   CVTemplateId,
   ExtractedCVContent,
+  JobAnalysisResult,
+  LatexExtractionModel,
+  LatexExtractionResult,
+  ModelInfo,
+  ParsedCVData,
+  TemplateExtractionResult,
 } from "./types";
 
 // =============================================================================
@@ -28,12 +28,31 @@ export type {
 
 export {
   AI_CONFIG,
-  LATEX_MODELS,
-  isModelAvailable,
   getAvailableModels,
   getModelInfo,
   getModelName,
+  isModelAvailable,
+  LATEX_MODELS,
 } from "./config";
+
+// =============================================================================
+// KEY MANAGER EXPORTS (BYOK support for local mode)
+// =============================================================================
+
+export {
+  clearAllAPIKeys,
+  getAPIKey,
+  getAPIKeyStatus,
+  getFirstAvailableProvider,
+  hasAnyAPIKey,
+  hasAPIKey,
+  maskAPIKey,
+  PROVIDER_INFO,
+  removeAPIKey,
+  setAPIKey,
+  testAPIKey,
+  validateKeyFormat,
+} from "./key-manager";
 
 // =============================================================================
 // PROVIDER EXPORTS (for direct access if needed)
@@ -42,16 +61,16 @@ export {
 // Gemini
 export {
   analyzeWithGemini,
-  generateCoverLetterWithGemini,
-  parseCVWithGeminiVision,
-  parseCVWithGeminiText,
-  extractLatexWithGemini,
-  extractLatexTwoPass,
   extractContentWithGemini,
+  extractLatexTwoPass,
+  extractLatexWithGemini,
+  generateCoverLetterWithGemini,
+  parseCVWithGeminiText,
+  parseCVWithGeminiVision,
 } from "./providers/gemini";
 
 // OpenRouter
-export { extractLatexWithOpenRouter, extractContentWithOpenRouter } from "./providers/openrouter";
+export { extractContentWithOpenRouter, extractLatexWithOpenRouter } from "./providers/openrouter";
 
 // =============================================================================
 // EXTRACTION EXPORTS
@@ -62,27 +81,27 @@ export { cleanAndValidateLatex, cleanJsonResponse, extractJsonFromText } from ".
 
 // LaTeX extraction
 export {
-  extractLatexFromPDF,
+  analyzeATSCompliance,
   extractLatexFromDocx,
+  extractLatexFromPDF,
   extractLatexWithModel,
   modifyLatexWithAI,
-  analyzeATSCompliance,
 } from "./extraction/latex";
 
 // Content extraction (template-based)
 export {
-  extractWithTemplate,
-  regenerateWithTemplate,
-  parseExtractedContent,
   extractedCVContentSchema,
+  extractWithTemplate,
+  parseExtractedContent,
+  regenerateWithTemplate,
 } from "./extraction/content";
 
 // CV data extraction (with rate-limit fallback)
-export { parseCVWithFallback, parseCVTextWithFallback } from "./extraction/cv-data";
+export { parseCVTextWithFallback, parseCVWithFallback } from "./extraction/cv-data";
 
 // =============================================================================
 // GENERATION EXPORTS (unified API)
 // =============================================================================
 
-export { analyzeJob } from "./generation/job-analysis";
 export { generateCoverLetter } from "./generation/cover-letter";
+export { analyzeJob } from "./generation/job-analysis";
