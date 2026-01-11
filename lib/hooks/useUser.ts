@@ -22,7 +22,7 @@ export interface User {
   id: string;
   name: string;
   email: string;
-  phone?: string | null;
+  phone?: string | null | undefined;
   location: string;
   summary: string;
   experience: string;

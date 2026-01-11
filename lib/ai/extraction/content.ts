@@ -4,14 +4,33 @@
  * Template-based CV extraction with structured JSON output.
  * Uses Zod for robust validation to fix type guard issues.
  * Includes automatic rate-limit fallback across available models.
+ * Supports BYOK (Bring Your Own Key) for client-side execution.
  */
 
 import { type ExtractedCVContent, generateLatexFromContent } from "@/lib/cv-templates";
 import { z } from "zod";
-import { AI_CONFIG, getModelInfo, isModelAvailable, LATEX_MODELS } from "../config";
+import {
+  AI_CONFIG,
+  getModelInfo,
+  isModelAvailable,
+  LATEX_MODELS,
+  type AvailabilityOptions,
+} from "../config";
 import { extractContentWithGemini } from "../providers/gemini";
 import { extractContentWithOpenRouter } from "../providers/openrouter";
 import type { CVTemplateId, LatexExtractionModel, TemplateExtractionResult } from "../types";
+
+// =============================================================================
+// TYPES
+// =============================================================================
+
+/**
+ * Options for AI operations (BYOK support)
+ */
+export interface AIOptions {
+  geminiKey?: string | undefined;
+  openrouterKey?: string | undefined;
+}
 
 // =============================================================================
 // RATE LIMIT DETECTION
@@ -46,8 +65,11 @@ function isRateLimitError(error: unknown): boolean {
 /**
  * Get ordered list of available fallback models (excluding the failed one)
  */
-function getAvailableFallbackModels(excludeModel: LatexExtractionModel): LatexExtractionModel[] {
-  return LATEX_MODELS.filter((m) => m.id !== excludeModel && isModelAvailable(m.id)).map(
+function getAvailableFallbackModels(
+  excludeModel: LatexExtractionModel,
+  options?: AvailabilityOptions
+): LatexExtractionModel[] {
+  return LATEX_MODELS.filter((m) => m.id !== excludeModel && isModelAvailable(m.id, options)).map(
     (m) => m.id as LatexExtractionModel
   );
 }
@@ -179,11 +201,14 @@ export function parseExtractedContent(responseText: string): ExtractedCVContent 
 async function extractContentWithModel(
   base64Data: string,
   mimeType: string,
-  model: LatexExtractionModel
+  model: LatexExtractionModel,
+  options?: AIOptions
 ): Promise<ExtractedCVContent> {
   switch (model) {
     case "gemini-2.5-flash": {
-      const rawContent = await extractContentWithGemini(base64Data, mimeType, model);
+      const rawContent = await extractContentWithGemini(base64Data, mimeType, model, {
+        apiKey: options?.geminiKey,
+      });
       return parseExtractedContent(JSON.stringify(rawContent));
     }
     case "qwen-2.5-vl":
@@ -197,7 +222,8 @@ async function extractContentWithModel(
       const rawContent = await extractContentWithOpenRouter(
         base64Data,
         mimeType,
-        modelInfo.openrouterModel
+        modelInfo.openrouterModel,
+        { apiKey: options?.openrouterKey }
       );
       return parseExtractedContent(JSON.stringify(rawContent));
     }
@@ -214,25 +240,30 @@ export async function extractWithTemplate(
   buffer: Buffer,
   mimeType: string,
   templateId: CVTemplateId,
-  model: LatexExtractionModel = AI_CONFIG.defaultLatexModel
+  model: LatexExtractionModel = AI_CONFIG.defaultLatexModel,
+  options?: AIOptions
 ): Promise<TemplateExtractionResult> {
   const base64Data = buffer.toString("base64");
   const triedModels: LatexExtractionModel[] = [];
+  const availabilityOptions: AvailabilityOptions = {
+    geminiKey: options?.geminiKey,
+    openrouterKey: options?.openrouterKey,
+  };
 
   // Check if requested model is available
-  if (!isModelAvailable(model)) {
+  if (!isModelAvailable(model, availabilityOptions)) {
     console.warn(`[extractWithTemplate] Model ${model} not available, finding fallback`);
-    const fallbacks = getAvailableFallbackModels(model);
+    const fallbacks = getAvailableFallbackModels(model, availabilityOptions);
     const firstFallback = fallbacks[0];
     if (!firstFallback) {
-      throw new Error("No AI models available. Please configure at least one API key.");
+      throw new Error("No AI models available. Please configure at least one API key in Settings.");
     }
     model = firstFallback;
   }
 
   // Try the requested model first
   try {
-    const content = await extractContentWithModel(base64Data, mimeType, model);
+    const content = await extractContentWithModel(base64Data, mimeType, model, options);
     const latex = generateLatexFromContent(content, templateId);
 
     return {
@@ -249,13 +280,18 @@ export async function extractWithTemplate(
     if (isRateLimitError(error)) {
       console.warn(`[extractWithTemplate] ${model} rate limited, trying fallback models...`);
 
-      const fallbacks = getAvailableFallbackModels(model);
+      const fallbacks = getAvailableFallbackModels(model, availabilityOptions);
       for (const fallbackModel of fallbacks) {
         if (triedModels.includes(fallbackModel)) continue;
 
         console.warn(`[extractWithTemplate] Trying fallback: ${fallbackModel}`);
         try {
-          const content = await extractContentWithModel(base64Data, mimeType, fallbackModel);
+          const content = await extractContentWithModel(
+            base64Data,
+            mimeType,
+            fallbackModel,
+            options
+          );
           const latex = generateLatexFromContent(content, templateId);
 
           console.warn(`[extractWithTemplate] Fallback ${fallbackModel} succeeded`);

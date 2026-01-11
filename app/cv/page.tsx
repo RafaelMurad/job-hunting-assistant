@@ -25,7 +25,8 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { FileUpload, type UploadProgress } from "@/components/ui/file-upload";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger } from "@/components/ui/select";
-import { useCV, type CVItem } from "@/lib/hooks/useCV";
+import { useStorageCV, type CVData } from "@/lib/hooks";
+import { useStorage } from "@/lib/storage/provider";
 import { CheckCircle, Loader2, Upload, X, XCircle } from "lucide-react";
 import { useCallback, useEffect, useState, type ChangeEvent, type JSX } from "react";
 
@@ -73,23 +74,27 @@ type ViewMode = "pdf" | "latex" | "split";
 // ============================================
 
 export default function CVEditorPage(): JSX.Element {
-  // CV hook for data management
+  // Storage adapter for file operations (loading PDFs from IndexedDB)
+  const storage = useStorage();
+
+  // CV hook for data management (storage handles local/demo mode)
   const {
     cvs,
     activeCV,
     loading: cvsLoading,
     updating: cvUpdating,
+    uploading: cvUploading,
     update: updateCV,
     setActive: setActiveCV,
-    refetch: refetchCVs,
+    upload: uploadCV,
     canAddMore,
-  } = useCV();
+  } = useStorageCV();
 
   // CV switching state
   const [isSwitchingCV, setIsSwitchingCV] = useState(false);
 
   // Current CV being edited
-  const [currentCV, setCurrentCV] = useState<CVItem | null>(null);
+  const [currentCV, setCurrentCV] = useState<CVData | null>(null);
   const [latexContent, setLatexContent] = useState<string>("");
   const [previewPdfUrl, setPreviewPdfUrl] = useState<string | null>(null);
   const [viewMode, setViewMode] = useState<ViewMode>("split");
@@ -104,10 +109,9 @@ export default function CVEditorPage(): JSX.Element {
   // Template selection state
   const [availableTemplates, setAvailableTemplates] = useState<TemplateInfo[]>([]);
   const [selectedTemplate, setSelectedTemplate] = useState<string>("tech-minimalist");
-  const [extractedContent, setExtractedContent] = useState<unknown>(null);
+  const [extractedContent, _setExtractedContent] = useState<unknown>(null);
 
   // Loading states
-  const [uploading, setUploading] = useState(false);
   const [compiling, setCompiling] = useState(false);
   const [modifying, setModifying] = useState(false);
   const [analyzing, setAnalyzing] = useState(false);
@@ -124,22 +128,60 @@ export default function CVEditorPage(): JSX.Element {
   useEffect(() => {
     if (cvsLoading) return;
 
+    // Helper to load PDF blob from local storage
+    const loadLocalPdf = async (localUrl: string): Promise<void> => {
+      try {
+        const blob = await storage.getFile(localUrl);
+        if (blob) {
+          const blobUrl = URL.createObjectURL(blob);
+          setPreviewPdfUrl(blobUrl);
+        } else {
+          // PDF not found in storage, try to compile from LaTeX
+          setPreviewPdfUrl(null);
+        }
+      } catch (error) {
+        console.error("Failed to load PDF from local storage:", error);
+        setPreviewPdfUrl(null);
+      }
+    };
+
     if (activeCV) {
       setCurrentCV(activeCV);
       setLatexContent(activeCV.latexContent ?? "");
-      setPreviewPdfUrl(activeCV.pdfUrl);
       setHasUnsavedChanges(false);
 
-      // Auto-compile if we have LaTeX content but no PDF URL
-      if (activeCV.latexContent && !activeCV.pdfUrl) {
-        void compileLatexForPreview(activeCV.latexContent);
+      // Handle PDF URL based on type
+      const pdfUrl = activeCV.pdfUrl;
+      if (pdfUrl && pdfUrl.length > 0) {
+        if (pdfUrl.startsWith("local://")) {
+          // Local storage URL - load blob and create displayable URL
+          void loadLocalPdf(pdfUrl);
+        } else {
+          // Remote URL (Vercel Blob) - use directly
+          setPreviewPdfUrl(pdfUrl);
+        }
+      } else {
+        setPreviewPdfUrl(null);
+        // Auto-compile if we have LaTeX content but no PDF URL
+        if (activeCV.latexContent) {
+          void compileLatexForPreview(activeCV.latexContent);
+        }
       }
     } else {
       setCurrentCV(null);
       setLatexContent("");
       setPreviewPdfUrl(null);
     }
-  }, [cvsLoading, activeCV]);
+  }, [cvsLoading, activeCV, storage]);
+
+  // Cleanup blob URLs to prevent memory leaks
+  useEffect(() => {
+    return () => {
+      if (previewPdfUrl && previewPdfUrl.startsWith("blob:")) {
+        URL.revokeObjectURL(previewPdfUrl);
+      }
+    };
+  }, [previewPdfUrl]);
 
   // Load models and templates on mount
   useEffect(() => {
@@ -284,154 +326,86 @@ export default function CVEditorPage(): JSX.Element {
       }
 
       try {
-        setUploading(true);
+        setUploadProgress({
+          status: "processing",
+          progress: 30,
+          step: "Extracting LaTeX...",
+          message: `Using ${availableModels.find((m) => m.id === selectedModel)?.name || selectedModel}`,
+        });
 
-        // Get list of models to try (selected first, then others)
-        const modelsToTry = [
-          selectedModel,
-          ...availableModels.filter((m) => m.available && m.id !== selectedModel).map((m) => m.id),
-        ];
+        // Use the storage-aware upload method
+        const result = await uploadCV(file, {
+          model: selectedModel,
+          template: selectedTemplate,
+          cvId: currentCV?.id,
+        });
 
-        let lastError: string | null = null;
-        const totalModels = modelsToTry.length;
-
-        // Try each model until one succeeds
-        for (let i = 0; i < modelsToTry.length; i++) {
-          const modelToTry = modelsToTry[i];
-          if (!modelToTry) continue;
-
-          const modelName = availableModels.find((m) => m.id === modelToTry)?.name || modelToTry;
-          const attemptNumber = i + 1;
-
-          // Update progress with model info
+        if (!result) {
           setUploadProgress({
-            status: "processing",
-            progress: Math.round((attemptNumber / totalModels) * 50),
-            step: `Extracting with ${modelName}...`,
-            message:
-              attemptNumber > 1
-                ? `Attempt ${attemptNumber}/${totalModels} - Previous model was rate limited`
-                : `Using ${modelName}`,
+            status: "error",
+            progress: 0,
+            step: "Failed",
+            message: "Upload failed",
           });
-
-          const formData = new FormData();
-          formData.append("file", file);
-          formData.append("model", modelToTry);
-          formData.append("template", selectedTemplate);
-
-          if (currentCV) {
-            formData.append("cvId", currentCV.id);
-          }
-
-          try {
-            const response = await fetch("/api/cv/store", {
-              method: "POST",
-              body: formData,
-            });
-
-            const result = await response.json();
-
-            if (response.ok) {
-              // Success!
-              setUploadProgress({
-                status: "complete",
-                progress: 100,
-                step: "Complete!",
-                message: `Extracted successfully with ${modelName}`,
-              });
-
-              setLatexContent(result.data.latexContent || "");
-              setPreviewPdfUrl(result.data.pdfUrl);
-              setAtsAnalysis(null);
-              setHasUnsavedChanges(false);
-
-              if (result.data.extractedContent) {
-                setExtractedContent(result.data.extractedContent);
-              }
-
-              refetchCVs();
-              const usedModel = result.data.modelUsed || modelToTry;
-              showToast(
-                "success",
-                attemptNumber > 1
-                  ? `CV uploaded! (Used ${usedModel} after ${attemptNumber - 1} retries)`
-                  : "CV uploaded successfully!"
-              );
-              return;
-            }
-
-            // Check if we should retry with another model
-            const errorMsg = result.error || "Upload failed";
-            const errorLower = errorMsg.toLowerCase();
-
-            // Retry on rate limits OR any server error (500s are often transient)
-            const shouldRetry =
-              response.status >= 500 ||
-              errorLower.includes("rate limit") ||
-              errorLower.includes("quota") ||
-              errorLower.includes("429") ||
-              errorLower.includes("exhausted") ||
-              errorLower.includes("error occurred") ||
-              errorLower.includes("try again");
-
-            if (shouldRetry && i < modelsToTry.length - 1) {
-              console.warn(
-                `[Upload] ${modelToTry} failed (${response.status}): ${errorMsg}, trying next model...`
-              );
-              lastError = errorMsg;
-
-              // Show retry feedback
-              setUploadProgress({
-                status: "processing",
-                progress: Math.round(((i + 1) / totalModels) * 50),
-                step: `${modelName} failed`,
-                message: `Retrying with next model... (${i + 1}/${totalModels})`,
-              });
-
-              // Small delay before retry
-              await new Promise((r) => setTimeout(r, 1000));
-              continue;
-            }
-
-            // No more models to try or non-retryable error
-            setUploadProgress({
-              status: "error",
-              progress: 0,
-              step: "Failed",
-              message: errorMsg,
-            });
-            showToast("error", errorMsg);
-            return;
-          } catch (fetchError) {
-            console.error(`[Upload] Fetch error for ${modelToTry}:`, fetchError);
-            lastError = "Network error";
-            if (i < modelsToTry.length - 1) continue;
-          }
+          showToast("error", "Failed to upload CV");
+          return;
         }
 
-        // All models failed
+        // Success!
         setUploadProgress({
-          status: "error",
-          progress: 0,
-          step: "All models failed",
-          message: "All AI models are rate limited",
+          status: "complete",
+          progress: 100,
+          step: "Complete!",
+          message: result.modelUsed
+            ? `Extracted successfully with ${result.modelUsed}`
+            : "Extracted successfully",
         });
+
+        setLatexContent(result.cv.latexContent ?? "");
+        setAtsAnalysis(null);
+        setHasUnsavedChanges(false);
+
+        // Handle PDF URL based on type
+        const pdfUrl = result.cv.pdfUrl;
+        if (pdfUrl && pdfUrl.length > 0) {
+          if (pdfUrl.startsWith("local://")) {
+            // Local storage URL - load blob and create displayable URL
+            try {
+              const blob = await storage.getFile(pdfUrl);
+              if (blob) {
+                const blobUrl = URL.createObjectURL(blob);
+                setPreviewPdfUrl(blobUrl);
+              } else {
+                setPreviewPdfUrl(null);
+              }
+            } catch {
+              setPreviewPdfUrl(null);
+            }
+          } else {
+            // Remote URL (Vercel Blob) - use directly
+            setPreviewPdfUrl(pdfUrl);
+          }
+        } else {
+          setPreviewPdfUrl(null);
+        }
+
         showToast(
-          "error",
-          lastError || "All AI models are rate limited. Please wait and try again."
+          "success",
+          result.fallbackUsed ? "CV uploaded! (Used fallback model)" : "CV uploaded successfully!"
         );
       } catch (error) {
         console.error("Upload error:", error);
-        showToast("error", "Upload failed. Please try again.");
-        setUploadProgress({ status: "error", progress: 0, message: "Upload failed" });
+        const errorMsg =
+          error instanceof Error ? error.message : "Upload failed. Please try again.";
+        showToast("error", errorMsg);
+        setUploadProgress({ status: "error", progress: 0, message: errorMsg });
       } finally {
-        setUploading(false);
         setTimeout(() => {
           setUploadProgress({ status: "idle", progress: 0 });
         }, 2000);
       }
     },
-    [selectedModel, selectedTemplate, currentCV, canAddMore, refetchCVs, availableModels]
+    [selectedModel, selectedTemplate, currentCV, canAddMore, uploadCV, availableModels, storage]
   );
 
   const handleFileSelect = useCallback(
@@ -732,10 +706,10 @@ export default function CVEditorPage(): JSX.Element {
 
           <Button
             onClick={() => document.getElementById("cv-upload")?.click()}
-            disabled={uploading}
+            disabled={cvUploading}
             className="h-10"
           >
-            {uploading ? (
+            {cvUploading ? (
               <>
                 <Loader2 className="w-4 h-4 mr-2 animate-spin" />
                 Uploading...
@@ -753,7 +727,7 @@ export default function CVEditorPage(): JSX.Element {
             accept=".pdf,.docx,.tex"
             className="hidden"
             onChange={handleUpload}
-            disabled={uploading}
+            disabled={cvUploading}
           />
         </div>
       </header>
@@ -792,7 +766,7 @@ export default function CVEditorPage(): JSX.Element {
             onDownload={handleDownload}
             onOpenOverleaf={handleOpenInOverleaf}
             downloadDisabled={!previewPdfUrl}
-            disabled={uploading}
+            disabled={cvUploading}
             isSaving={cvUpdating}
             onSave={() => void handleSaveCV()}
             hasUnsavedChanges={hasUnsavedChanges}
@@ -829,7 +803,7 @@ export default function CVEditorPage(): JSX.Element {
                   </div>
                 </CardHeader>
                 <CardContent className="flex-1 p-4 overflow-hidden">
-                  {previewPdfUrl ? (
+                  {previewPdfUrl && previewPdfUrl.length > 0 ? (
                     <iframe
                       src={previewPdfUrl}
                       className="w-full h-full border border-slate-200 dark:border-slate-600 rounded-lg bg-white"
@@ -841,7 +815,7 @@ export default function CVEditorPage(): JSX.Element {
                       progress={uploadProgress}
                       accept=".pdf,.docx,.tex"
                       maxSize={10 * 1024 * 1024}
-                      disabled={uploading}
+                      disabled={cvUploading}
                       title={
                         currentCV && !currentCV.latexContent
                           ? "Re-upload to enable editing"

@@ -6,81 +6,52 @@
  *
  * WHAT: Overview page showing profile summary, application stats, and quick actions.
  *
- * HOW: Server Component that fetches user data and renders cards.
- * Uses Server Components for initial data (no useEffect needed!).
+ * HOW: Client Component that uses storage hooks for dual-mode support.
+ * - Local mode: data from IndexedDB
+ * - Demo mode: data from tRPC/PostgreSQL
  */
 
-// Force dynamic rendering - this page uses Prisma which requires DATABASE_URL at runtime
-export const dynamic = "force-dynamic";
+"use client";
 
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { prisma } from "@/lib/db";
+import { useStorageUser, useStorageApplications } from "@/lib/hooks";
 import Link from "next/link";
 import type { JSX } from "react";
 
-/**
- * Fetch dashboard data on the server.
- * This runs at request time (not build time) because we're reading from DB.
- */
-async function getDashboardData(): Promise<{
-  user: Awaited<ReturnType<typeof prisma.user.findFirst>>;
-  recentApplications: Awaited<ReturnType<typeof prisma.application.findMany>>;
-  stats: { total: number; saved: number; applied: number; interviewing: number };
-}> {
-  const user = await prisma.user.findFirst();
+export default function DashboardPage(): JSX.Element {
+  const { user, loading: userLoading, isProfileComplete } = useStorageUser();
+  const { applications, stats, loading: appsLoading } = useStorageApplications();
 
-  if (!user) {
-    return {
-      user: null,
-      recentApplications: [],
-      stats: { total: 0, saved: 0, applied: 0, interviewing: 0 },
-    };
+  // Loading state
+  if (userLoading || appsLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-slate-50 dark:bg-slate-900">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-cyan-500 mx-auto mb-4"></div>
+          <p className="text-slate-600 dark:text-slate-400">Loading dashboard...</p>
+        </div>
+      </div>
+    );
   }
 
-  // Run queries in parallel for efficiency
-  const [recentApplications, total, saved, applied, interviewing] = await Promise.all([
-    // Get recent applications for display
-    prisma.application.findMany({
-      where: { userId: user.id },
-      orderBy: { createdAt: "desc" },
-      take: 5,
-    }),
-    // Get accurate counts for stats (not limited to 5)
-    prisma.application.count({ where: { userId: user.id } }),
-    prisma.application.count({ where: { userId: user.id, status: "saved" } }),
-    prisma.application.count({ where: { userId: user.id, status: "applied" } }),
-    prisma.application.count({ where: { userId: user.id, status: "interviewing" } }),
-  ]);
+  // Get recent applications (last 5)
+  const recentApplications = applications
+    .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
+    .slice(0, 5);
 
-  return {
-    user,
-    recentApplications,
-    stats: { total, saved, applied, interviewing },
-  };
-}
-
-export default async function DashboardPage(): Promise<JSX.Element> {
-  const { user, recentApplications, stats } = await getDashboardData();
-
-  // Check profile completion
-  const isProfileComplete =
-    user?.name &&
-    user?.email &&
-    user?.location &&
-    user?.summary &&
-    user?.experience &&
-    user?.skills;
-
-  const profileCompletionPercent = user
-    ? Math.round(
-        ([user.name, user.email, user.location, user.summary, user.experience, user.skills].filter(
-          Boolean
-        ).length /
-          6) *
-          100
-      )
-    : 0;
+  // Calculate profile completion percentage
+  const profileFields = [
+    user?.name,
+    user?.email,
+    user?.location,
+    user?.summary,
+    user?.experience,
+    user?.skills,
+  ];
+  const profileCompletionPercent = Math.round(
+    (profileFields.filter(Boolean).length / profileFields.length) * 100
+  );
 
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-slate-900 py-8">
@@ -140,12 +111,6 @@ export default async function DashboardPage(): Promise<JSX.Element> {
           </Card>
           <Card>
             <CardHeader className="pb-2">
-              <CardDescription>Saved</CardDescription>
-              <CardTitle className="text-3xl text-slate-600">{stats.saved}</CardTitle>
-            </CardHeader>
-          </Card>
-          <Card>
-            <CardHeader className="pb-2">
               <CardDescription>Applied</CardDescription>
               <CardTitle className="text-3xl text-sky-600">{stats.applied}</CardTitle>
             </CardHeader>
@@ -154,6 +119,12 @@ export default async function DashboardPage(): Promise<JSX.Element> {
             <CardHeader className="pb-2">
               <CardDescription>Interviewing</CardDescription>
               <CardTitle className="text-3xl text-emerald-600">{stats.interviewing}</CardTitle>
+            </CardHeader>
+          </Card>
+          <Card>
+            <CardHeader className="pb-2">
+              <CardDescription>Offers</CardDescription>
+              <CardTitle className="text-3xl text-purple-600">{stats.offers}</CardTitle>
             </CardHeader>
           </Card>
         </div>
@@ -233,7 +204,9 @@ export default async function DashboardPage(): Promise<JSX.Element> {
                               ? "bg-emerald-100 dark:bg-emerald-900/50 text-emerald-700 dark:text-emerald-300"
                               : app.status === "applied"
                                 ? "bg-sky-100 dark:bg-sky-900/50 text-sky-700 dark:text-sky-300"
-                                : "bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-300"
+                                : app.status === "offer"
+                                  ? "bg-purple-100 dark:bg-purple-900/50 text-purple-700 dark:text-purple-300"
+                                  : "bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-300"
                           }`}
                         >
                           {app.status}

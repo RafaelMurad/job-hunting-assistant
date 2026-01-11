@@ -3,7 +3,8 @@
 import { ConfirmationDialog } from "@/components/confirmation-dialog";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { useApplications, type ApplicationStatus } from "@/lib/hooks";
+import { useStorageApplications } from "@/lib/hooks";
+import type { ApplicationStatus } from "@/types";
 import { useRouter } from "next/navigation";
 import { useMemo, useState, type JSX } from "react";
 
@@ -61,8 +62,9 @@ export default function TrackerPage(): JSX.Element {
   const [notesDraft, setNotesDraft] = useState<string>("");
   const [savingNotesId, setSavingNotesId] = useState<string | null>(null);
 
-  // Data fetching (auth handled by tRPC middleware)
-  const { applications, stats, loading, updateStatus, updateNotes, remove } = useApplications();
+  // Data fetching (storage handles local/demo mode automatically)
+  const { applications, stats, loading, updateStatus, updateNotes, remove } =
+    useStorageApplications();
 
   // Filter and sort applications
   const filteredAndSortedApplications = useMemo(() => {
@@ -114,12 +116,12 @@ export default function TrackerPage(): JSX.Element {
 
   const handleStatusChange = (appId: string, newStatus: ApplicationStatus): void => {
     setUpdatingStatusId(appId);
-    updateStatus(appId, newStatus);
+    void updateStatus(appId, newStatus);
     setTimeout(() => setUpdatingStatusId(null), 500);
   };
 
   const handleDelete = (appId: string): void => {
-    remove(appId);
+    void remove(appId);
     setDeletingId(null);
   };
 
@@ -130,7 +132,7 @@ export default function TrackerPage(): JSX.Element {
 
   const handleSaveNotes = (appId: string): void => {
     setSavingNotesId(appId);
-    updateNotes(appId, notesDraft);
+    void updateNotes(appId, notesDraft);
     setTimeout(() => {
       setSavingNotesId(null);
       setEditingNotesId(null);

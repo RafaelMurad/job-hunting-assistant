@@ -2,13 +2,33 @@
  * CV Data Extraction Module
  *
  * Extract profile data from CVs with automatic rate-limit fallback.
+ * Supports BYOK (Bring Your Own Key) for client-side execution.
  */
 
-import { AI_CONFIG, getModelInfo, isModelAvailable, LATEX_MODELS } from "../config";
+import {
+  AI_CONFIG,
+  getAPIKeyForProvider,
+  getModelInfo,
+  isModelAvailable,
+  LATEX_MODELS,
+  type AvailabilityOptions,
+} from "../config";
 import { CV_EXTRACTION_PROMPT } from "../prompts";
 import { parsedCVDataSchema } from "../schemas";
 import type { LatexExtractionModel, ParsedCVData } from "../types";
 import { extractJsonFromText, parseJsonOrThrow } from "../utils";
+
+// =============================================================================
+// TYPES
+// =============================================================================
+
+/**
+ * Options for AI operations (BYOK support)
+ */
+export interface AIOptions {
+  geminiKey?: string | undefined;
+  openrouterKey?: string | undefined;
+}
 
 // =============================================================================
 // RATE LIMIT DETECTION
@@ -43,8 +63,11 @@ function isRateLimitError(error: unknown): boolean {
 /**
  * Get ordered list of available fallback models (excluding the failed one)
  */
-function getAvailableFallbackModels(excludeModel: LatexExtractionModel): LatexExtractionModel[] {
-  return LATEX_MODELS.filter((m) => m.id !== excludeModel && isModelAvailable(m.id)).map(
+function getAvailableFallbackModels(
+  excludeModel: LatexExtractionModel,
+  options?: AvailabilityOptions
+): LatexExtractionModel[] {
+  return LATEX_MODELS.filter((m) => m.id !== excludeModel && isModelAvailable(m.id, options)).map(
     (m) => m.id as LatexExtractionModel
   );
 }
@@ -56,10 +79,18 @@ function getAvailableFallbackModels(excludeModel: LatexExtractionModel): LatexEx
 /**
  * Parse CV using Gemini with native PDF vision.
  */
-async function parseCVWithGeminiDirect(pdfBuffer: Buffer): Promise<ParsedCVData> {
+async function parseCVWithGeminiDirect(
+  pdfBuffer: Buffer,
+  options?: AIOptions
+): Promise<ParsedCVData> {
   const { GoogleGenerativeAI } = await import("@google/generative-ai");
 
-  const genAI = new GoogleGenerativeAI(AI_CONFIG.apiKeys.gemini!);
+  const apiKey = getAPIKeyForProvider("gemini", options?.geminiKey);
+  if (!apiKey) {
+    throw new Error("Gemini API key not configured");
+  }
+
+  const genAI = new GoogleGenerativeAI(apiKey);
   const model = genAI.getGenerativeModel({
     model: AI_CONFIG.models.gemini,
   });
@@ -87,10 +118,18 @@ async function parseCVWithGeminiDirect(pdfBuffer: Buffer): Promise<ParsedCVData>
 /**
  * Parse CV using Gemini with extracted text (for DOCX files).
  */
-async function parseCVTextWithGeminiDirect(cvText: string): Promise<ParsedCVData> {
+async function parseCVTextWithGeminiDirect(
+  cvText: string,
+  options?: AIOptions
+): Promise<ParsedCVData> {
   const { GoogleGenerativeAI } = await import("@google/generative-ai");
 
-  const genAI = new GoogleGenerativeAI(AI_CONFIG.apiKeys.gemini!);
+  const apiKey = getAPIKeyForProvider("gemini", options?.geminiKey);
+  if (!apiKey) {
+    throw new Error("Gemini API key not configured");
+  }
+
+  const genAI = new GoogleGenerativeAI(apiKey);
   const model = genAI.getGenerativeModel({
     model: AI_CONFIG.models.gemini,
   });
@@ -117,13 +156,19 @@ async function parseCVTextWithGeminiDirect(cvText: string): Promise<ParsedCVData
 async function parseCVWithOpenRouter(
   base64Data: string,
   mimeType: string,
-  openrouterModel: string
+  openrouterModel: string,
+  options?: AIOptions
 ): Promise<ParsedCVData> {
   const { OpenAI } = await import("openai");
 
+  const apiKey = getAPIKeyForProvider("openrouter", options?.openrouterKey);
+  if (!apiKey) {
+    throw new Error("OpenRouter API key not configured");
+  }
+
   const openrouter = new OpenAI({
     baseURL: "https://openrouter.ai/api/v1",
-    apiKey: AI_CONFIG.apiKeys.openrouter,
+    apiKey,
   });
 
   const response = await openrouter.chat.completions.create({
@@ -165,13 +210,19 @@ async function parseCVWithOpenRouter(
  */
 async function parseCVTextWithOpenRouter(
   cvText: string,
-  openrouterModel: string
+  openrouterModel: string,
+  options?: AIOptions
 ): Promise<ParsedCVData> {
   const { OpenAI } = await import("openai");
 
+  const apiKey = getAPIKeyForProvider("openrouter", options?.openrouterKey);
+  if (!apiKey) {
+    throw new Error("OpenRouter API key not configured");
+  }
+
   const openrouter = new OpenAI({
     baseURL: "https://openrouter.ai/api/v1",
-    apiKey: AI_CONFIG.apiKeys.openrouter,
+    apiKey,
   });
 
   const response = await openrouter.chat.completions.create({
@@ -204,13 +255,20 @@ async function parseCVTextWithOpenRouter(
 /**
  * Parse CV from PDF with automatic rate-limit fallback
  */
-export async function parseCVWithFallback(pdfBuffer: Buffer): Promise<ParsedCVData> {
+export async function parseCVWithFallback(
+  pdfBuffer: Buffer,
+  options?: AIOptions
+): Promise<ParsedCVData> {
   const triedModels: string[] = [];
+  const availabilityOptions: AvailabilityOptions = {
+    geminiKey: options?.geminiKey,
+    openrouterKey: options?.openrouterKey,
+  };
 
   // Try Gemini first
-  if (isModelAvailable("gemini-2.5-flash")) {
+  if (isModelAvailable("gemini-2.5-flash", availabilityOptions)) {
     try {
-      return await parseCVWithGeminiDirect(pdfBuffer);
+      return await parseCVWithGeminiDirect(pdfBuffer, options);
     } catch (error) {
       triedModels.push("gemini-2.5-flash");
       if (!isRateLimitError(error)) throw error;
@@ -220,7 +278,7 @@ export async function parseCVWithFallback(pdfBuffer: Buffer): Promise<ParsedCVDa
 
   // Fallback to OpenRouter models
   const base64Data = pdfBuffer.toString("base64");
-  const fallbacks = getAvailableFallbackModels("gemini-2.5-flash");
+  const fallbacks = getAvailableFallbackModels("gemini-2.5-flash", availabilityOptions);
 
   for (const fallbackModel of fallbacks) {
     const modelInfo = getModelInfo(fallbackModel);
@@ -228,7 +286,12 @@ export async function parseCVWithFallback(pdfBuffer: Buffer): Promise<ParsedCVDa
 
     try {
       console.warn(`[parseCVWithFallback] Trying fallback: ${fallbackModel}`);
-      return await parseCVWithOpenRouter(base64Data, "application/pdf", modelInfo.openrouterModel);
+      return await parseCVWithOpenRouter(
+        base64Data,
+        "application/pdf",
+        modelInfo.openrouterModel,
+        options
+      );
     } catch (fallbackError) {
       triedModels.push(fallbackModel);
       if (isRateLimitError(fallbackError)) {
@@ -240,20 +303,27 @@ export async function parseCVWithFallback(pdfBuffer: Buffer): Promise<ParsedCVDa
   }
 
   throw new Error(
-    `All available AI models are rate limited. Tried: ${triedModels.join(", ")}. Please wait a moment and try again.`
+    `All available AI models are rate limited or unavailable. Tried: ${triedModels.join(", ")}. Please configure API keys in Settings and try again.`
   );
 }
 
 /**
  * Parse CV from text (DOCX) with automatic rate-limit fallback
  */
-export async function parseCVTextWithFallback(cvText: string): Promise<ParsedCVData> {
+export async function parseCVTextWithFallback(
+  cvText: string,
+  options?: AIOptions
+): Promise<ParsedCVData> {
   const triedModels: string[] = [];
+  const availabilityOptions: AvailabilityOptions = {
+    geminiKey: options?.geminiKey,
+    openrouterKey: options?.openrouterKey,
+  };
 
   // Try Gemini first
-  if (isModelAvailable("gemini-2.5-flash")) {
+  if (isModelAvailable("gemini-2.5-flash", availabilityOptions)) {
     try {
-      return await parseCVTextWithGeminiDirect(cvText);
+      return await parseCVTextWithGeminiDirect(cvText, options);
     } catch (error) {
       triedModels.push("gemini-2.5-flash");
       if (!isRateLimitError(error)) throw error;
@@ -262,7 +332,7 @@ export async function parseCVTextWithFallback(cvText: string): Promise<ParsedCVD
   }
 
   // Fallback to OpenRouter models
-  const fallbacks = getAvailableFallbackModels("gemini-2.5-flash");
+  const fallbacks = getAvailableFallbackModels("gemini-2.5-flash", availabilityOptions);
 
   for (const fallbackModel of fallbacks) {
     const modelInfo = getModelInfo(fallbackModel);
@@ -270,7 +340,7 @@ export async function parseCVTextWithFallback(cvText: string): Promise<ParsedCVD
 
     try {
       console.warn(`[parseCVTextWithFallback] Trying fallback: ${fallbackModel}`);
-      return await parseCVTextWithOpenRouter(cvText, modelInfo.openrouterModel);
+      return await parseCVTextWithOpenRouter(cvText, modelInfo.openrouterModel, options);
     } catch (fallbackError) {
       triedModels.push(fallbackModel);
       if (isRateLimitError(fallbackError)) {
@@ -282,6 +352,6 @@ export async function parseCVTextWithFallback(cvText: string): Promise<ParsedCVD
   }
 
   throw new Error(
-    `All available AI models are rate limited. Tried: ${triedModels.join(", ")}. Please wait a moment and try again.`
+    `All available AI models are rate limited or unavailable. Tried: ${triedModels.join(", ")}. Please configure API keys in Settings and try again.`
   );
 }

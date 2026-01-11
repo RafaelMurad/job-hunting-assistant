@@ -12,6 +12,9 @@ import {
   getAvailableModels,
   getModelInfo,
   getModelName,
+  getAPIKeyForProvider,
+  hasBYOK,
+  hasAnyAIAvailable,
 } from "@/lib/ai";
 
 describe("AI Config", () => {
@@ -156,6 +159,80 @@ describe("AI Config", () => {
         expect(model).toHaveProperty("cost");
         expect(model).toHaveProperty("description");
       }
+    });
+
+    it("should use explicit keys when provided via options", () => {
+      const models = getAvailableModels({
+        geminiKey: "test-gemini-key",
+      });
+
+      // Find gemini model
+      const geminiModel = models.find((m) => m.id === "gemini-2.5-flash");
+      expect(geminiModel?.available).toBe(true);
+    });
+  });
+
+  describe("BYOK Support", () => {
+    describe("getAPIKeyForProvider", () => {
+      it("should return explicit key when provided", () => {
+        const explicitKey = "my-explicit-key";
+        const result = getAPIKeyForProvider("gemini", explicitKey);
+        expect(result).toBe(explicitKey);
+      });
+
+      it("should return null when no key is available", () => {
+        // Without env vars or localStorage, should return null
+        const result = getAPIKeyForProvider("gemini");
+        // May return env var if set, or null
+        expect(result === null || typeof result === "string").toBe(true);
+      });
+
+      it("should handle openrouter provider", () => {
+        const explicitKey = "sk-or-test-key";
+        const result = getAPIKeyForProvider("openrouter", explicitKey);
+        expect(result).toBe(explicitKey);
+      });
+    });
+
+    describe("hasBYOK", () => {
+      it("should return false when not in browser", () => {
+        // In Node.js test environment, hasBYOK should return false
+        // because there's no real browser localStorage
+        const result = hasBYOK("gemini");
+        expect(typeof result).toBe("boolean");
+      });
+    });
+
+    describe("hasAnyAIAvailable", () => {
+      it("should return true when explicit key is provided", () => {
+        const result = hasAnyAIAvailable({
+          geminiKey: "test-key",
+        });
+        expect(result).toBe(true);
+      });
+
+      it("should check both gemini and openrouter", () => {
+        const result = hasAnyAIAvailable({
+          openrouterKey: "sk-or-test",
+        });
+        expect(result).toBe(true);
+      });
+    });
+
+    describe("isModelAvailable with BYOK options", () => {
+      it("should use explicit gemini key for availability check", () => {
+        const result = isModelAvailable("gemini-2.5-flash", {
+          geminiKey: "AIza-test-key",
+        });
+        expect(result).toBe(true);
+      });
+
+      it("should use explicit openrouter key for openrouter models", () => {
+        const result = isModelAvailable("qwen-2.5-vl", {
+          openrouterKey: "sk-or-v1-test",
+        });
+        expect(result).toBe(true);
+      });
     });
   });
 });

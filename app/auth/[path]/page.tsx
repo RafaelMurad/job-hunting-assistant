@@ -7,6 +7,9 @@
  * - /auth/sign-out - Sign the user out
  * - /auth/forgot-password - Password reset flow
  *
+ * Authentication is required in BOTH local and demo modes.
+ * The only difference is where data is stored (IndexedDB vs PostgreSQL).
+ *
  * @see https://neon.com/docs/auth/quick-start/nextjs
  */
 

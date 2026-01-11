@@ -13,6 +13,9 @@ import type { JSX, ReactNode } from "react";
  * Wraps the application with Neon Auth's NeonAuthUIProvider
  * for client-side session access and auth UI components.
  *
+ * Authentication is required in BOTH local and demo modes.
+ * The only difference is where data is stored (IndexedDB vs PostgreSQL).
+ *
  * Uses next-themes ThemeProvider to control the theme for Neon Auth UI.
  * disableTransitionOnChange prevents CSS flicker during theme hydration.
  *

@@ -6,6 +6,9 @@
  * WHAT: Receive LaTeX → Compile via latexonline.cc → Return PDF or upload to Blob
  *
  * HOW: Uses lib/latex.ts for compilation, optionally stores result in Blob.
+ *
+ * Authentication is required in BOTH local and demo modes.
+ * The only difference is where data is stored (IndexedDB vs PostgreSQL).
  */
 
 import { getNeonSession } from "@/lib/auth/neon-server";
@@ -15,6 +18,15 @@ import { uploadCVLatex, uploadCVPdf } from "@/lib/storage";
 import { type NextRequest, NextResponse } from "next/server";
 
 /**
+ * Get authenticated user ID from Neon Auth session.
+ * Returns null if not authenticated.
+ */
+async function getAuthenticatedUserId(): Promise<string | null> {
+  const session = await getNeonSession();
+  return session?.data?.user?.id ?? null;
+}
+
+/**
  * POST /api/cv/compile
  *
  * Compile LaTeX to PDF. Optionally save to Blob and update user record.
@@ -22,16 +34,14 @@ import { type NextRequest, NextResponse } from "next/server";
  */
 export async function POST(request: NextRequest): Promise<NextResponse> {
   try {
-    // Verify authentication via Neon Auth
-    const session = await getNeonSession();
-    const user = session?.data?.user;
-    if (!user?.id) {
+    // Get authenticated user (works in both local and demo mode)
+    const userId = await getAuthenticatedUserId();
+    if (!userId) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
     const body = await request.json();
     const { latexContent, save = false } = body;
-    const userId = user.id;
 
     if (!latexContent || typeof latexContent !== "string") {
       return NextResponse.json({ error: "LaTeX content is required" }, { status: 400 });

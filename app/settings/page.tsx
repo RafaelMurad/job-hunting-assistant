@@ -2,6 +2,7 @@
 
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { APIKeysSettings } from "@/components/settings/api-keys-settings";
 import { trpc } from "@/lib/trpc/client";
 import type { JSX } from "react";
 
@@ -49,6 +50,9 @@ export default function SettingsPage(): JSX.Element {
           <h1 className="text-4xl font-bold mb-2 text-gray-900 dark:text-slate-100">Settings</h1>
           <p className="text-gray-600 dark:text-slate-400">Manage your account</p>
         </div>
+
+        {/* API Keys Settings (Local Mode Only) */}
+        <APIKeysSettings />
 
         {/* Account Settings */}
         <Card>

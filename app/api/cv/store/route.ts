@@ -13,6 +13,9 @@
  * 4. Store both PDF and LaTeX in Vercel Blob
  * 5. Create or update CV record in database
  * 6. Return the CV data for immediate use
+ *
+ * Authentication is required in BOTH local and demo modes.
+ * The only difference is where data is stored (IndexedDB vs PostgreSQL).
  */
 
 import {
@@ -28,6 +31,15 @@ import { deleteCVFiles, uploadCVLatex, uploadCVPdf } from "@/lib/storage";
 import { parseAIError } from "@/lib/utils";
 import { type NextRequest, NextResponse } from "next/server";
 
+/**
+ * Get authenticated user ID from Neon Auth session.
+ * Returns null if not authenticated.
+ */
+async function getAuthenticatedUserId(): Promise<string | null> {
+  const session = await getNeonSession();
+  return session?.data?.user?.id ?? null;
+}
+
 const MAX_CVS_PER_USER = 5;
 
 /**
@@ -39,16 +51,14 @@ const MAX_CVS_PER_USER = 5;
  */
 export async function POST(request: NextRequest): Promise<NextResponse> {
   try {
-    // Verify authentication via Neon Auth
-    const session = await getNeonSession();
-    const user = session?.data?.user;
-    if (!user?.id) {
+    // Get authenticated user (works in both local and demo mode)
+    const userId = await getAuthenticatedUserId();
+    if (!userId) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
     const formData = await request.formData();
     const file = formData.get("file") as File | null;
-    const userId = user.id;
     const selectedModel =
       (formData.get("model") as LatexExtractionModel) || AI_CONFIG.defaultLatexModel;
     const selectedTemplate = formData.get("template") as CVTemplateId | null;
@@ -159,14 +169,14 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
       // Step 3: Upload LaTeX to Blob
       const latexUrl = await uploadCVLatex(userId, latexContent);
 
-      // Step 4: Ensure user record exists
+      // Step 4: Ensure user record exists (with minimal defaults)
       await prisma.user.upsert({
         where: { id: userId },
         update: {},
         create: {
           id: userId,
-          email: user.email ?? "",
-          name: user.name ?? "User",
+          email: "user@careerpal.app",
+          name: "User",
           location: "",
           summary: "",
           experience: "",
@@ -258,14 +268,11 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
  */
 export async function GET(_request: NextRequest): Promise<NextResponse> {
   try {
-    // Verify authentication via Neon Auth
-    const session = await getNeonSession();
-    const neonUser = session?.data?.user;
-    if (!neonUser?.id) {
+    // Get authenticated user (works in both local and demo mode)
+    const userId = await getAuthenticatedUserId();
+    if (!userId) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
-
-    const userId = neonUser.id;
 
     const appUser = await prisma.user.findUnique({
       where: { id: userId },
@@ -327,14 +334,11 @@ export async function GET(_request: NextRequest): Promise<NextResponse> {
  */
 export async function DELETE(_request: NextRequest): Promise<NextResponse> {
   try {
-    // Verify authentication via Neon Auth
-    const session = await getNeonSession();
-    const neonUser = session?.data?.user;
-    if (!neonUser?.id) {
+    // Get authenticated user (works in both local and demo mode)
+    const userId = await getAuthenticatedUserId();
+    if (!userId) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
-
-    const userId = neonUser.id;
 
     // Delete files from Blob storage
     await deleteCVFiles(userId);

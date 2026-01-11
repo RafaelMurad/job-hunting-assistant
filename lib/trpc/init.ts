@@ -10,6 +10,9 @@
  * - No code generation needed (unlike GraphQL)
  * - Automatic input validation with Zod
  * - Great DX with autocomplete
+ *
+ * Authentication is required in BOTH local and demo modes.
+ * The only difference is where data is stored (IndexedDB vs PostgreSQL).
  */
 
 import { getNeonSession } from "@/lib/auth/neon-server";
@@ -45,6 +48,7 @@ export const createTRPCContext = async (): Promise<{
   prisma: typeof prisma;
   session: NeonAuthSession | null;
 }> => {
+  // Use Neon Auth session for both local and demo modes
   const neonSession = await getNeonSession();
 
   // Map Neon Auth session to our app's session structure

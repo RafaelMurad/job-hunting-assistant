@@ -15,6 +15,12 @@
       "main": true
     }
   },
+  "crons": [
+    {
+      "path": "/api/cron/reset-demo",
+      "schedule": "0 0 * * *"
+    }
+  ],
   "headers": [
     {
       "source": "/(.*)",
