@@ -24,7 +24,7 @@ export function Logo({ className = "", showLink = true }: LogoProps): JSX.Elemen
 
   if (showLink) {
     return (
-      <Link href="/" className="hover:opacity-80 transition-opacity">
+      <Link href="/" className="hover:opacity-80 transition-opacity" aria-label="CareerPal">
         {logoContent}
       </Link>
     );
