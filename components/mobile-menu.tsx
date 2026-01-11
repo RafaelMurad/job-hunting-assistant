@@ -1,9 +1,10 @@
 "use client";
 
-import { useState, useEffect, type JSX } from "react";
+import { Logo } from "@/components/logo";
+import { cn } from "@/lib/utils";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { cn } from "@/lib/utils";
+import { useEffect, useState, type JSX } from "react";
 
 interface MobileMenuProps {
   className?: string;
@@ -41,9 +42,9 @@ export function MobileMenu({ className }: MobileMenuProps): JSX.Element {
         onClick={() => setIsOpen(!isOpen)}
         className={cn(
           "md:hidden inline-flex items-center justify-center h-11 w-11",
-          "text-slate-700 hover:bg-slate-100",
-          "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-500 focus-visible:ring-offset-2",
-          "transition-all duration-200",
+          "text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700",
+          "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-500 focus-visible:ring-offset-2 dark:focus-visible:ring-offset-slate-900",
+          "transition-all duration-200 rounded-lg",
           className
         )}
         aria-label="Toggle mobile menu"
@@ -74,27 +75,23 @@ export function MobileMenu({ className }: MobileMenuProps): JSX.Element {
       {/* Mobile Menu Panel */}
       <div
         className={cn(
-          "fixed top-0 left-0 bottom-0 w-80 max-w-[85vw] bg-white z-50",
+          "fixed top-0 left-0 bottom-0 w-80 max-w-[85vw] bg-white dark:bg-slate-800 z-50",
           "transform transition-transform duration-300 ease-in-out md:hidden",
-          "shadow-xl border-r border-slate-200",
+          "shadow-xl border-r border-slate-200 dark:border-slate-700",
           isOpen ? "translate-x-0" : "-translate-x-full"
         )}
       >
         {/* Menu Header */}
-        <div className="flex items-center justify-between h-16 px-4 border-b border-slate-200">
-          <Link
-            href="/"
-            className="text-xl font-bold text-slate-900"
-            onClick={() => setIsOpen(false)}
-          >
-            Job Hunt AI
-          </Link>
+        <div className="flex items-center justify-between h-16 px-4 border-b border-slate-200 dark:border-slate-700">
+          <div onClick={() => setIsOpen(false)}>
+            <Logo />
+          </div>
           <button
             onClick={() => setIsOpen(false)}
             className={cn(
               "inline-flex items-center justify-center h-10 w-10 rounded-lg",
-              "text-slate-600 hover:bg-slate-100",
-              "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-500",
+              "text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-700",
+              "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-500",
               "transition-colors duration-200"
             )}
             aria-label="Close menu"
@@ -123,10 +120,10 @@ export function MobileMenu({ className }: MobileMenuProps): JSX.Element {
                 href={link.href}
                 className={cn(
                   "flex items-center px-4 py-3 rounded-lg font-medium transition-all duration-200",
-                  "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-500 focus-visible:ring-offset-2",
+                  "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-500 focus-visible:ring-offset-2 dark:focus-visible:ring-offset-slate-800",
                   isActive
-                    ? "bg-sky-50 text-sky-700 border-l-4 border-sky-600"
-                    : "text-slate-700 hover:bg-slate-50 hover:text-slate-900"
+                    ? "bg-cyan-50 dark:bg-cyan-900/30 text-cyan-700 dark:text-cyan-400 border-l-4 border-cyan-500"
+                    : "text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700 hover:text-slate-900 dark:hover:text-slate-100"
                 )}
                 onClick={() => setIsOpen(false)}
               >
@@ -137,9 +134,9 @@ export function MobileMenu({ className }: MobileMenuProps): JSX.Element {
         </nav>
 
         {/* Menu Footer */}
-        <div className="absolute bottom-0 left-0 right-0 p-4 border-t border-slate-200 bg-slate-50">
-          <p className="text-sm text-slate-500 text-center">
-            Job Hunt AI &copy; {new Date().getFullYear()}
+        <div className="absolute bottom-0 left-0 right-0 p-4 border-t border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/50">
+          <p className="text-sm text-slate-500 dark:text-slate-400 text-center">
+            CareerPal &copy; {new Date().getFullYear()}
           </p>
         </div>
       </div>

@@ -26,24 +26,32 @@ export const userRouter = router({
   }),
 
   /**
-   * Update current user's profile.
+   * Create or update current user's profile.
    * Uses the authenticated user's ID from session.
    */
   upsert: protectedProcedure.input(userSchema).mutation(async ({ ctx, input }) => {
-    // Update user profile (user already exists from auth)
-    const user = await ctx.prisma.user.update({
+    const data = {
+      name: input.name,
+      email: input.email,
+      phone: input.phone ?? null,
+      location: input.location,
+      summary: input.summary,
+      experience: input.experience,
+      skills: input.skills,
+    };
+
+    // Use upsert to create if not exists, update if exists
+    const user = await ctx.prisma.user.upsert({
       where: { id: ctx.user.id },
-      data: {
-        name: input.name,
-        email: input.email,
-        phone: input.phone ?? null,
-        location: input.location,
-        summary: input.summary,
-        experience: input.experience,
-        skills: input.skills,
+      update: data,
+      create: {
+        id: ctx.user.id,
+        neonAuthId: ctx.user.id,
+        ...data,
       },
     });
-    return { user, created: false };
+
+    return { user };
   }),
 
   /**

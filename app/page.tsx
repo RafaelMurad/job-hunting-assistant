@@ -7,28 +7,28 @@ export default function LandingPage(): JSX.Element {
     <div className="min-h-screen bg-gradient-to-b from-white to-slate-50 dark:from-slate-900 dark:to-slate-800">
       {/* Hero Section */}
       <section className="relative overflow-hidden py-24 pb-32">
-        {/* Background Pattern - Subtle Nordic-inspired shapes */}
+        {/* Background Pattern - Friendly gradient shapes */}
         <div className="absolute inset-0 overflow-hidden opacity-5 dark:opacity-10">
-          <div className="absolute top-20 left-10 w-96 h-96 bg-sky-500 rounded-full blur-3xl"></div>
+          <div className="absolute top-20 left-10 w-96 h-96 bg-cyan-500 rounded-full blur-3xl"></div>
           <div className="absolute bottom-0 right-10 w-96 h-96 bg-emerald-500 rounded-full blur-3xl"></div>
         </div>
 
         <div className="relative max-w-5xl mx-auto px-4">
           <div className="text-center">
             {/* Eyebrow */}
-            <p className="text-sky-600 dark:text-sky-400 font-semibold mb-4 tracking-wide uppercase text-sm">
-              AI-Powered Job Search
+            <p className="text-cyan-600 dark:text-cyan-400 font-semibold mb-4 tracking-wide uppercase text-sm">
+              Your AI Job Search Companion
             </p>
 
             {/* Main Heading */}
             <h1 className="font-bold text-slate-900 dark:text-white mb-6 leading-tight text-4xl md:text-5xl max-w-3xl mx-auto">
-              Land Your Dream Job with AI-Powered Applications
+              Meet <span className="text-cyan-500">CareerPal</span> — Your Friendly Job Hunt Helper
             </h1>
 
             {/* Subheading */}
             <p className="text-slate-600 dark:text-slate-300 mb-10 text-lg md:text-xl max-w-2xl mx-auto leading-relaxed">
-              Analyze job postings, generate tailored cover letters, and track applications—all in
-              one place. Built for job seekers who want to work smarter, not harder.
+              Let your AI pal analyze job postings, craft perfect cover letters, and keep your
+              applications organized. Job hunting just got a whole lot friendlier.
             </p>
 
             {/* CTA Buttons */}
@@ -67,9 +67,9 @@ export default function LandingPage(): JSX.Element {
           <div className="grid md:grid-cols-3 gap-12">
             {/* Feature 1 */}
             <div className="text-center">
-              <div className="w-16 h-16 bg-sky-100 dark:bg-sky-900/30 rounded-full flex items-center justify-center mx-auto mb-6">
+              <div className="w-16 h-16 bg-cyan-100 dark:bg-cyan-900/30 rounded-full flex items-center justify-center mx-auto mb-6">
                 <svg
-                  className="w-8 h-8 text-sky-600 dark:text-sky-400"
+                  className="w-8 h-8 text-cyan-600 dark:text-cyan-400"
                   fill="none"
                   viewBox="0 0 24 24"
                   stroke="currentColor"
@@ -147,18 +147,19 @@ export default function LandingPage(): JSX.Element {
       </section>
 
       {/* CTA Section */}
-      <section className="py-20 bg-sky-600 dark:bg-sky-800 text-white">
+      <section className="py-20 bg-cyan-600 dark:bg-cyan-700 text-white">
         <div className="max-w-4xl mx-auto px-4 text-center">
-          <h2 className="font-bold mb-6 text-3xl">Ready to Transform Your Job Search?</h2>
-          <p className="mb-8 text-sky-100 dark:text-sky-200 text-lg leading-relaxed">
-            Join job seekers using AI to land better opportunities faster.
+          <h2 className="font-bold mb-6 text-3xl">Ready to Meet Your New Career Pal?</h2>
+          <p className="mb-8 text-cyan-100 dark:text-cyan-200 text-lg leading-relaxed">
+            Join job seekers who&apos;ve found their friendly AI companion for landing great
+            opportunities.
           </p>
           <Link href="/analyze">
             <Button
               size="lg"
-              className="bg-white text-sky-600 hover:bg-sky-50 dark:bg-slate-100 dark:hover:bg-white"
+              className="bg-white text-cyan-600 hover:bg-cyan-50 dark:bg-slate-100 dark:hover:bg-white"
             >
-              Start Analyzing Jobs →
+              Try CareerPal Free →
             </Button>
           </Link>
         </div>
