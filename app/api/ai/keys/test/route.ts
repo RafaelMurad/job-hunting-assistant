@@ -22,9 +22,8 @@ export async function GET(request: NextRequest): Promise<NextResponse<TestResult
   try {
     if (provider === "gemini") {
       return NextResponse.json(await testGeminiKey());
-    } 
-      return NextResponse.json(await testOpenRouterKey());
-    
+    }
+    return NextResponse.json(await testOpenRouterKey());
   } catch (error) {
     return NextResponse.json({
       valid: false,
