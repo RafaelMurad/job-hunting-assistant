@@ -25,14 +25,14 @@ import { rateLimiters as inMemoryRateLimiters, type RateLimitResult } from "./ra
  * More restrictive than local mode to protect shared resources
  */
 const DEMO_RATE_LIMITS = {
-  // AI operations: 5 requests per minute (shared API keys)
-  ai: { requests: 5, window: "1 m" as const },
-  // File uploads: 3 per minute
-  upload: { requests: 3, window: "1 m" as const },
-  // General API: 30 requests per minute
-  general: { requests: 30, window: "1 m" as const },
-  // Auth attempts: 3 per 15 minutes
-  auth: { requests: 3, window: "15 m" as const },
+  // AI operations: 15 requests per minute (shared API keys)
+  ai: { requests: 15, window: "1 m" as const },
+  // File uploads: 10 per minute
+  upload: { requests: 10, window: "1 m" as const },
+  // General API: 60 requests per minute
+  general: { requests: 60, window: "1 m" as const },
+  // Auth attempts: 5 per 15 minutes
+  auth: { requests: 5, window: "15 m" as const },
 };
 
 // ============================================
