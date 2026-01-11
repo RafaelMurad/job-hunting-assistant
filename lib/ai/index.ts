@@ -28,11 +28,15 @@ export type {
 
 export {
   AI_CONFIG,
+  getAPIKeyForProvider,
   getAvailableModels,
   getModelInfo,
   getModelName,
+  hasAnyAIAvailable,
+  hasBYOK,
   isModelAvailable,
   LATEX_MODELS,
+  type AvailabilityOptions,
 } from "./config";
 
 // =============================================================================
@@ -67,10 +71,15 @@ export {
   generateCoverLetterWithGemini,
   parseCVWithGeminiText,
   parseCVWithGeminiVision,
+  type GeminiOptions,
 } from "./providers/gemini";
 
 // OpenRouter
-export { extractContentWithOpenRouter, extractLatexWithOpenRouter } from "./providers/openrouter";
+export {
+  extractContentWithOpenRouter,
+  extractLatexWithOpenRouter,
+  type OpenRouterOptions,
+} from "./providers/openrouter";
 
 // =============================================================================
 // EXTRACTION EXPORTS
@@ -86,6 +95,7 @@ export {
   extractLatexFromPDF,
   extractLatexWithModel,
   modifyLatexWithAI,
+  type AIOptions,
 } from "./extraction/latex";
 
 // Content extraction (template-based)

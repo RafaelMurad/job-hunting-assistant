@@ -2,9 +2,10 @@
  * Gemini AI Provider
  *
  * Google Gemini integration for job analysis, CV parsing, and LaTeX extraction.
+ * Supports both server-side (env vars) and client-side (BYOK) API keys.
  */
 
-import { AI_CONFIG, getModelName } from "../config";
+import { getAPIKeyForProvider, getModelName } from "../config";
 import {
   ANALYSIS_PROMPT,
   COVER_LETTER_PROMPT,
@@ -30,13 +31,37 @@ import {
 } from "../utils";
 
 // =============================================================================
-// HELPER TYPES AND FUNCTIONS
+// TYPES
 // =============================================================================
+
+/**
+ * Options for Gemini API calls
+ */
+export interface GeminiOptions {
+  apiKey?: string | undefined; // Explicit API key (BYOK support)
+}
 
 /**
  * Result type for safe validation (no exceptions for control flow)
  */
 type ValidationResult = { success: true; latex: string } | { success: false; error: string };
+
+// =============================================================================
+// HELPER FUNCTIONS
+// =============================================================================
+
+/**
+ * Get Gemini API key, checking BYOK first
+ */
+function getGeminiKey(options?: GeminiOptions): string {
+  const key = getAPIKeyForProvider("gemini", options?.apiKey);
+  if (!key) {
+    throw new Error(
+      "Gemini API key not configured. Please add your API key in Settings or set GEMINI_API_KEY environment variable."
+    );
+  }
+  return key;
+}
 
 /**
  * Validate LaTeX without throwing - returns Result type
@@ -57,13 +82,15 @@ function validateLatexSafely(text: string): ValidationResult {
 
 export async function analyzeWithGemini(
   jobDescription: string,
-  userCV: string
+  userCV: string,
+  options?: GeminiOptions
 ): Promise<JobAnalysisResult> {
   const { GoogleGenerativeAI } = await import("@google/generative-ai");
+  const apiKey = getGeminiKey(options);
 
-  const genAI = new GoogleGenerativeAI(AI_CONFIG.apiKeys.gemini!);
+  const genAI = new GoogleGenerativeAI(apiKey);
   const model = genAI.getGenerativeModel({
-    model: AI_CONFIG.models.gemini,
+    model: "gemini-2.5-flash",
   });
 
   const result = await model.generateContent(ANALYSIS_PROMPT(jobDescription, userCV));
@@ -80,13 +107,15 @@ export async function analyzeWithGemini(
 
 export async function generateCoverLetterWithGemini(
   analysis: JobAnalysisResult,
-  userCV: string
+  userCV: string,
+  options?: GeminiOptions
 ): Promise<string> {
   const { GoogleGenerativeAI } = await import("@google/generative-ai");
+  const apiKey = getGeminiKey(options);
 
-  const genAI = new GoogleGenerativeAI(AI_CONFIG.apiKeys.gemini!);
+  const genAI = new GoogleGenerativeAI(apiKey);
   const model = genAI.getGenerativeModel({
-    model: AI_CONFIG.models.gemini,
+    model: "gemini-2.5-flash",
   });
 
   const result = await model.generateContent(COVER_LETTER_PROMPT(analysis, userCV));
@@ -101,12 +130,16 @@ export async function generateCoverLetterWithGemini(
  * Parse CV using Gemini with native PDF vision.
  * Sends the PDF directly to Gemini - no text extraction needed.
  */
-export async function parseCVWithGeminiVision(pdfBuffer: Buffer): Promise<ParsedCVData> {
+export async function parseCVWithGeminiVision(
+  pdfBuffer: Buffer,
+  options?: GeminiOptions
+): Promise<ParsedCVData> {
   const { GoogleGenerativeAI } = await import("@google/generative-ai");
+  const apiKey = getGeminiKey(options);
 
-  const genAI = new GoogleGenerativeAI(AI_CONFIG.apiKeys.gemini!);
+  const genAI = new GoogleGenerativeAI(apiKey);
   const model = genAI.getGenerativeModel({
-    model: AI_CONFIG.models.gemini,
+    model: "gemini-2.5-flash",
   });
 
   const base64Data = pdfBuffer.toString("base64");
@@ -132,12 +165,16 @@ export async function parseCVWithGeminiVision(pdfBuffer: Buffer): Promise<Parsed
 /**
  * Parse CV using Gemini with extracted text (for DOCX files).
  */
-export async function parseCVWithGeminiText(cvText: string): Promise<ParsedCVData> {
+export async function parseCVWithGeminiText(
+  cvText: string,
+  options?: GeminiOptions
+): Promise<ParsedCVData> {
   const { GoogleGenerativeAI } = await import("@google/generative-ai");
+  const apiKey = getGeminiKey(options);
 
-  const genAI = new GoogleGenerativeAI(AI_CONFIG.apiKeys.gemini!);
+  const genAI = new GoogleGenerativeAI(apiKey);
   const model = genAI.getGenerativeModel({
-    model: AI_CONFIG.models.gemini,
+    model: "gemini-2.5-flash",
   });
 
   const result = await model.generateContent(
@@ -236,11 +273,13 @@ export async function extractLatexTwoPass(
 export async function extractLatexWithGemini(
   base64Data: string,
   mimeType: string,
-  modelId: LatexExtractionModel
+  modelId: LatexExtractionModel,
+  options?: GeminiOptions
 ): Promise<string> {
   const { GoogleGenerativeAI } = await import("@google/generative-ai");
+  const apiKey = getGeminiKey(options);
 
-  const genAI = new GoogleGenerativeAI(AI_CONFIG.apiKeys.gemini!);
+  const genAI = new GoogleGenerativeAI(apiKey);
   const modelName = getModelName(modelId);
 
   // Single-pass extraction for free tier
@@ -312,10 +351,13 @@ export async function extractLatexWithGemini(
 export async function extractContentWithGemini(
   base64Data: string,
   mimeType: string,
-  modelName: LatexExtractionModel
+  modelName: LatexExtractionModel,
+  options?: GeminiOptions
 ): Promise<ExtractedCVContent> {
   const { GoogleGenerativeAI } = await import("@google/generative-ai");
-  const genAI = new GoogleGenerativeAI(AI_CONFIG.apiKeys.gemini!);
+  const apiKey = getGeminiKey(options);
+
+  const genAI = new GoogleGenerativeAI(apiKey);
 
   const model = genAI.getGenerativeModel({
     model: modelName,

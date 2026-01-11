@@ -55,6 +55,8 @@ next-env.d.ts
 # Local AI instructions (private collaboration context)
 .copilot-local.md
 .cursor/
+.claude/
+.planning/
 .env*.local
 
 *storybook.log

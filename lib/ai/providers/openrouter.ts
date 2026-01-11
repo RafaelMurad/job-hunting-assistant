@@ -2,9 +2,10 @@
  * OpenRouter Provider
  *
  * OpenRouter integration for accessing multiple free vision models.
+ * Supports both server-side (env vars) and client-side (BYOK) API keys.
  */
 
-import { AI_CONFIG } from "../config";
+import { getAPIKeyForProvider } from "../config";
 import type { ExtractedCVContent } from "../types";
 import { extractedCVContentSchema } from "../schemas";
 import { LATEX_EXTRACTION_PROMPT, CV_CONTENT_EXTRACTION_PROMPT } from "../prompts";
@@ -13,6 +14,13 @@ import { cleanAndValidateLatex, cleanJsonResponse, parseJsonOrThrow } from "../u
 // =============================================================================
 // TYPES
 // =============================================================================
+
+/**
+ * Options for OpenRouter API calls
+ */
+export interface OpenRouterOptions {
+  apiKey?: string | undefined; // Explicit API key (BYOK support)
+}
 
 interface ContentPart {
   type: string;
@@ -37,6 +45,23 @@ interface OpenRouterResponse {
 }
 
 // =============================================================================
+// HELPER FUNCTIONS
+// =============================================================================
+
+/**
+ * Get OpenRouter API key, checking BYOK first
+ */
+function getOpenRouterKey(options?: OpenRouterOptions): string {
+  const key = getAPIKeyForProvider("openrouter", options?.apiKey);
+  if (!key) {
+    throw new Error(
+      "OpenRouter API key not configured. Please add your API key in Settings or set OPENROUTER_API_KEY environment variable."
+    );
+  }
+  return key;
+}
+
+// =============================================================================
 // LATEX EXTRACTION
 // =============================================================================
 
@@ -47,8 +72,10 @@ interface OpenRouterResponse {
 export async function extractLatexWithOpenRouter(
   base64Data: string,
   mimeType: string,
-  openrouterModel: string
+  openrouterModel: string,
+  options?: OpenRouterOptions
 ): Promise<string> {
+  const apiKey = getOpenRouterKey(options);
   const dataUrl = `data:${mimeType};base64,${base64Data}`;
 
   // Build content array based on file type
@@ -107,10 +134,10 @@ export async function extractLatexWithOpenRouter(
   const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
     method: "POST",
     headers: {
-      Authorization: `Bearer ${AI_CONFIG.apiKeys.openrouter}`,
+      Authorization: `Bearer ${apiKey}`,
       "Content-Type": "application/json",
-      "HTTP-Referer": "https://job-hunt-ai.vercel.app",
-      "X-Title": "Job Hunt AI - CV Editor",
+      "HTTP-Referer": "https://careerpal.app",
+      "X-Title": "CareerPal - CV Editor",
     },
     body: JSON.stringify(body),
   });
@@ -140,8 +167,10 @@ export async function extractLatexWithOpenRouter(
 export async function extractContentWithOpenRouter(
   base64Data: string,
   mimeType: string,
-  openrouterModel: string
+  openrouterModel: string,
+  options?: OpenRouterOptions
 ): Promise<ExtractedCVContent> {
+  const apiKey = getOpenRouterKey(options);
   const dataUrl = `data:${mimeType};base64,${base64Data}`;
 
   const isPdf = mimeType === "application/pdf";
@@ -196,10 +225,10 @@ export async function extractContentWithOpenRouter(
   const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
     method: "POST",
     headers: {
-      Authorization: `Bearer ${AI_CONFIG.apiKeys.openrouter}`,
+      Authorization: `Bearer ${apiKey}`,
       "Content-Type": "application/json",
-      "HTTP-Referer": "https://job-hunt-ai.vercel.app",
-      "X-Title": "Job Hunt AI - CV Editor",
+      "HTTP-Referer": "https://careerpal.app",
+      "X-Title": "CareerPal - CV Editor",
     },
     body: JSON.stringify(body),
   });

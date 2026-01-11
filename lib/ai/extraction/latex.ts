@@ -3,9 +3,17 @@
  *
  * Shared LaTeX extraction and validation logic.
  * Includes automatic retry with fallback models on rate limit errors.
+ * Supports BYOK (Bring Your Own Key) for client-side execution.
  */
 
-import { AI_CONFIG, getModelInfo, isModelAvailable, LATEX_MODELS } from "../config";
+import {
+  AI_CONFIG,
+  getAPIKeyForProvider,
+  getModelInfo,
+  isModelAvailable,
+  LATEX_MODELS,
+  type AvailabilityOptions,
+} from "../config";
 import { ATS_ANALYSIS_PROMPT, LATEX_MODIFY_PROMPT } from "../prompts";
 import { extractLatexWithGemini } from "../providers/gemini";
 import { extractLatexWithOpenRouter } from "../providers/openrouter";
@@ -15,6 +23,18 @@ import { cleanAndValidateLatex, extractJsonFromText, parseJsonOrThrow } from "..
 
 // Re-export for backward compatibility
 export { cleanAndValidateLatex };
+
+// =============================================================================
+// TYPES
+// =============================================================================
+
+/**
+ * Options for AI operations (BYOK support)
+ */
+export interface AIOptions {
+  geminiKey?: string | undefined;
+  openrouterKey?: string | undefined;
+}
 
 // =============================================================================
 // RATE LIMIT DETECTION
@@ -49,8 +69,11 @@ function isRateLimitError(error: unknown): boolean {
 /**
  * Get ordered list of available fallback models (excluding the failed one)
  */
-function getAvailableFallbackModels(excludeModel: LatexExtractionModel): LatexExtractionModel[] {
-  return LATEX_MODELS.filter((m) => m.id !== excludeModel && isModelAvailable(m.id)).map(
+function getAvailableFallbackModels(
+  excludeModel: LatexExtractionModel,
+  options?: AvailabilityOptions
+): LatexExtractionModel[] {
+  return LATEX_MODELS.filter((m) => m.id !== excludeModel && isModelAvailable(m.id, options)).map(
     (m) => m.id as LatexExtractionModel
   );
 }
@@ -65,11 +88,12 @@ function getAvailableFallbackModels(excludeModel: LatexExtractionModel): LatexEx
  * Uses retry logic with escalating token limits to handle long CVs.
  * Starts conservative (16K) to stay within free tier, escalates to 32K if needed.
  */
-export async function extractLatexFromPDF(pdfBuffer: Buffer): Promise<string> {
+export async function extractLatexFromPDF(pdfBuffer: Buffer, options?: AIOptions): Promise<string> {
   return extractLatexWithGemini(
     pdfBuffer.toString("base64"),
     "application/pdf",
-    "gemini-2.5-flash"
+    "gemini-2.5-flash",
+    { apiKey: options?.geminiKey }
   );
 }
 
@@ -78,11 +102,15 @@ export async function extractLatexFromPDF(pdfBuffer: Buffer): Promise<string> {
  *
  * Uses the same approach as PDF extraction - Gemini can process DOCX files.
  */
-export async function extractLatexFromDocx(docxBuffer: Buffer): Promise<string> {
+export async function extractLatexFromDocx(
+  docxBuffer: Buffer,
+  options?: AIOptions
+): Promise<string> {
   return extractLatexWithGemini(
     docxBuffer.toString("base64"),
     "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-    "gemini-2.5-flash"
+    "gemini-2.5-flash",
+    { apiKey: options?.geminiKey }
   );
 }
 
@@ -96,11 +124,12 @@ export async function extractLatexFromDocx(docxBuffer: Buffer): Promise<string> 
 async function extractWithModel(
   base64Data: string,
   mimeType: string,
-  model: LatexExtractionModel
+  model: LatexExtractionModel,
+  options?: AIOptions
 ): Promise<string> {
   switch (model) {
     case "gemini-2.5-flash":
-      return extractLatexWithGemini(base64Data, mimeType, model);
+      return extractLatexWithGemini(base64Data, mimeType, model, { apiKey: options?.geminiKey });
     case "qwen-2.5-vl":
     case "mistral-small-3.1":
     case "gemma-3-27b":
@@ -109,7 +138,9 @@ async function extractWithModel(
       if (!modelInfo?.openrouterModel) {
         throw new Error(`OpenRouter model not configured for ${model}`);
       }
-      return extractLatexWithOpenRouter(base64Data, mimeType, modelInfo.openrouterModel);
+      return extractLatexWithOpenRouter(base64Data, mimeType, modelInfo.openrouterModel, {
+        apiKey: options?.openrouterKey,
+      });
     }
     default:
       throw new Error(`Unsupported model: ${model}`);
@@ -123,25 +154,30 @@ async function extractWithModel(
 export async function extractLatexWithModel(
   buffer: Buffer,
   mimeType: string,
-  model: LatexExtractionModel = AI_CONFIG.defaultLatexModel
+  model: LatexExtractionModel = AI_CONFIG.defaultLatexModel,
+  options?: AIOptions
 ): Promise<LatexExtractionResult> {
   const base64Data = buffer.toString("base64");
   const triedModels: LatexExtractionModel[] = [];
+  const availabilityOptions: AvailabilityOptions = {
+    geminiKey: options?.geminiKey,
+    openrouterKey: options?.openrouterKey,
+  };
 
   // Check if requested model is available
-  if (!isModelAvailable(model)) {
+  if (!isModelAvailable(model, availabilityOptions)) {
     console.warn(`[extractLatexWithModel] Model ${model} not available, finding fallback`);
-    const fallbacks = getAvailableFallbackModels(model);
+    const fallbacks = getAvailableFallbackModels(model, availabilityOptions);
     const firstFallback = fallbacks[0];
     if (!firstFallback) {
-      throw new Error("No AI models available. Please configure at least one API key.");
+      throw new Error("No AI models available. Please configure at least one API key in Settings.");
     }
     model = firstFallback;
   }
 
   // Try the requested model first
   try {
-    const latex = await extractWithModel(base64Data, mimeType, model);
+    const latex = await extractWithModel(base64Data, mimeType, model, options);
     return {
       latex,
       modelUsed: model,
@@ -154,13 +190,13 @@ export async function extractLatexWithModel(
     if (isRateLimitError(error)) {
       console.warn(`[extractLatexWithModel] ${model} rate limited, trying fallback models...`);
 
-      const fallbacks = getAvailableFallbackModels(model);
+      const fallbacks = getAvailableFallbackModels(model, availabilityOptions);
       for (const fallbackModel of fallbacks) {
         if (triedModels.includes(fallbackModel)) continue;
 
         console.warn(`[extractLatexWithModel] Trying fallback: ${fallbackModel}`);
         try {
-          const latex = await extractWithModel(base64Data, mimeType, fallbackModel);
+          const latex = await extractWithModel(base64Data, mimeType, fallbackModel, options);
           console.warn(`[extractLatexWithModel] Fallback ${fallbackModel} succeeded`);
           return {
             latex,
@@ -199,15 +235,23 @@ export async function extractLatexWithModel(
  */
 export async function modifyLatexWithAI(
   currentLatex: string,
-  instruction: string
+  instruction: string,
+  options?: AIOptions
 ): Promise<string> {
   const prompt = LATEX_MODIFY_PROMPT(currentLatex, instruction);
+  const availabilityOptions: AvailabilityOptions = {
+    geminiKey: options?.geminiKey,
+    openrouterKey: options?.openrouterKey,
+  };
 
   // Try Gemini first
-  if (isModelAvailable("gemini-2.5-flash")) {
+  if (isModelAvailable("gemini-2.5-flash", availabilityOptions)) {
     try {
       const { GoogleGenerativeAI } = await import("@google/generative-ai");
-      const genAI = new GoogleGenerativeAI(AI_CONFIG.apiKeys.gemini!);
+      const apiKey = getAPIKeyForProvider("gemini", options?.geminiKey);
+      if (!apiKey) throw new Error("Gemini API key not available");
+
+      const genAI = new GoogleGenerativeAI(apiKey);
       const model = genAI.getGenerativeModel({
         model: AI_CONFIG.models.gemini,
         generationConfig: {
@@ -224,16 +268,19 @@ export async function modifyLatexWithAI(
   }
 
   // Fallback to OpenRouter models
-  const fallbacks = getAvailableFallbackModels("gemini-2.5-flash");
+  const fallbacks = getAvailableFallbackModels("gemini-2.5-flash", availabilityOptions);
   for (const fallbackModel of fallbacks) {
     const modelInfo = getModelInfo(fallbackModel);
     if (!modelInfo?.openrouterModel) continue;
 
     try {
       const { OpenAI } = await import("openai");
+      const apiKey = getAPIKeyForProvider("openrouter", options?.openrouterKey);
+      if (!apiKey) continue;
+
       const openrouter = new OpenAI({
         baseURL: "https://openrouter.ai/api/v1",
-        apiKey: AI_CONFIG.apiKeys.openrouter,
+        apiKey,
       });
 
       const response = await openrouter.chat.completions.create({
@@ -254,7 +301,9 @@ export async function modifyLatexWithAI(
     }
   }
 
-  throw new Error("All AI models are rate limited. Please wait a moment and try again.");
+  throw new Error(
+    "All AI models are rate limited or unavailable. Please configure API keys in Settings and try again."
+  );
 }
 
 // =============================================================================
@@ -265,14 +314,24 @@ export async function modifyLatexWithAI(
  * Analyze LaTeX CV for ATS compliance
  * Includes automatic fallback to OpenRouter on rate limit
  */
-export async function analyzeATSCompliance(latexContent: string): Promise<ATSAnalysisResult> {
+export async function analyzeATSCompliance(
+  latexContent: string,
+  options?: AIOptions
+): Promise<ATSAnalysisResult> {
   const prompt = ATS_ANALYSIS_PROMPT(latexContent);
+  const availabilityOptions: AvailabilityOptions = {
+    geminiKey: options?.geminiKey,
+    openrouterKey: options?.openrouterKey,
+  };
 
   // Try Gemini first
-  if (isModelAvailable("gemini-2.5-flash")) {
+  if (isModelAvailable("gemini-2.5-flash", availabilityOptions)) {
     try {
       const { GoogleGenerativeAI } = await import("@google/generative-ai");
-      const genAI = new GoogleGenerativeAI(AI_CONFIG.apiKeys.gemini!);
+      const apiKey = getAPIKeyForProvider("gemini", options?.geminiKey);
+      if (!apiKey) throw new Error("Gemini API key not available");
+
+      const genAI = new GoogleGenerativeAI(apiKey);
       const model = genAI.getGenerativeModel({
         model: AI_CONFIG.models.gemini,
       });
@@ -290,16 +349,19 @@ export async function analyzeATSCompliance(latexContent: string): Promise<ATSAna
   }
 
   // Fallback to OpenRouter models
-  const fallbacks = getAvailableFallbackModels("gemini-2.5-flash");
+  const fallbacks = getAvailableFallbackModels("gemini-2.5-flash", availabilityOptions);
   for (const fallbackModel of fallbacks) {
     const modelInfo = getModelInfo(fallbackModel);
     if (!modelInfo?.openrouterModel) continue;
 
     try {
       const { OpenAI } = await import("openai");
+      const apiKey = getAPIKeyForProvider("openrouter", options?.openrouterKey);
+      if (!apiKey) continue;
+
       const openrouter = new OpenAI({
         baseURL: "https://openrouter.ai/api/v1",
-        apiKey: AI_CONFIG.apiKeys.openrouter,
+        apiKey,
       });
 
       const response = await openrouter.chat.completions.create({
@@ -324,5 +386,7 @@ export async function analyzeATSCompliance(latexContent: string): Promise<ATSAna
     }
   }
 
-  throw new Error("All AI models are rate limited. Please wait a moment and try again.");
+  throw new Error(
+    "All AI models are rate limited or unavailable. Please configure API keys in Settings and try again."
+  );
 }
