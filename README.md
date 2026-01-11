@@ -5,29 +5,38 @@
   <img src="https://img.shields.io/badge/AI_Powered-Gemini-4285F4?style=for-the-badge&logo=google" alt="AI Powered" />
 </p>
 
-<h1 align="center">🎯 Job Hunting Assistant</h1>
+<h1 align="center">🎯 CareerPal - Job Hunting Assistant</h1>
 
 <p align="center">
-  <strong>Apply smarter, not harder.</strong>
+  <strong>Privacy-first job hunting. Your data never leaves your browser.</strong>
   <br />
-  An AI-powered job hunting platform that transforms how you search, apply, and track your career opportunities.
+  Clone, run locally, and own your job search data completely.
 </p>
 
 <p align="center">
-  <a href="https://job-hunting-assistant.vercel.app">🚀 Live Demo</a>
+  <a href="https://job-hunting-assistant.vercel.app">🎭 Try Demo</a>
+  •
+  <a href="#-quick-start">Clone & Run</a>
   •
   <a href="#-features">Features</a>
   •
   <a href="#-tech-stack">Tech Stack</a>
-  •
-  <a href="#-getting-started">Get Started</a>
 </p>
 
 ---
 
 ## 🌟 Why This Project?
 
-Job hunting shouldn't feel like a second full-time job. This project tackles the fragmented, tedious nature of modern job applications by bringing everything into one intelligent platform:
+Job hunting shouldn't feel like a second full-time job. This project tackles the fragmented, tedious nature of modern job applications by bringing everything into one intelligent platform—**without compromising your privacy**.
+
+### 🔒 Privacy-First Architecture
+
+| Mode           | How It Works                                             | Your Data                                                     |
+| -------------- | -------------------------------------------------------- | ------------------------------------------------------------- |
+| **Local Mode** | Clone repo, run locally                                  | Stored in your browser (IndexedDB). Never touches any server. |
+| **Demo Mode**  | [Try the demo](https://job-hunting-assistant.vercel.app) | Server-stored, resets daily. Great for testing.               |
+
+### 💡 Problems Solved
 
 | Problem                               | Solution                                                           |
 | ------------------------------------- | ------------------------------------------------------------------ |
@@ -35,6 +44,7 @@ Job hunting shouldn't feel like a second full-time job. This project tackles the
 | ✍️ Writing personalized cover letters | One-click AI generation tailored to each job                       |
 | 🔍 Understanding job fit              | Instant match scoring with skill gap analysis                      |
 | 📊 Tracking applications              | Unified tracker with status workflow and notes                     |
+| 🔐 Trusting SaaS with career data     | Run locally—bring your own AI keys, zero server liability          |
 
 ---
 
@@ -217,15 +227,11 @@ A carefully crafted design language inspired by Scandinavian minimalism:
 
 ---
 
-## 🚀 Getting Started
+## 🚀 Quick Start
 
-### Prerequisites
+### Option 1: Run Locally (Recommended)
 
-- **Node.js 20+** (LTS recommended)
-- **PostgreSQL** (or use [Neon](https://neon.tech) free tier)
-- **Gemini API Key** (free from [AI Studio](https://aistudio.google.com/app/apikey))
-
-### Quick Start
+**Your data stays in your browser. No database needed.**
 
 ```bash
 # 1. Clone the repository
@@ -235,37 +241,26 @@ cd job-hunting-assistant
 # 2. Install dependencies
 npm install
 
-# 3. Set up environment
-cp .env.example .env.local
-# Edit .env.local with your credentials
-
-# 4. Initialize database
-npx prisma generate
-npx prisma db push
-
-# 5. Launch development server
+# 3. Launch development server
 npm run dev
 ```
 
 Open **[http://localhost:3000](http://localhost:3000)** and start hunting! 🎯
 
-### Development Testing
+> **Note**: For AI features, add your own API keys in Settings:
+>
+> - **Gemini** (free): [Get key from AI Studio](https://aistudio.google.com/app/apikey)
+> - **OpenRouter** (optional): [Get key](https://openrouter.ai/keys)
 
-Seed the database with test data to explore all features:
+### Option 2: Try the Demo
 
-```bash
-npx prisma db seed
-```
+Don't want to clone? **[Try the live demo →](https://job-hunting-assistant.vercel.app)**
 
-This creates **3 test users** with pre-populated CVs and applications:
+Demo mode uses server-hosted AI (rate-limited) and resets daily.
 
-| User           | Email                        | Password           | CVs | Applications |
-| -------------- | ---------------------------- | ------------------ | --- | ------------ |
-| Long Johnson   | `long.johnson@example.com`   | `TestPassword123!` | 7   | 15           |
-| Sarah Chen     | `sarah.chen@example.com`     | `TestPassword123!` | 3   | 8            |
-| Marcus Johnson | `marcus.johnson@example.com` | `TestPassword123!` | 4   | 6            |
+### Advanced: Server Mode Setup
 
-> **Note:** For seeded data to work, you must create these users in Neon Auth first, then update the user IDs in `prisma/seed.ts` to match.
+If you want to run with server-side storage (like the demo), see [docs/DUAL_MODE_DEPLOYMENT.md](docs/DUAL_MODE_DEPLOYMENT.md) for database and auth configuration.
 
 ---
 
