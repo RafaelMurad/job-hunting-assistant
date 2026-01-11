@@ -2,9 +2,11 @@
  * tRPC Rate Limiting Middleware
  *
  * Protects endpoints from abuse and basic DoS attempts.
+ * Uses Redis in demo mode, in-memory otherwise.
  */
 
-import { getRateLimitIdentifier, rateLimiters, type RateLimitResult } from "@/lib/rate-limit";
+import { getRateLimitIdentifier, type RateLimitResult } from "@/lib/rate-limit";
+import { limitAI, limitGeneral, limitUpload } from "@/lib/rate-limit-redis";
 import { TRPCError, type AnyMiddlewareFunction } from "@trpc/server";
 import type { TRPCContext } from "../init";
 
@@ -16,7 +18,7 @@ export const rateLimitMiddleware: AnyMiddlewareFunction = async ({
   next,
 }: AnyMiddlewareOpts & { ctx: TRPCContext }) => {
   const identifier = getRateLimitIdentifier(ctx.session?.user?.id);
-  const result = await rateLimiters.general.limit(identifier);
+  const result = await limitGeneral(identifier);
 
   if (!result.success) {
     throw new TRPCError({
@@ -38,7 +40,7 @@ export const aiRateLimitMiddleware: AnyMiddlewareFunction = async ({
   next,
 }: AnyMiddlewareOpts & { ctx: TRPCContext }) => {
   const identifier = getRateLimitIdentifier(ctx.session?.user?.id);
-  const result = await rateLimiters.ai.limit(identifier);
+  const result = await limitAI(identifier);
 
   if (!result.success) {
     throw new TRPCError({
@@ -60,7 +62,7 @@ export const uploadRateLimitMiddleware: AnyMiddlewareFunction = async ({
   next,
 }: AnyMiddlewareOpts & { ctx: TRPCContext }) => {
   const identifier = getRateLimitIdentifier(ctx.session?.user?.id);
-  const result = await rateLimiters.upload.limit(identifier);
+  const result = await limitUpload(identifier);
 
   if (!result.success) {
     throw new TRPCError({
