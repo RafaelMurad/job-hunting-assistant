@@ -279,38 +279,141 @@ export default function CVEditorPage(): JSX.Element {
 
       try {
         setUploading(true);
-        const formData = new FormData();
-        formData.append("file", file);
-        formData.append("model", selectedModel);
-        formData.append("template", selectedTemplate);
 
-        if (currentCV) {
-          formData.append("cvId", currentCV.id);
+        // Get list of models to try (selected first, then others)
+        const modelsToTry = [
+          selectedModel,
+          ...availableModels.filter((m) => m.available && m.id !== selectedModel).map((m) => m.id),
+        ];
+
+        let lastError: string | null = null;
+        const totalModels = modelsToTry.length;
+
+        // Try each model until one succeeds
+        for (let i = 0; i < modelsToTry.length; i++) {
+          const modelToTry = modelsToTry[i];
+          if (!modelToTry) continue;
+
+          const modelName = availableModels.find((m) => m.id === modelToTry)?.name || modelToTry;
+          const attemptNumber = i + 1;
+
+          // Update progress with model info
+          setUploadProgress({
+            status: "processing",
+            progress: Math.round((attemptNumber / totalModels) * 50),
+            step: `Extracting with ${modelName}...`,
+            message:
+              attemptNumber > 1
+                ? `Attempt ${attemptNumber}/${totalModels} - Previous model was rate limited`
+                : `Using ${modelName}`,
+          });
+
+          const formData = new FormData();
+          formData.append("file", file);
+          formData.append("model", modelToTry);
+          formData.append("template", selectedTemplate);
+
+          if (currentCV) {
+            formData.append("cvId", currentCV.id);
+          }
+
+          try {
+            const response = await fetch("/api/cv/store", {
+              method: "POST",
+              body: formData,
+            });
+
+            const result = await response.json();
+
+            if (response.ok) {
+              // Success!
+              setUploadProgress({
+                status: "complete",
+                progress: 100,
+                step: "Complete!",
+                message: `Extracted successfully with ${modelName}`,
+              });
+
+              setLatexContent(result.data.latexContent || "");
+              setPreviewPdfUrl(result.data.pdfUrl);
+              setAtsAnalysis(null);
+              setHasUnsavedChanges(false);
+
+              if (result.data.extractedContent) {
+                setExtractedContent(result.data.extractedContent);
+              }
+
+              refetchCVs();
+              const usedModel = result.data.modelUsed || modelToTry;
+              showToast(
+                "success",
+                attemptNumber > 1
+                  ? `CV uploaded! (Used ${usedModel} after ${attemptNumber - 1} retries)`
+                  : "CV uploaded successfully!"
+              );
+              return;
+            }
+
+            // Check if we should retry with another model
+            const errorMsg = result.error || "Upload failed";
+            const errorLower = errorMsg.toLowerCase();
+
+            // Retry on rate limits OR any server error (500s are often transient)
+            const shouldRetry =
+              response.status >= 500 ||
+              errorLower.includes("rate limit") ||
+              errorLower.includes("quota") ||
+              errorLower.includes("429") ||
+              errorLower.includes("exhausted") ||
+              errorLower.includes("error occurred") ||
+              errorLower.includes("try again");
+
+            if (shouldRetry && i < modelsToTry.length - 1) {
+              console.warn(
+                `[Upload] ${modelToTry} failed (${response.status}): ${errorMsg}, trying next model...`
+              );
+              lastError = errorMsg;
+
+              // Show retry feedback
+              setUploadProgress({
+                status: "processing",
+                progress: Math.round(((i + 1) / totalModels) * 50),
+                step: `${modelName} failed`,
+                message: `Retrying with next model... (${i + 1}/${totalModels})`,
+              });
+
+              // Small delay before retry
+              await new Promise((r) => setTimeout(r, 1000));
+              continue;
+            }
+
+            // No more models to try or non-retryable error
+            setUploadProgress({
+              status: "error",
+              progress: 0,
+              step: "Failed",
+              message: errorMsg,
+            });
+            showToast("error", errorMsg);
+            return;
+          } catch (fetchError) {
+            console.error(`[Upload] Fetch error for ${modelToTry}:`, fetchError);
+            lastError = "Network error";
+            if (i < modelsToTry.length - 1) continue;
+          }
         }
 
-        const response = await fetch("/api/cv/store", {
-          method: "POST",
-          body: formData,
+        // All models failed
+        setUploadProgress({
+          status: "error",
+          progress: 0,
+          step: "All models failed",
+          message: "All AI models are rate limited",
         });
-
-        const result = await response.json();
-
-        if (!response.ok) {
-          showToast("error", result.error || "Upload failed");
-          return;
-        }
-
-        setLatexContent(result.data.latexContent || "");
-        setPreviewPdfUrl(result.data.pdfUrl);
-        setAtsAnalysis(null);
-        setHasUnsavedChanges(false);
-
-        if (result.data.extractedContent) {
-          setExtractedContent(result.data.extractedContent);
-        }
-
-        refetchCVs();
-        showToast("success", "CV uploaded successfully!");
+        showToast(
+          "error",
+          lastError || "All AI models are rate limited. Please wait and try again."
+        );
       } catch (error) {
         console.error("Upload error:", error);
         showToast("error", "Upload failed. Please try again.");
@@ -322,7 +425,7 @@ export default function CVEditorPage(): JSX.Element {
         }, 2000);
       }
     },
-    [selectedModel, selectedTemplate, currentCV, canAddMore, refetchCVs]
+    [selectedModel, selectedTemplate, currentCV, canAddMore, refetchCVs, availableModels]
   );
 
   const handleFileSelect = useCallback(
@@ -342,11 +445,10 @@ export default function CVEditorPage(): JSX.Element {
         target: { files: [file] },
       } as unknown as ChangeEvent<HTMLInputElement>;
 
-      setUploadProgress({ status: "uploading", progress: 30, step: "Uploading file..." });
+      setUploadProgress({ status: "uploading", progress: 10, step: "Starting upload..." });
 
-      void handleUpload(syntheticEvent).then(() => {
-        setUploadProgress({ status: "complete", progress: 100, step: "Done!" });
-      });
+      // Don't override progress - handleUpload manages its own progress state
+      void handleUpload(syntheticEvent);
     },
     [handleUpload]
   );

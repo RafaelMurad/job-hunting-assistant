@@ -24,18 +24,26 @@ export { cleanAndValidateLatex };
  * Check if an error is a rate limit error
  */
 function isRateLimitError(error: unknown): boolean {
-  if (error instanceof Error) {
-    const message = error.message.toLowerCase();
-    return (
-      message.includes("rate limit") ||
-      message.includes("rate_limit") ||
-      message.includes("quota exceeded") ||
-      message.includes("too many requests") ||
-      message.includes("429") ||
-      message.includes("resource exhausted")
-    );
+  const errorString = String(error).toLowerCase();
+  const message = error instanceof Error ? error.message.toLowerCase() : "";
+  const combined = errorString + " " + message;
+
+  const isRateLimit =
+    combined.includes("rate limit") ||
+    combined.includes("rate_limit") ||
+    combined.includes("quota exceeded") ||
+    combined.includes("too many requests") ||
+    combined.includes("429") ||
+    combined.includes("resource exhausted") ||
+    combined.includes("exhausted") ||
+    combined.includes("limit exceeded") ||
+    combined.includes("requests per minute");
+
+  if (isRateLimit) {
+    console.warn("[isRateLimitError] Detected rate limit error:", message.substring(0, 200));
   }
-  return false;
+
+  return isRateLimit;
 }
 
 /**
