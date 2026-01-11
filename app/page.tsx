@@ -58,7 +58,7 @@ export default function LandingPage(): JSX.Element {
   const content = isLocal ? LOCAL_MODE_CONTENT : DEMO_MODE_CONTENT;
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-white to-slate-50 dark:from-slate-900 dark:to-slate-800">
+    <div className="min-h-screen bg-linear-to-b from-white to-slate-50 dark:from-slate-900 dark:to-slate-800">
       {/* Hero Section */}
       <section className="relative overflow-hidden py-24 pb-32">
         {/* Background Pattern - Friendly gradient shapes */}
