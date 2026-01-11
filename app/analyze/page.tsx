@@ -194,14 +194,14 @@ export default function AnalyzePage(): JSX.Element {
   const displayError = inputError || analyzeError;
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 py-12">
+    <div className="min-h-screen bg-slate-50 dark:bg-slate-900 py-12">
       <div className="max-w-6xl mx-auto px-4">
         <div className="mb-8 flex justify-between items-center">
           <div>
-            <h1 className="text-4xl font-bold mb-2 text-gray-900 dark:text-gray-100">
+            <h1 className="text-4xl font-bold mb-2 text-slate-900 dark:text-slate-100">
               Analyze Job
             </h1>
-            <p className="text-gray-600 dark:text-gray-400">
+            <p className="text-slate-600 dark:text-slate-400">
               Paste a job description to get AI-powered analysis
             </p>
           </div>
@@ -429,7 +429,7 @@ export default function AnalyzePage(): JSX.Element {
 
             {!analysis && (
               <Card>
-                <CardContent className="py-12 text-center text-gray-500 dark:text-gray-400">
+                <CardContent className="py-12 text-center text-gray-500 dark:text-slate-400">
                   <p>Paste a job description and click &quot;Analyze&quot; to get started</p>
                 </CardContent>
               </Card>

@@ -220,11 +220,11 @@ export default async function DashboardPage(): Promise<JSX.Element> {
                   {recentApplications.map((app) => (
                     <div
                       key={app.id}
-                      className="flex items-center justify-between p-3 bg-slate-50 dark:bg-gray-800 rounded-lg"
+                      className="flex items-center justify-between p-3 bg-slate-50 dark:bg-slate-800 rounded-lg"
                     >
                       <div>
-                        <p className="font-medium text-slate-900 dark:text-gray-100">{app.role}</p>
-                        <p className="text-sm text-slate-600 dark:text-gray-400">{app.company}</p>
+                        <p className="font-medium text-slate-900 dark:text-slate-100">{app.role}</p>
+                        <p className="text-sm text-slate-600 dark:text-slate-400">{app.company}</p>
                       </div>
                       <div className="flex items-center gap-3">
                         <span
@@ -233,12 +233,12 @@ export default async function DashboardPage(): Promise<JSX.Element> {
                               ? "bg-emerald-100 dark:bg-emerald-900/50 text-emerald-700 dark:text-emerald-300"
                               : app.status === "applied"
                                 ? "bg-sky-100 dark:bg-sky-900/50 text-sky-700 dark:text-sky-300"
-                                : "bg-slate-100 dark:bg-gray-700 text-slate-700 dark:text-gray-300"
+                                : "bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-300"
                           }`}
                         >
                           {app.status}
                         </span>
-                        <span className="text-sm text-slate-500 dark:text-gray-400">
+                        <span className="text-sm text-slate-500 dark:text-slate-400">
                           {app.matchScore}% match
                         </span>
                       </div>
@@ -260,7 +260,7 @@ export default async function DashboardPage(): Promise<JSX.Element> {
                       d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"
                     />
                   </svg>
-                  <p className="text-slate-600 dark:text-gray-400 mb-4">No applications yet</p>
+                  <p className="text-slate-600 dark:text-slate-400 mb-4">No applications yet</p>
                   <Link href="/analyze">
                     <Button>Analyze Your First Job →</Button>
                   </Link>
@@ -289,15 +289,15 @@ export default async function DashboardPage(): Promise<JSX.Element> {
             <CardContent>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
-                  <h4 className="text-sm font-medium text-slate-500 dark:text-gray-400 mb-1">
+                  <h4 className="text-sm font-medium text-slate-500 dark:text-slate-400 mb-1">
                     Contact
                   </h4>
-                  <p className="text-slate-900 dark:text-gray-100">{user.name}</p>
-                  <p className="text-slate-600 dark:text-gray-400 text-sm">{user.email}</p>
-                  <p className="text-slate-600 dark:text-gray-400 text-sm">{user.location}</p>
+                  <p className="text-slate-900 dark:text-slate-100">{user.name}</p>
+                  <p className="text-slate-600 dark:text-slate-400 text-sm">{user.email}</p>
+                  <p className="text-slate-600 dark:text-slate-400 text-sm">{user.location}</p>
                 </div>
                 <div>
-                  <h4 className="text-sm font-medium text-slate-500 dark:text-gray-400 mb-1">
+                  <h4 className="text-sm font-medium text-slate-500 dark:text-slate-400 mb-1">
                     Skills
                   </h4>
                   <div className="flex flex-wrap gap-1">
@@ -313,7 +313,7 @@ export default async function DashboardPage(): Promise<JSX.Element> {
                         </span>
                       ))}
                     {user.skills.split(",").length > 8 && (
-                      <span className="text-xs text-slate-500 dark:text-gray-400">
+                      <span className="text-xs text-slate-500 dark:text-slate-400">
                         +{user.skills.split(",").length - 8} more
                       </span>
                     )}

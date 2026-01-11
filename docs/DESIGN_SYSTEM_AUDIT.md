@@ -1,13 +1,27 @@
 # Design System Audit Report
 
 **Generated:** December 2024
+**Updated:** January 2025
 **Project:** Job Hunting Assistant
 
 ## Executive Summary
 
 The design system is well-structured with a cohesive "Nordic" theme. The implementation follows modern best practices with CSS custom properties, Tailwind CSS v4, and shadcn/ui components.
 
-**Overall Rating:** 8/10 - Solid foundation with minor improvements suggested.
+**Overall Rating:** 9/10 - Solid foundation with recent improvements completed.
+
+### Recent Improvements (January 2025)
+
+| Improvement                                | Status       |
+| ------------------------------------------ | ------------ |
+| Dark mode implementation                   | ✅ Completed |
+| Theme toggle redesign (3-state pill)       | ✅ Completed |
+| Button dark mode styling (Cyan 400 + glow) | ✅ Completed |
+| Reduced motion support                     | ✅ Completed |
+| Skip-to-content link                       | ✅ Completed |
+| Button inline styles → CVA                 | ✅ Completed |
+| Page color consistency (gray → slate)      | ✅ Completed |
+| Focus ring standardization (cyan in dark)  | ✅ Completed |
 
 ---
 
@@ -175,25 +189,12 @@ The color system uses a themed Nordic palette:
 
 - Uses CVA for variant management
 - Proper Nordic color mapping:
-  - `default` → fjord-600 (primary blue)
-  - `secondary` → forest-600 (green)
-  - `destructive` → clay-600 (red)
-  - `ghost` → nordic-neutral
-- Consistent sizing with design tokens
-
-**Improvement Opportunity:**
-
-```tsx
-// Current: Inline style for border-radius
-style={{
-  borderRadius: "var(--radius-md)",
-}}
-
-// Better: Use Tailwind class
-className="rounded-md"
-```
-
-The inline style can be moved to the CVA definition for consistency.
+  - `default` → sky-600 (light), cyan-400 + glow (dark)
+  - `secondary` → emerald-600 (light), emerald-400 + glow (dark)
+  - `destructive` → red-600 (light), red-500 + glow (dark)
+  - `ghost` → slate-100 hover
+- Consistent sizing with Tailwind classes
+- ✅ All styling moved to CVA (no inline styles)
 
 ### Card Component (`components/ui/card.tsx`)
 
@@ -226,20 +227,21 @@ The inline style can be moved to the CVA definition for consistency.
 
 **Note:** All ratios meet WCAG AA standards (4.5:1 for normal text, 3:1 for large text).
 
-### Missing Accessibility Features
+### Accessibility Features
 
-1. **Skip Link:** No skip-to-content link for keyboard users
-2. **Focus Visible:** Good - using `focus-visible:ring-2`
-3. **Reduced Motion:** Consider adding `prefers-reduced-motion` support
-
-### Recommended Addition
+1. **Skip Link:** ✅ Implemented - `components/ui/skip-link.tsx` allows keyboard users to skip navigation
+2. **Focus Visible:** ✅ Good - using `focus-visible:ring-2` with cyan ring in dark mode
+3. **Reduced Motion:** ✅ Implemented - Added to `globals.css`:
 
 ```css
 @media (prefers-reduced-motion: reduce) {
-  * {
+  *,
+  *::before,
+  *::after {
     animation-duration: 0.01ms !important;
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
   }
 }
 ```
@@ -287,48 +289,35 @@ The inline style can be moved to the CVA definition for consistency.
 
 ## Recommendations Summary
 
-### High Priority
+### Completed ✅
 
-1. **Add Warning Color Scale**
+1. ~~**Add Reduced Motion Support**~~ ✅
+   Added `prefers-reduced-motion` media query to `globals.css`
 
-   ```css
-   --color-amber-50: #fffbeb;
-   --color-amber-500: #f59e0b;
-   --color-amber-900: #78350f;
-   ```
+2. ~~**Move Inline Styles to CVA**~~ ✅
+   Cleaned up Button component - moved inline styles to CVA classes
 
-2. **Add Reduced Motion Support**
+3. ~~**Add Skip Link Component**~~ ✅
+   Created `components/ui/skip-link.tsx` and integrated in `layout.tsx`
 
-   ```css
-   @media (prefers-reduced-motion: reduce) { ... }
-   ```
+4. ~~**Add Dark Mode Toggle**~~ ✅
+   Implemented 3-state animated pill toggle (Light/System/Dark)
 
-3. **Move Inline Styles to CVA**
-   Clean up inline `style` props in Button component
+5. ~~**Dark Mode Polish**~~ ✅
+   - Cyan 400 + glow for buttons in dark mode
+   - Consistent slate palette across all pages
+   - Focus rings use cyan-400 in dark mode
 
-### Medium Priority
+### Remaining (Low Priority)
 
-4. **Add Skip Link Component**
-   For keyboard navigation accessibility
-
-5. **Document Design Tokens**
+6. **Document Design Tokens**
    Create a Storybook or design token documentation
 
-6. **Add Semantic Status Colors**
-   ```css
-   --color-success: var(--color-forest-500);
-   --color-warning: var(--color-amber-500);
-   --color-error: var(--color-clay-500);
-   --color-info: var(--color-fjord-500);
-   ```
-
-### Low Priority
-
-7. **Consider Dark Mode Toggle**
-   Dark mode CSS exists but no UI toggle
-
-8. **Add Animation Tokens**
+7. **Add Animation Tokens**
    Standardize animation durations and easings
+
+8. **Container Queries**
+   Consider CSS container queries for complex responsive components
 
 ---
 
@@ -371,13 +360,16 @@ The design system is **production-ready** with a cohesive Nordic aesthetic. The 
 
 - Consistent naming conventions
 - Mathematical type scale
-- Good color contrast
+- Good color contrast (WCAG AA compliant)
 - Touch-friendly sizing
+- Dark mode with Cyan 400 accent and glow effects
+- Accessibility features (skip link, reduced motion, focus visible)
+- Animated 3-state theme toggle
 
-**Areas for Improvement:**
+**Remaining Low-Priority Items:**
 
-- Add warning color scale
-- Implement reduced motion support
-- Document design tokens formally
+- Document design tokens formally (Storybook)
+- Add animation tokens
+- Consider container queries for complex components
 
-Overall, this is a well-architected design system that follows 2024-2025 best practices.
+Overall, this is a well-architected design system that follows 2024-2025 best practices with excellent dark mode support and accessibility.
