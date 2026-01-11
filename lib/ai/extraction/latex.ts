@@ -101,7 +101,7 @@ async function extractWithModel(
   switch (model) {
     case "gemini-2.5-flash":
       return extractLatexWithGemini(base64Data, mimeType, model);
-    case "nova-2-lite":
+    case "qwen-2.5-vl":
     case "mistral-small-3.1":
     case "gemma-3-27b":
     case "gemini-2.0-flash-or": {

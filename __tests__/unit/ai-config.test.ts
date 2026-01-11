@@ -90,10 +90,10 @@ describe("AI Config", () => {
     });
 
     it("should return OpenRouter model details", () => {
-      const info = getModelInfo("nova-2-lite");
+      const info = getModelInfo("qwen-2.5-vl");
       expect(info).toBeDefined();
       expect(info?.provider).toBe("openrouter");
-      expect(info?.openrouterModel).toBe("amazon/nova-2-lite-v1:free");
+      expect(info?.openrouterModel).toBe("qwen/qwen2.5-vl-72b-instruct:free");
     });
   });
 
@@ -129,7 +129,7 @@ describe("AI Config", () => {
     });
 
     it("should check openrouter API key for openrouter models", () => {
-      const modelInfo = LATEX_MODELS.find((m) => m.id === "nova-2-lite");
+      const modelInfo = LATEX_MODELS.find((m) => m.id === "qwen-2.5-vl");
       expect(modelInfo?.provider).toBe("openrouter");
     });
   });

@@ -6,12 +6,12 @@
  * Includes automatic rate-limit fallback across available models.
  */
 
+import { type ExtractedCVContent, generateLatexFromContent } from "@/lib/cv-templates";
 import { z } from "zod";
-import { AI_CONFIG, isModelAvailable, getModelInfo, LATEX_MODELS } from "../config";
-import type { LatexExtractionModel, TemplateExtractionResult, CVTemplateId } from "../types";
+import { AI_CONFIG, getModelInfo, isModelAvailable, LATEX_MODELS } from "../config";
 import { extractContentWithGemini } from "../providers/gemini";
 import { extractContentWithOpenRouter } from "../providers/openrouter";
-import { type ExtractedCVContent, generateLatexFromContent } from "@/lib/cv-templates";
+import type { CVTemplateId, LatexExtractionModel, TemplateExtractionResult } from "../types";
 
 // =============================================================================
 // RATE LIMIT DETECTION
@@ -63,9 +63,9 @@ const contactSchema = z.object({
   email: z.string().default(""),
   phone: z.string().default(""),
   location: z.string().default(""),
-  linkedin: z.string().optional(),
-  github: z.string().optional(),
-  website: z.string().optional(),
+  linkedin: z.string().nullish(), // Accept null, undefined, or string
+  github: z.string().nullish(),
+  website: z.string().nullish(),
 });
 
 /**
@@ -186,7 +186,7 @@ async function extractContentWithModel(
       const rawContent = await extractContentWithGemini(base64Data, mimeType, model);
       return parseExtractedContent(JSON.stringify(rawContent));
     }
-    case "nova-2-lite":
+    case "qwen-2.5-vl":
     case "mistral-small-3.1":
     case "gemma-3-27b":
     case "gemini-2.0-flash-or": {

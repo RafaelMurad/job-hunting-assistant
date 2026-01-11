@@ -30,12 +30,12 @@ export const LATEX_MODELS: ModelInfo[] = [
     openrouterModel: "google/gemini-2.0-flash-exp:free",
   },
   {
-    id: "nova-2-lite",
-    name: "Amazon Nova 2 Lite",
+    id: "qwen-2.5-vl",
+    name: "Qwen 2.5 VL 72B",
     provider: "openrouter",
     cost: "Free",
-    description: "Amazon vision model via OpenRouter",
-    openrouterModel: "amazon/nova-2-lite-v1:free",
+    description: "Alibaba vision-language model via OpenRouter",
+    openrouterModel: "qwen/qwen2.5-vl-72b-instruct:free",
   },
   {
     id: "mistral-small-3.1",

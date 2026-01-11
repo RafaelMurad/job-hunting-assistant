@@ -17,7 +17,7 @@ export type AIProvider = "gemini" | "openrouter";
 export type LatexExtractionModel =
   | "gemini-2.5-flash" // Free, fast (default)
   | "gemini-2.0-flash-or" // Free via OpenRouter, different rate limits
-  | "nova-2-lite" // Free via OpenRouter, Amazon vision model
+  | "qwen-2.5-vl" // Free via OpenRouter, Alibaba vision-language model
   | "mistral-small-3.1" // Free via OpenRouter, Mistral vision model
   | "gemma-3-27b"; // Free via OpenRouter, Google Gemma
 
