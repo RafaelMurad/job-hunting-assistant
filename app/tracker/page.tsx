@@ -14,7 +14,7 @@ import { useStorageApplications } from "@/lib/hooks";
 import type { ApplicationStatus } from "@/types";
 import { ArrowUpDown } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { useMemo, useState, type JSX } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState, type JSX } from "react";
 
 /**
  * Format a date using native Intl.DateTimeFormat
@@ -55,6 +55,86 @@ const SORT_OPTIONS: { value: SortOption; label: string }[] = [
   { value: "company", label: "Company A-Z" },
   { value: "matchScore", label: "Best Match" },
 ];
+
+/**
+ * Scrollable pills with overflow detection
+ */
+function ScrollablePills({
+  statusFilter,
+  onFilterChange,
+}: {
+  statusFilter: string;
+  onFilterChange: (value: string) => void;
+}): JSX.Element {
+  const scrollRef = useRef<HTMLDivElement>(null);
+  const [showRightFade, setShowRightFade] = useState(false);
+  const [showLeftFade, setShowLeftFade] = useState(false);
+
+  const checkOverflow = useCallback(() => {
+    const el = scrollRef.current;
+    if (!el) return;
+
+    const hasOverflow = el.scrollWidth > el.clientWidth;
+    const isScrolledLeft = el.scrollLeft > 0;
+    const isScrolledRight = el.scrollLeft + el.clientWidth >= el.scrollWidth - 1;
+
+    setShowLeftFade(isScrolledLeft);
+    setShowRightFade(hasOverflow && !isScrolledRight);
+  }, []);
+
+  useEffect(() => {
+    checkOverflow();
+    window.addEventListener("resize", checkOverflow);
+    return () => window.removeEventListener("resize", checkOverflow);
+  }, [checkOverflow]);
+
+  return (
+    <div className="relative">
+      {/* Left fade */}
+      {showLeftFade && (
+        <div className="absolute left-0 top-0 bottom-0 w-6 bg-linear-to-r from-slate-50 dark:from-slate-900 to-transparent z-10 pointer-events-none" />
+      )}
+
+      {/* Scrollable container */}
+      <div
+        ref={scrollRef}
+        onScroll={checkOverflow}
+        className="overflow-x-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]"
+      >
+        <div className="flex gap-2">
+          <button
+            onClick={() => onFilterChange("all")}
+            className={`h-8 rounded-full px-4 text-sm font-medium transition-colors whitespace-nowrap ${
+              statusFilter === "all"
+                ? "bg-cyan-500 text-slate-900"
+                : "bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400"
+            }`}
+          >
+            All
+          </button>
+          {STATUS_OPTIONS.map(({ value, label }) => (
+            <button
+              key={value}
+              onClick={() => onFilterChange(value)}
+              className={`h-8 rounded-full px-4 text-sm font-medium transition-colors whitespace-nowrap ${
+                statusFilter === value
+                  ? "bg-cyan-500 text-slate-900"
+                  : "bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400"
+              }`}
+            >
+              {label}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* Right fade */}
+      {showRightFade && (
+        <div className="absolute right-0 top-0 bottom-0 w-6 bg-linear-to-l from-slate-50 dark:from-slate-900 to-transparent z-10 pointer-events-none" />
+      )}
+    </div>
+  );
+}
 
 export default function TrackerPage(): JSX.Element {
   const router = useRouter();
@@ -348,34 +428,8 @@ export default function TrackerPage(): JSX.Element {
             </DropdownMenu>
           </div>
 
-          {/* Status Filter Pills - Horizontal scroll */}
-          <div className="-mx-4 px-4 overflow-x-auto scrollbar-hide">
-            <div className="flex gap-2 min-w-max pb-1">
-              <button
-                onClick={() => setStatusFilter("all")}
-                className={`h-8 rounded-full px-4 text-sm font-medium transition-colors whitespace-nowrap ${
-                  statusFilter === "all"
-                    ? "bg-cyan-500 text-slate-900"
-                    : "bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400"
-                }`}
-              >
-                All
-              </button>
-              {STATUS_OPTIONS.map(({ value, label }) => (
-                <button
-                  key={value}
-                  onClick={() => setStatusFilter(value)}
-                  className={`h-8 rounded-full px-4 text-sm font-medium transition-colors whitespace-nowrap ${
-                    statusFilter === value
-                      ? "bg-cyan-500 text-slate-900"
-                      : "bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400"
-                  }`}
-                >
-                  {label}
-                </button>
-              ))}
-            </div>
-          </div>
+          {/* Status Filter Pills - Horizontal scroll with overflow detection */}
+          <ScrollablePills statusFilter={statusFilter} onFilterChange={setStatusFilter} />
         </div>
 
         {/* Applications List */}
