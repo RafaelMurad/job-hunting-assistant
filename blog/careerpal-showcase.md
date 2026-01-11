@@ -32,18 +32,19 @@ What if the same app could run in two completely different ways?
 │                    Single Codebase                           │
 ├───────────────────────────┬─────────────────────────────────┤
 │       LOCAL MODE          │          DEMO MODE               │
-│   careerpal.app           │   demo.careerpal.app             │
+│   (Self-Hosted)           │   demo.careerpal.app             │
 ├───────────────────────────┼─────────────────────────────────┤
 │   🔒 Privacy-First        │   🎭 Portfolio Showcase          │
 │   Data: Browser only      │   Data: PostgreSQL               │
 │   AI: User's own keys     │   AI: My keys (rate-limited)     │
 │   Auth: None needed       │   Auth: OAuth sign-in            │
+│   Deploy: Clone & run     │   Deploy: Vercel                 │
 └───────────────────────────┴─────────────────────────────────┘
 ```
 
-**Local Mode** is the "real" product—your data never leaves your browser. You bring your own AI API keys.
+**Local Mode** is the "real" product—users clone the repo and run it locally. Your data literally never touches a server. You bring your own AI API keys.
 
-**Demo Mode** is for my portfolio—recruiters can try it without setup. Data resets daily.
+**Demo Mode** is for my portfolio—recruiters can try it without setup. Data resets daily. Hosted on Vercel.
 
 Same codebase. Same features. Zero liability.
 
@@ -206,8 +207,12 @@ Instead of complex data retention policies, just... reset daily. Users know what
 
 ## Try It Yourself
 
-- **Demo**: [demo.careerpal.app](https://demo.careerpal.app) (sample data, rate-limited)
-- **Local**: [careerpal.app](https://careerpal.app) (bring your own AI keys)
+- **Demo**: [job-hunting-assistant.vercel.app](https://job-hunting-assistant.vercel.app) (sample data, rate-limited)
+- **Run Locally** (recommended):
+  ```bash
+  git clone https://github.com/RafaelMurad/job-hunting-assistant.git
+  cd job-hunting-assistant && npm install && npm run dev
+  ```
 - **GitHub**: [github.com/RafaelMurad/job-hunting-assistant](https://github.com/RafaelMurad/job-hunting-assistant)
 
 ---
