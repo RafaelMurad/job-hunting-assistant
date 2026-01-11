@@ -1,4 +1,8 @@
-# 🚀 Production Deployment Guide - Vercel
+# 🚀 Production Deployment Guide - Vercel (Demo Mode)
+
+> **Note**: This guide is for deploying **Demo Mode** to Vercel (job-hunting-assistant.vercel.app).
+> For **Local Mode** (privacy-first), just clone the repo and run `npm run dev` — no Vercel needed.
+> See [DUAL_MODE_DEPLOYMENT.md](./DUAL_MODE_DEPLOYMENT.md) for the full dual-mode architecture.
 
 This guide walks through deploying the Job Hunting Assistant to Vercel with production-ready PostgreSQL database.
 

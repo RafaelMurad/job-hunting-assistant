@@ -234,3 +234,85 @@ This catches ~95% of issues before human review, significantly improving code qu
 ---
 
 Ready to catch bugs before they happen! 🐛🔫
+
+---
+
+## 🔧 Common Issues & Fixes
+
+### ESLint Cleanup
+
+**Unused Variables:**
+Remove or use them. Dead code looks sloppy in code reviews.
+
+**Shadcn Empty Interface Pattern:**
+
+```typescript
+// Shadcn pattern: Empty interface allows future prop customization
+// eslint-disable-next-line @typescript-eslint/no-empty-object-type
+export interface InputProps extends React.InputHTMLAttributes<HTMLInputElement> {}
+```
+
+**Lesson:** Explain WHY you're disabling lint rules. Don't just suppress blindly.
+
+**CommonJS vs ES Modules:**
+
+```javascript
+/* eslint-disable @typescript-eslint/no-require-imports */
+// Diagnostic script uses CommonJS for simplicity (no build step)
+require('dotenv').config(...)
+```
+
+**Lesson:** Pick one module system. If you must mix, document why.
+
+---
+
+### Qodana Code Quality Fixes
+
+**UMD Global Variables:**
+
+```typescript
+// ❌ Bad - creates UMD global warning
+import * as React from "react";
+function Component(): React.JSX.Element { ... }
+
+// ✅ Good - direct imports
+import type { JSX, ReactNode } from "react";
+function Component(): JSX.Element { ... }
+```
+
+**Ignored Promises:**
+
+```typescript
+// ❌ Bad - promise ignored
+useEffect(() => {
+  loadData();
+}, []);
+
+// ✅ Good - explicitly ignored with void
+useEffect(() => {
+  void loadData();
+}, []);
+```
+
+**Duplicated Code Fragments:**
+Extract shared logic into helper functions.
+
+**Static Generation with Database:**
+
+```typescript
+// app/dashboard/page.tsx
+// Force dynamic rendering - this page uses Prisma
+export const dynamic = "force-dynamic";
+```
+
+---
+
+### Pattern Summary
+
+| Issue             | Pattern          | Example                                  |
+| ----------------- | ---------------- | ---------------------------------------- |
+| UMD globals       | Named imports    | `import type { JSX } from "react"`       |
+| Ignored promises  | void operator    | `void asyncFunction()`                   |
+| Redundant escapes | Remove backslash | `/{pattern}/` not `/\{pattern\}/`        |
+| Code duplication  | Extract helpers  | Shared logic in one function             |
+| Build-time DB     | Force dynamic    | `export const dynamic = "force-dynamic"` |

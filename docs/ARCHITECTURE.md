@@ -55,7 +55,8 @@ The application runs from a single codebase but adapts behavior based on `NEXT_P
 │  AI Keys: User BYOK       │  AI Keys: Server (rate-limited)       │
 │  Auth: None               │  Auth: Neon Auth (OAuth)              │
 │  Data: Browser only       │  Data: Resets daily                   │
-│  Domain: careerpal.app    │  Domain: demo.careerpal.app           │
+│  Deploy: Self-hosted      │  Deploy: Vercel                       │
+│  (clone & run locally)    │  (job-hunting-assistant.vercel.app)  │
 └───────────────────────────┴──────────────────────────────────────┘
 ```
 
@@ -412,9 +413,11 @@ The landing page shows different messaging per mode:
 
 ### Infrastructure
 
-- **Vercel** - Hosting (two projects)
+- **Vercel** - Demo mode hosting only
 - **Upstash Redis** - Rate limiting (demo mode)
 - **Neon Auth** - Authentication (demo mode)
+
+> **Note**: Local mode is self-hosted—users clone the repo and run locally. No Vercel deployment needed.
 
 ---
 
@@ -525,7 +528,6 @@ job-hunting-assistant/
 
 ## Further Reading
 
-- [DUAL_MODE_DEPLOYMENT.md](./DUAL_MODE_DEPLOYMENT.md) - Deployment guide
-- [DEPLOYMENT.md](./DEPLOYMENT.md) - General deployment
-- [PRD.md](./PRD.md) - Product requirements
-- [ROADMAP.md](../.planning/ROADMAP.md) - Development roadmap
+- [DUAL_MODE_DEPLOYMENT.md](./DUAL_MODE_DEPLOYMENT.md) - Running locally and deploying demo
+- [DEPLOYMENT.md](./DEPLOYMENT.md) - General deployment notes
+- [CODE_QUALITY_SETUP.md](./CODE_QUALITY_SETUP.md) - Linting and code quality
