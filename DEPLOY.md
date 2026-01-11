@@ -1,5 +1,9 @@
 # 🚀 Vercel Deployment Quick Reference
 
+> **Note**: This guide is for deploying **Demo Mode** to Vercel.
+> For **Local Mode** (privacy-first), just clone the repo and run `npm run dev`.
+> See [docs/DUAL_MODE_DEPLOYMENT.md](docs/DUAL_MODE_DEPLOYMENT.md) for details.
+
 ## One-Time Setup (5 minutes)
 
 ### 1. Install Vercel CLI
