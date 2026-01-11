@@ -14,7 +14,7 @@ test.describe("Landing Page", () => {
 
   test("has correct title", async ({ page }) => {
     // Actual title from metadata
-    await expect(page).toHaveTitle(/Job Hunt AI/);
+    await expect(page).toHaveTitle(/CareerPal/);
   });
 
   test("displays hero section", async ({ page }) => {
@@ -60,7 +60,7 @@ test.describe("Navigation", () => {
   test("logo links to home", async ({ page }) => {
     await page.goto("/");
 
-    const logo = page.getByRole("link", { name: /job hunt ai/i });
+    const logo = page.getByRole("link", { name: /careerpal/i });
     await expect(logo).toBeVisible();
     await expect(logo).toHaveAttribute("href", "/");
   });
