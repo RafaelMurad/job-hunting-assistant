@@ -12,11 +12,13 @@ import Dexie, { type Table } from "dexie";
 import type {
   CreateApplicationInput,
   CreateCVInput,
+  CreateEmbeddingInput,
   CreateProfileInput,
   ExportedData,
   StorageAdapter,
   StoredApplication,
   StoredCV,
+  StoredEmbedding,
   StoredFile,
   StoredProfile,
   UpdateApplicationInput,
@@ -41,6 +43,7 @@ class CareerPalDB extends Dexie {
   cvs!: Table<StoredCV, string>;
   applications!: Table<StoredApplication, string>;
   files!: Table<StoredFile, string>;
+  embeddings!: Table<StoredEmbedding, string>;
 
   constructor() {
     super("careerpal");
@@ -52,6 +55,15 @@ class CareerPalDB extends Dexie {
       cvs: "id, isActive, createdAt",
       applications: "id, status, company, createdAt",
       files: "id, name, createdAt",
+    });
+
+    // Version 2: Add embeddings table for local AI features
+    this.version(2).stores({
+      profiles: "id, email",
+      cvs: "id, isActive, createdAt",
+      applications: "id, status, company, createdAt",
+      files: "id, name, createdAt",
+      embeddings: "id, sourceType, sourceId, createdAt",
     });
   }
 }
@@ -507,6 +519,7 @@ export const localStorageAdapter: StorageAdapter = {
       db.cvs.clear(),
       db.applications.clear(),
       db.files.clear(),
+      db.embeddings.clear(),
     ]);
   },
 
@@ -536,6 +549,65 @@ export const localStorageAdapter: StorageAdapter = {
     }
 
     return { used, quota, cvCount, applicationCount };
+  },
+
+  // ----------------------------------------
+  // Embedding Operations (for Local AI)
+  // ----------------------------------------
+
+  async getEmbedding(sourceType: string, sourceId: string): Promise<StoredEmbedding | null> {
+    const embedding = await db.embeddings.where({ sourceType, sourceId }).first();
+    return embedding ?? null;
+  },
+
+  async saveEmbedding(input: CreateEmbeddingInput): Promise<StoredEmbedding> {
+    // Check if embedding already exists for this source
+    const existing = await db.embeddings
+      .where({ sourceType: input.sourceType, sourceId: input.sourceId })
+      .first();
+
+    if (existing) {
+      // Update existing embedding
+      await db.embeddings.update(existing.id, {
+        embedding: input.embedding,
+        textHash: input.textHash,
+        createdAt: now(),
+      });
+      return {
+        ...existing,
+        embedding: input.embedding,
+        textHash: input.textHash,
+        createdAt: now(),
+      };
+    }
+
+    // Create new embedding
+    const embedding: StoredEmbedding = {
+      id: generateId(),
+      sourceType: input.sourceType,
+      sourceId: input.sourceId,
+      embedding: input.embedding,
+      textHash: input.textHash,
+      createdAt: now(),
+    };
+
+    await db.embeddings.add(embedding);
+    return embedding;
+  },
+
+  async deleteEmbedding(sourceType: string, sourceId: string): Promise<void> {
+    await db.embeddings.where({ sourceType, sourceId }).delete();
+  },
+
+  async getAllEmbeddings(sourceType?: string): Promise<StoredEmbedding[]> {
+    if (sourceType) {
+      return db.embeddings.where({ sourceType }).toArray();
+    }
+    return db.embeddings.toArray();
+  },
+
+  async clearEmbeddings(): Promise<void> {
+    await db.embeddings.clear();
   },
 };
 

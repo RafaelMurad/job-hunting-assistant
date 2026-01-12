@@ -5,9 +5,24 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { useAnalyze, useStorageApplications, type ButtonState } from "@/lib/hooks";
+import { extractTextFromLatex } from "@/lib/ai/local";
+import {
+  useAnalyze,
+  useLocalAIContext,
+  useStorageApplications,
+  useStorageCV,
+  useStorageUser,
+  type ButtonState,
+} from "@/lib/hooks";
 import { useRouter } from "next/navigation";
-import { useState, type Dispatch, type JSX, type SetStateAction } from "react";
+import {
+  useCallback,
+  useEffect,
+  useState,
+  type Dispatch,
+  type JSX,
+  type SetStateAction,
+} from "react";
 
 export default function AnalyzePage(): JSX.Element {
   const router = useRouter();
@@ -18,6 +33,10 @@ export default function AnalyzePage(): JSX.Element {
   const [saveState, setSaveState] = useState<ButtonState>("idle");
   const [copyState, setCopyState] = useState<ButtonState>("idle");
   const [saveError, setSaveError] = useState<string | null>(null);
+
+  // Instant preview score state
+  const [instantScore, setInstantScore] = useState<number | null>(null);
+  const [isCalculatingInstant, setIsCalculatingInstant] = useState(false);
 
   // Use abstracted hooks (auth handled by tRPC middleware)
   const {
@@ -33,6 +52,61 @@ export default function AnalyzePage(): JSX.Element {
   } = useAnalyze();
 
   const { create: createApplication } = useStorageApplications();
+
+  // Local AI for instant preview
+  const {
+    isReady: localAIReady,
+    calculateMatchScore,
+    initialize: initializeLocalAI,
+  } = useLocalAIContext();
+
+  // Get active CV for instant matching
+  const { activeCV } = useStorageCV();
+
+  // Get user profile as fallback for matching
+  const { user: profile } = useStorageUser();
+
+  // Build candidate text from CV or profile (fallback)
+  // If CV content is LaTeX, extract plain text for semantic matching
+  const rawCVContent = activeCV?.latexContent || "";
+  const candidateText = rawCVContent
+    ? extractTextFromLatex(rawCVContent)
+    : profile
+      ? `${profile.summary} ${profile.experience} ${profile.skills}`
+      : "";
+
+  // Calculate instant preview score when job description changes
+  const calculateInstantPreview = useCallback(async () => {
+    if (!localAIReady || !candidateText.trim() || !jobDescription.trim()) {
+      setInstantScore(null);
+      return;
+    }
+
+    // Only calculate if we have enough content
+    if (jobDescription.trim().length < 100) {
+      setInstantScore(null);
+      return;
+    }
+
+    setIsCalculatingInstant(true);
+    try {
+      const score = await calculateMatchScore(candidateText, jobDescription);
+      setInstantScore(score);
+    } catch {
+      setInstantScore(null);
+    } finally {
+      setIsCalculatingInstant(false);
+    }
+  }, [localAIReady, candidateText, jobDescription, calculateMatchScore]);
+
+  // Debounce the instant preview calculation
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      void calculateInstantPreview();
+    }, 500); // Wait 500ms after typing stops
+
+    return () => clearTimeout(timer);
+  }, [calculateInstantPreview]);
 
   // Helper to reset button state after delay
   const resetButtonState = (setter: Dispatch<SetStateAction<ButtonState>>, delay = 2000): void => {
@@ -237,6 +311,70 @@ export default function AnalyzePage(): JSX.Element {
                   rows={12}
                   className="mb-3 sm:mb-4 text-sm sm:text-base min-h-[200px] sm:min-h-[300px]"
                 />
+
+                {/* Instant Preview Score */}
+                {(instantScore !== null || isCalculatingInstant) && !analysis && (
+                  <div className="mb-3 sm:mb-4 p-3 rounded-lg bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <svg
+                          className="h-4 w-4 text-cyan-500"
+                          fill="none"
+                          viewBox="0 0 24 24"
+                          stroke="currentColor"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M13 10V3L4 14h7v7l9-11h-7z"
+                          />
+                        </svg>
+                        <span className="text-sm text-slate-600 dark:text-slate-400">
+                          Instant Preview
+                        </span>
+                      </div>
+                      {isCalculatingInstant ? (
+                        <span className="text-sm text-slate-500 animate-pulse">Calculating...</span>
+                      ) : instantScore !== null ? (
+                        <Badge className={getMatchColor(instantScore)}>
+                          ~{instantScore}% Match
+                        </Badge>
+                      ) : null}
+                    </div>
+                    <p className="mt-1 text-xs text-slate-500 dark:text-slate-500">
+                      Quick estimate based on your{" "}
+                      {activeCV?.latexContent ? "active CV" : "profile"} • Full analysis provides
+                      detailed insights
+                    </p>
+                  </div>
+                )}
+
+                {/* Enable Local AI hint */}
+                {!localAIReady && jobDescription.trim().length > 100 && !analysis && (
+                  <button
+                    onClick={() => void initializeLocalAI()}
+                    className="mb-3 sm:mb-4 w-full p-3 rounded-lg border border-dashed border-slate-300 dark:border-slate-600 text-sm text-slate-500 dark:text-slate-400 hover:border-cyan-500 dark:hover:border-cyan-400 hover:text-cyan-600 dark:hover:text-cyan-400 transition-colors"
+                  >
+                    <span className="flex items-center justify-center gap-2">
+                      <svg
+                        className="h-4 w-4"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        stroke="currentColor"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M13 10V3L4 14h7v7l9-11h-7z"
+                        />
+                      </svg>
+                      Enable instant preview (loads AI model)
+                    </span>
+                  </button>
+                )}
+
                 <Button
                   onClick={handleAnalyze}
                   disabled={analyzeState === "loading" || !jobDescription.trim()}

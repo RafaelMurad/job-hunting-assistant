@@ -11,11 +11,12 @@ const securityHeaders = [
     value: [
       "default-src 'self'",
       // Next.js requires 'unsafe-eval' in dev; we keep it here for simplicity.
-      "script-src 'self' 'unsafe-eval' 'unsafe-inline'",
+      // ONNX runtime for Transformers.js loads WASM modules from jsdelivr CDN.
+      "script-src 'self' 'unsafe-eval' 'unsafe-inline' 'wasm-unsafe-eval' https://cdn.jsdelivr.net blob:",
       "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
       "img-src 'self' data: https: blob:",
       "font-src 'self' https://fonts.gstatic.com",
-      "connect-src 'self' https://api.anthropic.com https://api.openai.com https://generativelanguage.googleapis.com https://*.vercel-insights.com",
+      "connect-src 'self' https://api.anthropic.com https://api.openai.com https://generativelanguage.googleapis.com https://*.vercel-insights.com https://huggingface.co https://*.huggingface.co https://cdn-lfs.huggingface.co https://cdn-lfs-us-1.huggingface.co https://*.xethub.hf.co https://cdn.jsdelivr.net",
       // Allow PDF preview from Vercel Blob storage and compiled blob URLs
       "frame-src 'self' blob: https://*.public.blob.vercel-storage.com",
       "frame-ancestors 'none'",

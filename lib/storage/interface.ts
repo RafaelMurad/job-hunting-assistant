@@ -82,6 +82,40 @@ export interface StoredFile {
   createdAt: string;
 }
 
+/**
+ * Source types for embeddings.
+ */
+export type EmbeddingSourceType = "cv" | "application" | "profile";
+
+/**
+ * Stored embedding for local AI features.
+ * Embeddings are cached to avoid recomputing for unchanged content.
+ */
+export interface StoredEmbedding {
+  /** Unique ID for this embedding */
+  id: string;
+  /** Type of source entity */
+  sourceType: EmbeddingSourceType;
+  /** Reference to the source entity ID */
+  sourceId: string;
+  /** The embedding vector (stored as array for IndexedDB compatibility) */
+  embedding: number[];
+  /** Hash of the source text to detect changes */
+  textHash: string;
+  /** When the embedding was created */
+  createdAt: string;
+}
+
+/**
+ * Input for creating/updating an embedding.
+ */
+export interface CreateEmbeddingInput {
+  sourceType: EmbeddingSourceType;
+  sourceId: string;
+  embedding: number[];
+  textHash: string;
+}
+
 // ============================================
 // Input Types for Create/Update Operations
 // ============================================
@@ -350,6 +384,35 @@ export interface StorageAdapter {
     cvCount: number;
     applicationCount: number;
   }>;
+
+  // ----------------------------------------
+  // Embedding Operations (for Local AI)
+  // ----------------------------------------
+
+  /**
+   * Get an embedding by source type and ID.
+   */
+  getEmbedding(sourceType: string, sourceId: string): Promise<StoredEmbedding | null>;
+
+  /**
+   * Save or update an embedding.
+   */
+  saveEmbedding(input: CreateEmbeddingInput): Promise<StoredEmbedding>;
+
+  /**
+   * Delete an embedding by source.
+   */
+  deleteEmbedding(sourceType: string, sourceId: string): Promise<void>;
+
+  /**
+   * Get all embeddings, optionally filtered by source type.
+   */
+  getAllEmbeddings(sourceType?: string): Promise<StoredEmbedding[]>;
+
+  /**
+   * Clear all embeddings.
+   */
+  clearEmbeddings(): Promise<void>;
 }
 
 // ============================================

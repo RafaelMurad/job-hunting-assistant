@@ -10,9 +10,10 @@ import {
   DropdownMenuRadioItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { useStorageApplications } from "@/lib/hooks";
+import { useLocalAIContext, useStorageApplications } from "@/lib/hooks";
+import type { StoredApplication } from "@/lib/storage/interface";
 import type { ApplicationStatus } from "@/types";
-import { ArrowUpDown } from "lucide-react";
+import { ArrowUpDown, Sparkles } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useMemo, useRef, useState, type JSX } from "react";
 
@@ -150,12 +151,82 @@ export default function TrackerPage(): JSX.Element {
   const [notesDraft, setNotesDraft] = useState<string>("");
   const [savingNotesId, setSavingNotesId] = useState<string | null>(null);
 
+  // Semantic search state
+  const [semanticResults, setSemanticResults] = useState<StoredApplication[]>([]);
+  const [isSemanticSearching, setIsSemanticSearching] = useState(false);
+  const [useSemanticSearch, setUseSemanticSearch] = useState(false);
+
   // Data fetching (storage handles local/demo mode automatically)
   const { applications, stats, loading, updateStatus, updateNotes, remove } =
     useStorageApplications();
 
+  // Local AI for semantic search
+  const {
+    isReady: localAIReady,
+    searchApplications,
+    initialize: initializeLocalAI,
+  } = useLocalAIContext();
+
+  // Perform semantic search when query changes
+  useEffect(() => {
+    const performSemanticSearch = async (): Promise<void> => {
+      if (!searchQuery.trim() || !useSemanticSearch || !localAIReady) {
+        setSemanticResults([]);
+        return;
+      }
+
+      setIsSemanticSearching(true);
+      try {
+        // Convert applications to StoredApplication format for search
+        const storedApps = applications.map((app) => ({
+          id: app.id,
+          company: app.company,
+          role: app.role,
+          jobDescription: app.jobDescription || "",
+          jobUrl: app.jobUrl,
+          matchScore: app.matchScore,
+          analysis: app.analysis || "",
+          coverLetter: app.coverLetter || "",
+          status: app.status,
+          appliedAt: app.appliedAt,
+          notes: app.notes,
+          createdAt: app.createdAt,
+          updatedAt: app.updatedAt,
+        })) as StoredApplication[];
+
+        const results = await searchApplications(searchQuery, storedApps);
+        setSemanticResults(results.map((r) => r.item));
+      } catch (error) {
+        console.error("Semantic search error:", error);
+        setSemanticResults([]);
+      } finally {
+        setIsSemanticSearching(false);
+      }
+    };
+
+    void performSemanticSearch();
+  }, [searchQuery, useSemanticSearch, localAIReady, applications, searchApplications]);
+
   // Filter and sort applications
   const filteredAndSortedApplications = useMemo(() => {
+    // Use semantic results if semantic search is active
+    if (useSemanticSearch && searchQuery.trim() && semanticResults.length > 0) {
+      let result = semanticResults.map((sr) => {
+        // Find the original application data
+        const original = applications.find((app) => app.id === sr.id);
+        return original || sr;
+      });
+
+      // Filter by status
+      if (statusFilter !== "all") {
+        result = result.filter((app) => app.status === statusFilter);
+      }
+
+      // Skip sorting for semantic results (already ranked by relevance)
+      return result;
+    }
+
+    // Standard text-based filtering
     let result = [...applications];
 
     // Filter by status
@@ -163,8 +234,8 @@ export default function TrackerPage(): JSX.Element {
       result = result.filter((app) => app.status === statusFilter);
     }
 
-    // Filter by search query
-    if (searchQuery.trim()) {
+    // Filter by search query (text-based)
+    if (searchQuery.trim() && !useSemanticSearch) {
       const query = searchQuery.toLowerCase();
       result = result.filter(
         (app) =>
@@ -191,7 +262,7 @@ export default function TrackerPage(): JSX.Element {
     }
 
     return result;
-  }, [applications, statusFilter, searchQuery, sortBy]);
+  }, [applications, statusFilter, searchQuery, sortBy, useSemanticSearch, semanticResults]);
 
   const handleStatusChange = (appId: string, newStatus: ApplicationStatus): void => {
     setUpdatingStatusId(appId);
@@ -374,7 +445,7 @@ export default function TrackerPage(): JSX.Element {
               </svg>
               <input
                 type="text"
-                placeholder="Search..."
+                placeholder={useSemanticSearch ? "Semantic search..." : "Search..."}
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 className="w-full h-10 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 pl-9 pr-8 text-sm text-slate-900 dark:text-slate-100 placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:border-cyan-500 dark:focus:border-cyan-400 focus:outline-none focus:ring-2 focus:ring-cyan-500/20 dark:focus:ring-cyan-400/20"
@@ -395,6 +466,48 @@ export default function TrackerPage(): JSX.Element {
                 </button>
               )}
             </div>
+
+            {/* Semantic Search Toggle */}
+            <button
+              onClick={() => {
+                if (!localAIReady) {
+                  void initializeLocalAI();
+                }
+                setUseSemanticSearch(!useSemanticSearch);
+              }}
+              className={`h-10 w-10 flex items-center justify-center rounded-lg border transition-colors focus:outline-none focus:ring-2 focus:ring-cyan-500/20 dark:focus:ring-cyan-400/20 ${
+                useSemanticSearch
+                  ? "border-cyan-500 dark:border-cyan-400 bg-cyan-50 dark:bg-cyan-900/30 text-cyan-600 dark:text-cyan-400"
+                  : "border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-700"
+              }`}
+              title={
+                useSemanticSearch
+                  ? "Semantic search enabled (AI-powered)"
+                  : localAIReady
+                    ? "Enable semantic search"
+                    : "Enable semantic search (downloads AI model)"
+              }
+            >
+              {isSemanticSearching ? (
+                <svg className="h-5 w-5 animate-spin" fill="none" viewBox="0 0 24 24">
+                  <circle
+                    className="opacity-25"
+                    cx="12"
+                    cy="12"
+                    r="10"
+                    stroke="currentColor"
+                    strokeWidth="4"
+                  />
+                  <path
+                    className="opacity-75"
+                    fill="currentColor"
+                    d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"
+                  />
+                </svg>
+              ) : (
+                <Sparkles className="h-5 w-5" />
+              )}
+            </button>
 
             {/* Sort Dropdown */}
             <DropdownMenu>

@@ -3,6 +3,7 @@
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { APIKeysSettings } from "@/components/settings/api-keys-settings";
+import { LocalAISettings } from "@/components/settings/local-ai-settings";
 import { trpc } from "@/lib/trpc/client";
 import type { JSX } from "react";
 
@@ -58,6 +59,11 @@ export default function SettingsPage(): JSX.Element {
 
         {/* API Keys Settings (Local Mode Only) */}
         <APIKeysSettings />
+
+        {/* Local AI Settings */}
+        <div className="mb-4 sm:mb-6">
+          <LocalAISettings />
+        </div>
 
         {/* Account Settings */}
         <Card>

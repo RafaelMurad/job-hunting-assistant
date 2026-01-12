@@ -490,4 +490,29 @@ export const serverStorageAdapter: StorageAdapter = {
       applicationCount: applications.length,
     };
   },
+
+  // ----------------------------------------
+  // Embedding Operations (Local AI only)
+  // ----------------------------------------
+  // Embeddings are only stored locally - demo mode doesn't support them
+
+  async getEmbedding(): Promise<null> {
+    return null; // Demo mode doesn't store embeddings
+  },
+
+  async saveEmbedding(): Promise<never> {
+    throw new Error("Embeddings are only supported in local mode.");
+  },
+
+  async deleteEmbedding(): Promise<void> {
+    // No-op in demo mode
+  },
+
+  async getAllEmbeddings(): Promise<[]> {
+    return []; // Demo mode doesn't store embeddings
+  },
+
+  async clearEmbeddings(): Promise<void> {
+    // No-op in demo mode
+  },
 };
