@@ -15,7 +15,7 @@ const securityHeaders = [
       "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
       "img-src 'self' data: https: blob:",
       "font-src 'self' https://fonts.gstatic.com",
-      "connect-src 'self' https://api.anthropic.com https://api.openai.com https://generativelanguage.googleapis.com https://*.vercel-insights.com",
+      "connect-src 'self' https://api.anthropic.com https://api.openai.com https://generativelanguage.googleapis.com https://*.vercel-insights.com https://*.neon.tech",
       // Allow PDF preview from Vercel Blob storage and compiled blob URLs
       "frame-src 'self' blob: https://*.public.blob.vercel-storage.com",
       "frame-ancestors 'none'",
