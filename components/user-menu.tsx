@@ -37,14 +37,21 @@ function UserIcon({ className }: { className?: string }): JSX.Element {
  */
 function LocalUserMenu(): JSX.Element {
   return (
-    <Link href="/settings" className="flex items-center gap-2 group">
-      <div className="h-8 w-8 sm:h-8 sm:w-8 rounded-full bg-emerald-100 dark:bg-emerald-900 flex items-center justify-center">
-        <UserIcon className="h-4 w-4 text-emerald-600 dark:text-emerald-400" />
-      </div>
-      <span className="hidden md:inline text-sm text-slate-600 dark:text-slate-400 group-hover:text-slate-900 dark:group-hover:text-slate-200">
-        Local User
-      </span>
-    </Link>
+    <div className="flex items-center gap-2">
+      <Link href="/settings" className="flex items-center gap-2 group">
+        <div className="h-8 w-8 sm:h-8 sm:w-8 rounded-full bg-emerald-100 dark:bg-emerald-900 flex items-center justify-center">
+          <UserIcon className="h-4 w-4 text-emerald-600 dark:text-emerald-400" />
+        </div>
+        <span className="hidden md:inline text-sm text-slate-600 dark:text-slate-400 group-hover:text-slate-900 dark:group-hover:text-slate-200">
+          Local User
+        </span>
+      </Link>
+      <Link href="/get-started">
+        <Button variant="ghost" size="sm" className="text-xs">
+          Switch Mode
+        </Button>
+      </Link>
+    </div>
   );
 }
 
@@ -67,14 +74,21 @@ function DemoUserMenu(): JSX.Element {
     return <div className="h-8 w-8 rounded-full bg-slate-200 animate-pulse" />;
   }
 
-  // Unauthenticated - show login button
+  // Unauthenticated - show login options
   if (!session?.user) {
     return (
-      <Link href="/auth/sign-in">
-        <Button variant="outline" size="sm">
-          Sign In
-        </Button>
-      </Link>
+      <div className="flex items-center gap-2">
+        <Link href="/auth/zk/login">
+          <Button variant="outline" size="sm">
+            🔐 ZK Login
+          </Button>
+        </Link>
+        <Link href="/auth/sign-in">
+          <Button variant="ghost" size="sm" className="hidden sm:inline-flex">
+            Demo Sign In
+          </Button>
+        </Link>
+      </div>
     );
   }
 

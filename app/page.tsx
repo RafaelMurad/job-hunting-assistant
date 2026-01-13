@@ -41,15 +41,15 @@ const DEMO_MODE_CONTENT = {
   ),
   subheading:
     "Let your AI pal analyze job postings, craft perfect cover letters, and keep your applications organized. Job hunting just got a whole lot friendlier.",
-  trustIndicator: "Free to try. Sign up to save your progress.",
-  primaryCTA: { text: "Get Started Free", href: "/dashboard" },
-  secondaryCTA: { text: "Analyze a Job", href: "/analyze" },
+  trustIndicator: "Free to try. Your data is encrypted end-to-end.",
+  primaryCTA: { text: "Get Started", href: "/get-started" },
+  secondaryCTA: { text: "Try Demo", href: "/dashboard" },
   bottomCTA: {
     heading: "Ready to Meet Your New Career Pal?",
     subheading:
-      "Join job seekers who've found their friendly AI companion for landing great opportunities.",
-    buttonText: "Try CareerPal Free →",
-    href: "/analyze",
+      "Choose how you want to use CareerPal: locally with complete privacy, or with encrypted cloud sync.",
+    buttonText: "Choose Your Mode →",
+    href: "/get-started",
   },
 } as const;
 
