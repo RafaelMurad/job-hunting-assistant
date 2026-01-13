@@ -69,14 +69,8 @@ export interface VaultEducation {
 // Application Types
 // ============================================
 
-export type ApplicationStatus =
-  | "draft"
-  | "saved"
-  | "applied"
-  | "interviewing"
-  | "offered"
-  | "rejected"
-  | "accepted";
+// Match the existing app's ApplicationStatus from types/database.ts
+export type ApplicationStatus = "saved" | "applied" | "interviewing" | "offer" | "rejected";
 
 export interface VaultApplication {
   id: string;
