@@ -48,6 +48,61 @@ model User {
 }
 
 // ============================================
+// Zero-Knowledge Auth & Storage Models
+// ============================================
+// These models support the zero-knowledge architecture where
+// all user career data is encrypted client-side before storage.
+// The server never sees plaintext user data.
+
+/**
+ * Zero-knowledge user account.
+ * Stores only email and hashed authKey - no plaintext career data.
+ * The authKey is derived client-side and hashed before transmission.
+ */
+model ZkUser {
+  id    String @id @default(cuid())
+  email String @unique
+
+  // Authentication (zero-knowledge)
+  // authKeyHash is SHA-256(authKey), where authKey is derived from password
+  // The server NEVER sees the password or raw authKey
+  authKeyHash String
+
+  // Account metadata (not encrypted - needed for account management)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  vault ZkVault?
+
+  @@index([email])
+}
+
+/**
+ * Encrypted user vault.
+ * Contains all career data (profile, CVs, applications) encrypted client-side.
+ * The server stores only encrypted blobs and cannot decrypt them.
+ */
+model ZkVault {
+  id     String @id @default(cuid())
+  userId String @unique
+  user   ZkUser @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  // Encrypted data (AES-256-GCM)
+  // Format: { v: 1, nonce: "hex", ciphertext: "hex" }
+  encryptedData String @db.Text
+
+  // Encryption metadata
+  version Int @default(1) // Schema version for migrations
+
+  // Sync metadata
+  lastModified DateTime @default(now()) // Client's lastModified timestamp
+  serverUpdatedAt DateTime @updatedAt   // Server's update timestamp
+
+  @@index([userId])
+}
+
+// ============================================
 // CV Management Model
 // ============================================
 // TODO: Consider renaming to `model Cv` for cleaner Prisma client accessor.
